@@ -1068,14 +1068,27 @@ function calculatePrediction(m,previous,model,confidenceConfig=state.confidenceC
 const RANKED_DEFAULT={windows:[15,10,5],weights:[.3,.3,.4],strength:.35,homeBoundary:.25,awayBoundary:.25,homeSelect:.55,awaySelect:.55,drawSelect:.12};
 let rankedSettings={...RANKED_DEFAULT};
 function rankedReadSettings(){try{const v=JSON.parse(localStorage.getItem('fp_ranked_goals_v1')||'{}');return {...RANKED_DEFAULT,...v,windows:Array.isArray(v.windows)?v.windows:RANKED_DEFAULT.windows,weights:Array.isArray(v.weights)?v.weights:RANKED_DEFAULT.weights}}catch(e){return {...RANKED_DEFAULT}}}
-function rankedGoalModel(m,previous,config=rankedSettings){
- const rows=previous.filter(x=>isFinished(x)&&x.leagueId===m.leagueId&&new Date(x.date)<new Date(m.date));
+// Per-fixture cache is scoped to each chronological history snapshot. It is never
+// shared with a different cutoff, so future results cannot enter past predictions.
+const rankedFixtureCache=new WeakMap();
+function rankedPrepared(m,previous){
+ let byFixture=rankedFixtureCache.get(previous);
+ if(!byFixture){byFixture=new Map();rankedFixtureCache.set(previous,byFixture)}
+ const id=String(m.leagueId)+":"+String(m.id??m.date)+":"+String(m.date);
+ if(byFixture.has(id))return byFixture.get(id);
+ const cutoff=new Date(m.date).getTime();
+ const rows=previous.filter(x=>isFinished(x)&&x.leagueId===m.leagueId&&new Date(x.date).getTime()<cutoff);
  const keys=new Set();for(const x of rows){keys.add(teamKey(x,'H'));keys.add(teamKey(x,'A'))}
+ const histories=new Map();for(const key of keys)histories.set(key,historyForTeam(rows,key));
+ const prepared={rows,keys,histories};byFixture.set(id,prepared);return prepared;
+}
+function rankedGoalModel(m,previous,config=rankedSettings){
+ const {keys,histories}=rankedPrepared(m,previous);
  const windows=config.windows,weights=config.weights,ws=weights.reduce((a,b)=>a+b,0)||1;
- const rankings=[...keys].map(key=>{const hist=historyForTeam(rows,key);const form=windows.reduce((sum,n,i)=>{const sample=hist.slice(-n);return sum+(weights[i]||0)*(sample.length?sample.filter(x=>x.result==='W').length/sample.length:.5)},0)/ws;return{key,form,count:hist.length}}).sort((a,b)=>b.form-a.form||b.count-a.count);
+ const rankings=[...keys].map(key=>{const hist=histories.get(key)||[];const form=windows.reduce((sum,n,i)=>{const sample=hist.slice(-n);return sum+(weights[i]||0)*(sample.length?sample.filter(x=>x.result==='W').length/sample.length:.5)},0)/ws;return{key,form,count:hist.length}}).sort((a,b)=>b.form-a.form||b.count-a.count);
  const rank=new Map(rankings.map((v,i)=>[v.key,{...v,rank:i+1}]));const N=Math.max(2,rankings.length);
  const strengthFor=key=>{const r=rank.get(key);return r?1+(config.strength||0)*(1-2*(r.rank-1)/(N-1)):1};
- const team=(key)=>{const hist=historyForTeam(rows,key);const samples=windows.map(n=>hist.slice(-n));const stat=(field,attack)=>samples.reduce((sum,s,i)=>sum+(weights[i]||0)*(s.length?avg(s,x=>{const power=strengthFor(x.opponentKey);return attack?x[field]*power:x[field]/power},0):1.25),0)/ws;return{attack:stat('gf',true),defence:stat('ga',false),count:hist.length,opponents:hist.slice(-Math.max(...windows)).map(x=>({name:x.opponent,rank:rank.get(x.opponentKey)?.rank||null,gf:x.gf,ga:x.ga}))}};
+ const team=(key)=>{const hist=histories.get(key)||[];const samples=windows.map(n=>hist.slice(-n));const stat=(field,attack)=>samples.reduce((sum,s,i)=>sum+(weights[i]||0)*(s.length?avg(s,x=>{const power=strengthFor(x.opponentKey);return attack?x[field]*power:x[field]/power},0):1.25),0)/ws;return{attack:stat('gf',true),defence:stat('ga',false),count:hist.length,opponents:hist.slice(-Math.max(...windows)).map(x=>({name:x.opponent,rank:rank.get(x.opponentKey)?.rank||null,gf:x.gf,ga:x.ga}))}};
  const home=team(teamKey(m,'H')),away=team(teamKey(m,'A'));
  const hl=clamp((home.attack+away.defence)/2,.15,4.2),al=clamp((away.attack+home.defence)/2,.15,4.2),gap=hl-al;
  const prediction=goalDifferenceOutcome(gap,config.homeBoundary,config.awayBoundary),dist=scoreDistribution(hl,al);
@@ -1096,6 +1109,7 @@ function rankedSettingsHtml(){return `<details class="panel" open><summary><stro
 function rankedInitSettings(){rankedSettings=rankedReadSettings();const box=document.getElementById('rankedSettingsSlot');if(box)box.innerHTML=rankedSettingsHtml();const ids={rankStrength:'strength',rankHomeBoundary:'homeBoundary',rankAwayBoundary:'awayBoundary',rankHomeSelect:'homeSelect',rankAwaySelect:'awaySelect',rankDrawSelect:'drawSelect'};for(const [id,k] of Object.entries(ids))document.getElementById(id).value=rankedSettings[k];document.getElementById('rankWindows').value=rankedSettings.windows.join(',');document.getElementById('rankWeights').value=rankedSettings.weights.join(',')}
 function rankedSaveSettings(){const next={windows:document.getElementById('rankWindows').value.split(',').map(Number),weights:document.getElementById('rankWeights').value.split(',').map(Number)};for(const [id,k] of Object.entries({rankStrength:'strength',rankHomeBoundary:'homeBoundary',rankAwayBoundary:'awayBoundary',rankHomeSelect:'homeSelect',rankAwaySelect:'awaySelect',rankDrawSelect:'drawSelect'}))next[k]=+document.getElementById(id).value;if(next.weights.length!==3||next.weights.some(x=>!Number.isFinite(x)||x<0)||next.weights.reduce((a,b)=>a+b,0)<=0||Object.entries(next).some(([k,v])=>typeof v==='number'&&(!Number.isFinite(v)||v<0)))throw Error('Invalid Model 3 settings');rankedSettings=next;localStorage.setItem('fp_ranked_goals_v1',JSON.stringify(next))}
 async function rankedBacktest(matches){
+ const evaluationCutoff=Date.now()-365*86400000;
  // Performance-only optimisation: prepare chronological histories once, then reuse
  // goal estimates for every decision boundary. All 80 candidates remain evaluated.
  const grouped={};
@@ -1107,7 +1121,7 @@ async function rankedBacktest(matches){
   for(let i=0;i<league.length;i++){
    const m=league[i],cutoff=new Date(m.date).getTime();
    // Preserve original index eligibility (i >= 10) and strict earlier-date history.
-   if(i>=10)fixtures.push({m,previous:previous.slice(),actual:getOutcome(m.homeScore,m.awayScore)});
+   if(i>=10&&cutoff>=evaluationCutoff)fixtures.push({m,previous:previous.slice(),actual:getOutcome(m.homeScore,m.awayScore)});
    // Only earlier-date matches may be used for same-kickoff fixtures.
    // Build history using the original strict-date predicate when needed below.
    previous.push(m);
@@ -1145,7 +1159,7 @@ async function rankedBacktest(matches){
  }
  output.sort((a,b)=>b.hits/Math.max(1,b.n)-a.hits/Math.max(1,a.n)||b.selHits/Math.max(1,b.sel)-a.selHits/Math.max(1,a.sel));
  const el=document.getElementById('rankedTestResults');
- if(el)el.innerHTML=`<div class="panel"><h3>Model 3 · opposition-ranked goals · historical comparison</h3><p class="muted smalltext">Exploratory historical replay. Settings are not changed automatically. Accuracy is calculated on the same chronological per-fixture past-only data; candidate selection on this sample is not an independent holdout. Performance update: all 80 configurations are evaluated using 20 goal-estimate passes.</p><div class="tablewrap"><table><thead><tr><th>Windows</th><th>Opposition factor</th><th>Win/draw gap</th><th>Correct</th><th>Accuracy</th><th>SELECT correct</th></tr></thead><tbody>${output.slice(0,15).map(x=>`<tr><td>${x.windows.join('/')}</td><td>${x.strength.toFixed(2)}</td><td>${x.boundary.toFixed(2)}</td><td>${x.hits}/${x.n}</td><td>${fpRate(x.hits,x.n)}</td><td>${x.selHits}/${x.sel} (${fpRate(x.selHits,x.sel)})</td></tr>`).join('')}</tbody></table></div></div>`;
+ if(el)el.innerHTML=`<div class="panel"><h3>Model 3 · opposition-ranked goals · historical comparison</h3><p class="muted smalltext">Exploratory historical replay. Settings are not changed automatically. Accuracy is calculated on the same chronological per-fixture past-only data; candidate selection on this sample is not an independent holdout. Performance update: all 80 configurations are evaluated using 20 goal-estimate passes; chronological team histories are cached per fixture.</p><div class="tablewrap"><table><thead><tr><th>Windows</th><th>Opposition factor</th><th>Win/draw gap</th><th>Correct</th><th>Accuracy</th><th>SELECT correct</th></tr></thead><tbody>${output.slice(0,15).map(x=>`<tr><td>${x.windows.join('/')}</td><td>${x.strength.toFixed(2)}</td><td>${x.boundary.toFixed(2)}</td><td>${x.hits}/${x.n}</td><td>${fpRate(x.hits,x.n)}</td><td>${x.selHits}/${x.sel} (${fpRate(x.selHits,x.sel)})</td></tr>`).join('')}</tbody></table></div></div>`;
 }
 
 function originalSettings(){return state.originalSettings||{modelIndex:1,windowIndex:0,homeGap:.5,awayGap:.5,confidenceMultiplier:3}}
@@ -1443,9 +1457,10 @@ function testCheckpoint(){if(testCancelRequested)throw new Error("Test cancelled
 function testYield(){return new Promise(resolve=>setTimeout(resolve,0))}
 function testProgress(label,done,total,from=72,to=96){const percent=Math.round(from+(to-from)*done/Math.max(1,total));setBusy(label,percent);$("testStatus").textContent=`${label} — ${done.toLocaleString()} / ${total.toLocaleString()}`}
 async function runBacktest(all){
+ const evaluationCutoff=Date.now()-365*86400000;
  const models=modelCombinations().map(m=>({...m,total:0,correct:0,brier:0,logLoss:0,actual:{H:0,D:0,A:0},predicted:{H:0,D:0,A:0},classCorrect:{H:0,D:0,A:0},byLeague:{}}));
  attachHistoricalXg(all);const chron=all.filter(isFinished).slice().sort((a,b)=>new Date(a.date)-new Date(b.date)),history={},eligible=[];
- let prepared=0;for(const m of chron){if(prepared++%25===0){testCheckpoint();await testYield()}const prior=(history[m.leagueId]||[]).filter(x=>new Date(x.date)<new Date(m.date)),h=historyForTeam(prior,teamKey(m,"H")),a=historyForTeam(prior,teamKey(m,"A"));if(h.length>=8&&a.length>=8)eligible.push({m,prior:prior.slice(),minimum:Math.min(h.length,a.length)});(history[m.leagueId]??=[]).push(m)}
+ let prepared=0;for(const m of chron){if(prepared++%25===0){testCheckpoint();await testYield()}const prior=(history[m.leagueId]||[]).filter(x=>new Date(x.date)<new Date(m.date)),h=historyForTeam(prior,teamKey(m,"H")),a=historyForTeam(prior,teamKey(m,"A"));if(new Date(m.date).getTime()>=evaluationCutoff&&h.length>=8&&a.length>=8)eligible.push({m,prior:prior.slice(),minimum:Math.min(h.length,a.length)});(history[m.leagueId]??=[]).push(m)}
  const start=Math.floor(eligible.length*.70),records=[],training=[];
  for(let i=0;i<eligible.length;i++){if(i%12===0){testCheckpoint();testProgress("Calculating historical predictions",i,eligible.length,70,84);await testYield()}const row=eligible[i],m=row.m,actual=getOutcome(m.homeScore,m.awayScore),split=i<start?"train":"holdout";
   for(const r of models){if(row.minimum<r.windows[0])continue;const foundation=calculatePrediction(m,row.prior,{...r,leagueInfluence:0,historicalXgInfluence:0,finishingInfluence:0});for(const leagueInfluence of LEAGUE_INFLUENCES){const p=hybridFromFoundation(foundation,r,leagueInfluence),b=brierScore(p.probs,actual);
@@ -1669,18 +1684,53 @@ function validateOutcomeRecommendation(test){
  rec.verdict=rec.approved?'apply':'keep';
 }
 function confidenceQuality(rows,cfg){const buckets=new Map();let count=0,concordant=0,discordant=0;for(const r of rows){const c=calibrationScore(r,cfg),b=buckets.get(c)||{n:0,hits:0};b.n++;if(r.prediction===r.actualOutcome)b.hits++;buckets.set(c,b)}const sorted=[...buckets].sort((a,b)=>a[0]-b[0]);for(let i=0;i<sorted.length;i++)for(let j=i+1;j<sorted.length;j++){const a=sorted[i][1],b=sorted[j][1];if(a.n<5||b.n<5)continue;const pair=a.n*b.n,delta=b.hits/b.n-a.hits/a.n;if(delta>0)concordant+=pair*delta;else discordant+=pair*(-delta)}const covered=sorted.filter(x=>x[1].n>=5).length;const quality=(concordant-discordant)/Math.max(1,rows.length*rows.length)+Math.min(covered,6)*.002;return{quality,buckets:sorted,covered}}
+// Prepared confidence operands are immutable for each historical prediction.
+// The optimiser varies only point allocations and risk deductions in its main
+// search; expensive goal-gap caps and component extraction can be shared.
+function prepareConfidenceRows(rows,baseCfg){
+ return rows.map(r=>{
+  const b=r.confidenceBreakdown||{},sample=b.minTeamSample||0;
+  let cap=sample<baseCfg.lowSampleThreshold?baseCfg.lowSampleCap:sample<baseCfg.midSampleThreshold?baseCfg.midSampleCap:10;
+  cap=Math.min(cap,hardGoalGapConfidenceCap(r.goalGap,r.prediction,baseCfg.confidenceMultiplier??state.confidenceMultiplier,baseCfg.homeGap??state.homeGap,baseCfg.awayGap??state.awayGap));
+  if(r.prediction==="D"){
+   const dp=Number(r.probs?.D);
+   cap=Math.min(cap,!Number.isFinite(dp)?7:dp<.25?6:dp<.30?7:dp<.35?8:dp<.40?9:10);
+  }else if(b.strongWinEvidence===false)cap=Math.min(cap,8);
+  else if(b.exceptionalWinEvidence===false)cap=Math.min(cap,9);
+  return {prob:clamp((b.probabilityGap||0)/.4,0,1),difference:b.differenceStrength||0,
+   history:clamp(sample/baseCfg.historyTarget,0,1),support:clamp((b.supportBonus||0)/(b.pointMaxima?.[3]||1),0,1),
+   risk:r.riskLevel,cap,hit:r.prediction===r.actualOutcome};
+ });
+}
+function preparedConfidenceQuality(rows,points,medium,high){
+ const buckets=Array.from({length:11},()=>({n:0,hits:0}));
+ for(const r of rows){
+  const raw=clamp(r.prob*points[0]+r.difference*points[1]+r.history*points[2]+r.support*points[3]-(r.risk==="high"?high:r.risk==="medium"?medium:0),0,10);
+  const c=Math.max(1,Math.min(Math.round(raw),r.cap)),b=buckets[c];b.n++;if(r.hit)b.hits++;
+ }
+ const sorted=[];for(let i=0;i<buckets.length;i++)if(buckets[i].n)sorted.push([i,buckets[i]]);
+ let concordant=0,discordant=0;
+ for(let i=0;i<sorted.length;i++)for(let j=i+1;j<sorted.length;j++){
+  const a=sorted[i][1],b=sorted[j][1];if(a.n<5||b.n<5)continue;
+  const pair=a.n*b.n,delta=b.hits/b.n-a.hits/a.n;
+  if(delta>0)concordant+=pair*delta;else discordant+=pair*(-delta);
+ }
+ const covered=sorted.filter(x=>x[1].n>=5).length;
+ return {quality:(concordant-discordant)/Math.max(1,rows.length*rows.length)+Math.min(covered,6)*.002,buckets:sorted,covered};
+}
 async function optimiseConfidence(test){
  const outcome=test.recommendation;if(!outcome)return null;
  const key=`${outcome.windowIndex}-${outcome.modelIndex}-${outcome.leagueInfluence}`,train=test.training.filter(r=>r.key===key).map(r=>withThresholdPrediction(r,outcome)),hold=test.records.filter(r=>r.key===key).map(r=>withThresholdPrediction(r,outcome));
  if(train.length<state.minSample)return null;
  let best=null,done=0;
+ const preparedTrain=prepareConfidenceRows(train,state.confidenceConfig);
  const allocations=[];for(let a=1;a<=7;a++)for(let b=1;b<=8-a;b++)for(let c=1;c<=9-a-b;c++){const d=10-a-b-c;if(d>=1)allocations.push([a,b,c,d])}
  const penalties=[];for(let medium=0;medium<=3;medium++)for(let high=medium;high<=4;high++)penalties.push([medium,high]);
  const total=allocations.length*penalties.length;
  for(const points of allocations){for(const [medium,high] of penalties){
-  const cfg={...state.confidenceConfig,points,mediumPenalty:medium,highPenalty:high},metrics=confidenceQuality(train,cfg);
+  const cfg={...state.confidenceConfig,points,mediumPenalty:medium,highPenalty:high},metrics=preparedConfidenceQuality(preparedTrain,points,medium,high);
   if(!best||metrics.quality>best.training.quality)best={config:cfg,training:metrics,sample:hold.length};done++;
-  if(done%20===0){testCheckpoint();testProgress("Optimising confidence",done,total,92,99);await testYield()}
+  if(done%100===0){testCheckpoint();testProgress("Optimising confidence",done,total,92,99);await testYield()}
  }}
  testCheckpoint();
  if(best){
@@ -1766,7 +1816,7 @@ async function loadData(){
   const result=await fetchAllLeagues(6,(i,n,name)=>setBusy("Loading "+name+"…",Math.round(5+i/n*45)));
   if(!result.matches.length)throw Error("No matches were returned by the data provider.");
   state.matches=attachHistoricalXg(result.matches);state.lastTest=null;
-  if(state.mode==="auto"){setBusy("Testing historical models…",55);const t=await fetchAllLeagues(24);if(t.matches.length){state.lastTest=await runBacktest(t.matches);const b=bestTestModel(state.lastTest);state.activeIndex=b?b.modelIndex:state.manualIndex;state.activeWindow=b?b.windowIndex:state.manualWindow}else {state.activeIndex=state.manualIndex;state.activeWindow=state.manualWindow;}}
+  if(state.mode==="auto"){setBusy("Testing historical models…",55);const t=await fetchAllLeagues(14);if(t.matches.length){state.lastTest=await runBacktest(t.matches);const b=bestTestModel(state.lastTest);state.activeIndex=b?b.modelIndex:state.manualIndex;state.activeWindow=b?b.windowIndex:state.manualWindow}else {state.activeIndex=state.manualIndex;state.activeWindow=state.manualWindow;}}
   else {state.activeIndex=state.manualIndex;state.activeWindow=state.manualWindow;}
   setBusy("Calculating predictions…",78);updatePredictions(state.matches,state.activeIndex);state.loaded=true;updateModelBanner();
   if(state.mode==="auto"&&state.lastTest){const b=bestTestModel(state.lastTest);$("activeModelNote")&&($("activeModelNote").textContent=b?`Auto selected ${b.name} by outcome accuracy ${testRate(b.correct,b.total)}.`:`Not enough test matches for Auto; using manual fallback, Option ${MODELS[state.manualIndex].short}.`)}
@@ -1783,7 +1833,7 @@ async function refreshHistoryScoresFromLoaded(){
  store("fp_prediction_history",state.history);renderHistory();
 }
 
-async function runWinRankAudit(matches){
+async function runWinRankAudit(matches){const evaluationCutoff=Date.now()-365*86400000;
  const by={};for(const m of matches.filter(isFinished))(by[m.leagueId]??=[]).push(m);
  const cases=[['League-adjusted','league',calculateOriginalPrediction,()=>({...MODELS[originalSettings().modelIndex],windows:WINDOW_SETS[originalSettings().windowIndex]})],['Team-form','team',calculatePrediction,()=>({...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]})]];
  const results=[];
@@ -1791,22 +1841,22 @@ async function runWinRankAudit(matches){
   let n=0,hits=0,selected=0,selectedHits=0,goalError=0;
   const cfg=mode==='Original rating'?{enabled:false}:mode==='No adjustment'?{...winRankSettings[key],enabled:true,strength:0}:{...winRankSettings[key],enabled:true};
   for(const league of Object.values(by)){const rows=league.slice().sort((a,b)=>new Date(a.date)-new Date(b.date));for(let i=10;i<rows.length;i++){
-   const m=rows[i],past=rows.slice(0,i).filter(x=>new Date(x.date)<new Date(m.date));if(!past.length)continue;
+   const m=rows[i];if(new Date(m.date).getTime()<evaluationCutoff)continue;const past=rows.slice(0,i).filter(x=>new Date(x.date)<new Date(m.date));if(!past.length)continue;
    try{const p=calc(m,past,{...modelFactory(),rankConfig:cfg});n++;hits+=p.prediction===getOutcome(m.homeScore,m.awayScore);goalError+=Math.abs(p.homeLambda-m.homeScore)+Math.abs(p.awayLambda-m.awayScore);if(p.selection===p.prediction){selected++;selectedHits+=p.prediction===getOutcome(m.homeScore,m.awayScore)}}catch(e){}
   }}results.push({name,mode,n,hits,selected,selectedHits,goalError});await testYield();
  }}
  const el=document.getElementById('winRankTestResults');if(el)el.innerHTML=`<div class="panel"><h3>Opposition ranking · Model 1 & 2 comparison</h3><p class="muted smalltext">Chronological past-only replay of the same fixtures for each approach. This is an exploratory in-sample comparison, not a separate untouched validation set. No settings are activated automatically.</p><div class="tablewrap"><table><thead><tr><th>Model</th><th>Opposition method</th><th>Outcome</th><th>SELECT</th><th>Mean absolute goals error</th></tr></thead><tbody>${results.map(r=>`<tr><td>${r.name}</td><td>${r.mode}</td><td>${r.hits}/${r.n} (${fpRate(r.hits,r.n)})</td><td>${r.selectedHits}/${r.selected} (${fpRate(r.selectedHits,r.selected)})</td><td>${r.n?(r.goalError/(2*r.n)).toFixed(3):'—'}</td></tr>`).join('')}</tbody></table></div></div>`;
 }
-async function runDualAudit(matches){const by={};for(const m of matches)(by[m.leagueId]??=[]).push(m);const records=[];let done=0;for(const league of Object.values(by)){league.sort((a,b)=>new Date(a.date)-new Date(b.date));for(let i=0;i<league.length;i++){const m=league[i];if(!isFinished(m)||i<8)continue;const previous=league.slice(0,i).filter(x=>isFinished(x)&&new Date(x.date)<new Date(m.date));if(previous.length<8)continue;try{const original=calculateOriginalIndependent(m,previous),updated=calculatePrediction(m,previous,{...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]});records.push({actual:getOutcome(m.homeScore,m.awayScore),original,updated})}catch(e){}if(++done%75===0)await testYield();}}const split=Math.floor(records.length*.8),hold=records.slice(split);const measure=(arr,key)=>{const r=arr.map(x=>({v:x[key],actual:x.actual})),correct=r.filter(x=>x.v.prediction===x.actual).length,sel=r.filter(x=>x.v.selection===x.v.prediction),hits=sel.filter(x=>x.v.prediction===x.actual).length;return {n:r.length,correct,sel:sel.length,hits,accuracy:r.length?correct/r.length:0,precision:sel.length?hits/sel.length:0}};const fmt=m=>`${m.correct}/${m.n} (${(m.accuracy*100).toFixed(1)}%) outcome accuracy; SELECT ${m.hits}/${m.sel} (${m.sel?(m.precision*100).toFixed(1)+'%':'—'})`;const both=hold.filter(x=>x.original.selection===x.original.prediction&&x.updated.selection===x.updated.prediction&&x.original.prediction===x.updated.prediction),consensus=both.filter(x=>x.actual===x.original.prediction).length;$("dualTestResults").innerHTML=`<strong>Chronological comparison — later 20% of ${records.length} replayed fixtures</strong><p>League-adjusted: ${fmt(measure(hold,'original'))}</p><p>Team-form: ${fmt(measure(hold,'updated'))}</p><p>Consensus selection: ${consensus}/${both.length} correct (${both.length?(100*consensus/both.length).toFixed(1)+'%':'—'}). Coverage ${(100*both.length/Math.max(1,hold.length)).toFixed(1)}%.</p><p class="muted smalltext">Exploratory replay, not an untouched holdout for tuning: no new settings are automatically recommended by this comparison. The existing Updated Model optimiser retains its own recommendation controls.</p>`}
+async function runDualAudit(matches){const evaluationCutoff=Date.now()-365*86400000;const by={};for(const m of matches)(by[m.leagueId]??=[]).push(m);const records=[];let done=0;for(const league of Object.values(by)){league.sort((a,b)=>new Date(a.date)-new Date(b.date));for(let i=0;i<league.length;i++){const m=league[i];if(!isFinished(m)||i<8||new Date(m.date).getTime()<evaluationCutoff)continue;const previous=league.slice(0,i).filter(x=>isFinished(x)&&new Date(x.date)<new Date(m.date));if(previous.length<8)continue;try{const original=calculateOriginalIndependent(m,previous),updated=calculatePrediction(m,previous,{...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]});records.push({actual:getOutcome(m.homeScore,m.awayScore),original,updated})}catch(e){}if(++done%75===0)await testYield();}}const split=Math.floor(records.length*.8),hold=records.slice(split);const measure=(arr,key)=>{const r=arr.map(x=>({v:x[key],actual:x.actual})),correct=r.filter(x=>x.v.prediction===x.actual).length,sel=r.filter(x=>x.v.selection===x.v.prediction),hits=sel.filter(x=>x.v.prediction===x.actual).length;return {n:r.length,correct,sel:sel.length,hits,accuracy:r.length?correct/r.length:0,precision:sel.length?hits/sel.length:0}};const fmt=m=>`${m.correct}/${m.n} (${(m.accuracy*100).toFixed(1)}%) outcome accuracy; SELECT ${m.hits}/${m.sel} (${m.sel?(m.precision*100).toFixed(1)+'%':'—'})`;const both=hold.filter(x=>x.original.selection===x.original.prediction&&x.updated.selection===x.updated.prediction&&x.original.prediction===x.updated.prediction),consensus=both.filter(x=>x.actual===x.original.prediction).length;$("dualTestResults").innerHTML=`<strong>Chronological comparison — later 20% of ${records.length} replayed fixtures</strong><p>League-adjusted: ${fmt(measure(hold,'original'))}</p><p>Team-form: ${fmt(measure(hold,'updated'))}</p><p>Consensus selection: ${consensus}/${both.length} correct (${both.length?(100*consensus/both.length).toFixed(1)+'%':'—'}). Coverage ${(100*both.length/Math.max(1,hold.length)).toFixed(1)}%.</p><p class="muted smalltext">Exploratory replay, not an untouched holdout for tuning: no new settings are automatically recommended by this comparison. The existing Updated Model optimiser retains its own recommendation controls.</p>`}
 
 async function doTest(){
- if(state.loading)return;testCancelRequested=false;$("cancelTest").style.display="inline-block";state.loading=true;$("runTest").disabled=true;setBusy("Fetching historical results…",5);$("testStatus").textContent="Fetching up to 24 months of results. Please wait.";
+ if(state.loading)return;testCancelRequested=false;$("cancelTest").style.display="inline-block";state.loading=true;$("runTest").disabled=true;setBusy("Fetching historical results…",5);$("testStatus").textContent="Fetching recent results plus warm-up history for a rolling 12-month test. Please wait.";
  try{
-  const r=await fetchAllLeagues(24,(i,n,name)=>{setBusy("Loading test data: "+name,Math.round(5+i/n*65));$("testStatus").textContent=`Fetching historical results: ${i}/${n} — ${name}`});testCheckpoint();
+  const r=await fetchAllLeagues(14,(i,n,name)=>{setBusy("Loading test data: "+name,Math.round(5+i/n*65));$("testStatus").textContent=`Fetching historical results: ${i}/${n} — ${name}`});testCheckpoint();
   if(!r.matches.length)throw Error("No historical matches were returned.");
   
   setBusy("Running chronological model test…",78);await new Promise(r=>setTimeout(r,20));state.lastTest=await runBacktest(r.matches);renderTest(state.lastTest);await runDualAudit(r.matches);await runWinRankAudit(r.matches);await rankedBacktest(r.matches);
-  $("testStatus").textContent=`Test completed on ${r.matches.length} retrieved matches.`+`${r.errors.length?" Unavailable: "+r.errors.join(", "):""}`;
+  $("testStatus").textContent=`Test completed on ${r.matches.length} retrieved matches (including warm-up history).`+`${r.errors.length?" Unavailable: "+r.errors.join(", "):""}`;
   if(state.mode==="auto")$("activeModelNote")&&($("activeModelNote").textContent="Test recommendations are available below; copy to Settings and save to apply explicitly.");
   setBusy("Test complete",100);await new Promise(r=>setTimeout(r,250));hideBusy();
  }catch(e){hideBusy();$("testStatus").innerHTML=`<span class="error">Test failed: ${esc(e.message)}</span>`}
