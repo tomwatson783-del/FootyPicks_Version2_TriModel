@@ -552,7 +552,8 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 </style>
 <style>
 .fp-bet-button{background:#174d43;border:1px solid #2b957f;color:#e4fff4}
-.fp-bet-button.is-backed,.fp-backed-tag{background:#164b3f;border:1px solid #47bc97;color:#b9ffe3}
+.fp-bet-button.is-backed{background:#31bd8b!important;border:2px solid #9affd8!important;color:#062c25!important;font-weight:850;box-shadow:0 0 0 2px rgba(49,189,139,.2)}
+.fp-backed-tag{background:#164b3f;border:1px solid #47bc97;color:#b9ffe3}
 .fp-backed-tag{display:inline-flex;align-items:center;padding:4px 9px;border-radius:8px;font-size:12px;font-weight:750}
 .live-card.fp-backed-match{border-color:#47bc97;box-shadow:inset 3px 0 #47bc97}
 .fp-bet-monitor{border-left:3px solid #47bc97}
@@ -591,7 +592,7 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 <nav id="tabs" aria-label="Main navigation">
  <button class="active" data-tab="fixtures">Fixtures</button>
  <button data-tab="live">Live Centre <span id="liveTabCount"></span></button>
- <button data-tab="accumulator">Accumulator <span id="accCount"></span></button>
+ <button data-tab="accumulator">Bets <span id="accCount"></span></button>
  <button data-tab="weekly">Weekly Top 6</button>
  <button data-tab="previous">Previous Results</button>
  <button data-tab="test">Model Test</button>
@@ -657,7 +658,7 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
  <details class="panel" id="hiddenLiveSection" style="margin-top:14px" hidden><summary><strong>Hidden Games (<span id="hiddenLiveCount">0</span>)</strong></summary><div id="hiddenLiveList" style="margin-top:12px"></div></details><details class="panel" id="liveValidation" style="margin-top:14px"><summary><strong>In-play estimate tracking</strong></summary><div id="liveValidationStats" class="muted smalltext" style="margin-top:10px">Predictions will be recorded as live matches update. Historical scores will be used to assess resolved snapshots when available.</div></details>
  </section>
 <section id="accumulator" hidden>
- <h2>Your accumulator</h2><p class="muted">Save individual match selections here. This is not a bet or bookmaker connection.</p>
+ <h2>Accumulator</h2><p class="muted">Save individual match selections here. This is not a bet or bookmaker connection.</p>
  <div id="accList"></div>
  <div class="panel">
   <div class="row between"><span>Selections</span><strong id="accTotal">0</strong></div>
@@ -665,6 +666,7 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
   <p class="muted smalltext">Multiplies each selection's probability and assumes outcomes are independent, so this is only a rough estimate.</p>
   <button class="btn secondary" id="clearAcc">Clear accumulator</button>
  </div>
+ <div class="panel" style="margin-top:18px"><div id="betsTabList"></div></div>
 </section>
 
 <section id="previous" hidden>
@@ -694,14 +696,14 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 
 <section id="calculations" hidden>
  <h2>Calculation Breakdown</h2>
- <p class="muted smalltext">Inspect one upcoming fixture using the currently saved settings for each prediction method. This view shows actual recorded model operands, not example figures.</p>
+ <p class="muted smalltext">Inspect one upcoming fixture using the current prediction settings. This view shows actual recorded model operands, not example figures.</p>
  <div class="controls"><div><label for="calculationFixture">Upcoming fixture</label><select id="calculationFixture"></select></div></div>
  <div id="calculationContent" class="panel"><div class="empty">Load fixtures to inspect their calculations.</div></div>
 </section>
 
-<section id="settings" hidden><div class="fp-intro panel"><h3>Prediction settings</h3><div class="fp-model-grid"><label class="fp-model-card"><strong>Retired baseline</strong><span>Draw xG gap</span><input id="fpDrawLeague" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label><label class="fp-model-card"><strong>Draw boundary</strong><span>Draw xG gap</span><input id="fpDrawTeam" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label><label class="fp-model-card"><strong>Retired ranking</strong><span>Draw xG gap</span><input id="fpDrawRank" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label></div><div id="fpDrawRecommendations" hidden></div><button class="btn small secondary" id="fpApplyDrawRecommendations" type="button" hidden>Use recommended draw gaps</button></div><details class="panel fp-advanced"><summary><strong>Prediction configuration and data management</strong></summary>
+<section id="settings" hidden><div class="fp-intro panel"><h3>Prediction settings</h3><div class="fp-model-grid"><label class="fp-model-card"><strong>Retired baseline</strong><span>Draw xG gap</span><input id="fpDrawLeague" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label><label class="fp-model-card"><strong>Draw boundary</strong><span>Draw xG gap</span><input id="fpDrawTeam" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label><label class="fp-model-card" hidden><strong>Retired ranking</strong><span>Draw xG gap</span><input id="fpDrawRank" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label></div><div id="fpDrawRecommendations" hidden></div><button class="btn small secondary" id="fpApplyDrawRecommendations" type="button" hidden>Use recommended draw gaps</button></div><details class="panel fp-advanced"><summary><strong>Prediction configuration and data management</strong></summary>
  <h3>Advanced model controls</h3><div class="panel" style="display:none"><div class="notice"><strong>Active prediction display</strong><p class="muted smalltext">All three models retain independent pre-match predictions.</p><select id="activePredictionView"><option value="both">All three models</option><option value="original">League-adjusted (Poisson) only</option><option value="updated">Team-form (goal difference) only</option></select></div>
-<details class="panel"><summary><strong>League-adjusted · advanced settings</strong></summary><p class="muted smalltext">League-adjusted expected-goals engine. Its form windows, selection gaps and confidence multiplier are independent of the updated engine.</p><div class="controls"><div><label>Form weighting</label><select id="originalModelChoice"><option value="0">A — Stable</option><option value="1">B — Balanced</option><option value="2">C — Recent</option><option value="3">D — Very recent</option></select></div><div><label>Form windows</label><select id="originalWindowChoice"><option value="0">15 / 10 / 5</option><option value="1">10 / 6 / 3</option><option value="2">8 / 5 / 3</option></select></div><div><label>HOME SELECT goal advantage</label><input id="originalHomeGap" type="number" min="0.05" max="2" step="0.05" value="0.5"></div><div><label>AWAY SELECT goal advantage</label><input id="originalAwayGap" type="number" min="0.05" max="2" step="0.05" value="0.5"></div><div><label>Confidence 10 multiplier</label><select id="originalConfidenceMultiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option><option value="4">4×</option><option value="5">5×</option></select></div></div><p class="muted smalltext">Save Settings below activates changes. Existing frozen predictions will not be rewritten.</p></details><div id="winRankSettingsSlot"></div><div id="rankedSettingsSlot"></div><h3>Team-form · advanced configuration</h3>
+<details class="panel"><summary><strong>League-adjusted · advanced settings</strong></summary><p class="muted smalltext">League-adjusted expected-goals engine. Its form windows, selection gaps and confidence multiplier are independent of the updated engine.</p><div class="controls"><div><label>Form weighting</label><select id="originalModelChoice"><option value="0">A — Stable</option><option value="1">B — Balanced</option><option value="2">C — Recent</option><option value="3">D — Very recent</option></select></div><div><label>Form windows</label><select id="originalWindowChoice"><option value="0">15 / 10 / 5</option><option value="1">10 / 6 / 3</option><option value="2">8 / 5 / 3</option></select></div><div><label>HOME SELECT goal advantage</label><input id="originalHomeGap" type="number" min="0.05" max="2" step="0.05" value="0.5"></div><div><label>AWAY SELECT goal advantage</label><input id="originalAwayGap" type="number" min="0.05" max="2" step="0.05" value="0.5"></div><div><label>Confidence 10 multiplier</label><select id="originalConfidenceMultiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option><option value="4">4×</option><option value="5">5×</option></select></div></div><p class="muted smalltext">Save Settings below activates changes. Existing frozen predictions will not be rewritten.</p></details><div id="winRankSettingsSlot"></div><div id="rankedSettingsSlot" hidden></div><h3>Team-form · advanced configuration</h3>
   <label class="row" style="padding:10px 0"><input type="radio" name="mode" value="manual" id="modeManual"><span><strong>Manual</strong><br><span class="muted smalltext">Choose form weighting.</span></span></label>
   <label class="row" style="padding:10px 0"><input type="radio" name="mode" value="auto" id="modeAuto"><span><strong>Auto</strong><br><span class="muted smalltext">Legacy auto selection (not available in simplified testing).</span></span></label>
   <div style="margin-top:12px"><label for="modelChoice">Form weighting</label><select id="modelChoice"><option value="0">A — Stable (60/30/10)</option><option value="1">B — Balanced (40/35/25)</option><option value="2">C — Recent (25/30/45)</option><option value="3">D — Very recent (10/20/70)</option></select></div>
@@ -1917,6 +1919,9 @@ async function fetchLive(){
   const scoreboardEvents=[...unique.values()];
   state.liveMatches=scoreboardEvents.filter(isLive).sort((a,b)=>new Date(a.date)-new Date(b.date));
   attachLivePredictions(state.liveMatches);
+  state.liveLastUpdated=new Date();
+  $("liveStatus").textContent=state.liveMatches.length?`${state.liveMatches.length} LIVE MATCH${state.liveMatches.length===1?"":"ES"}`:"NO LIVE MATCHES";
+  renderLive(); // Show matches before optional per-match stats finish.
   const stats={};
   let statIndex=0;
   await Promise.all(Array.from({length:Math.min(4,state.liveMatches.length)},async()=>{
@@ -2264,8 +2269,15 @@ function renderWeeklyTop6(){
  <h3 style="margin-top:16px">Settled selections</h3>${tracked.length?`<p><strong>${correctPicks.length}/${tracked.length}</strong> correct overall (${(correctPicks.length/tracked.length*100).toFixed(1)}%).</p><div class="tablewrap"><table><thead><tr><th>Fixture</th><th>Week / position</th><th>Saved pick</th><th>Final score</th><th>Result</th></tr></thead><tbody>${trackedRows}</tbody></table></div>`:`<p>No completed weekly selections tracked yet. Refresh after matches finish to update results.</p>`}
  <p class="muted smalltext" style="margin-top:10px">Accumulator performance counts only weeks with six saved selections and all six settled. A week with fewer than six credible picks or any pending/postponed fixture is not counted as a completed accumulator attempt.</p>`;
 }
+let fpScheduleLoading=false;
 async function fetchLiveSchedule(){
+ if(fpScheduleLoading)return;
+ fpScheduleLoading=true;
  const filter=$("liveStatusFilter");if(!filter)return;
+ try{
+ if(state.liveScheduleFilter!=="live"){
+  $("liveList").innerHTML='<div class="empty">Loading '+esc(state.liveScheduleFilter)+' matches across all leagues…</div>';
+ }
  const now=new Date();
  const monthOffset=n=>{const d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+n,1));return `${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,"0")}`};
  const months=[monthOffset(-1),monthOffset(0),monthOffset(1)];
@@ -2281,6 +2293,7 @@ async function fetchLiveSchedule(){
  for(const m of state.liveSchedule){const snap=snapshots.get(eventId(m));if(snap){m.originalPredictedScore=snap.predictedScore;m.originalPrediction=snap.prediction;m.originalConfidence=snap.confidence;}}
  state.scheduleCoverage={requested:ids.length*months.length,failed:failures.length,failures,unique:map.size,fromESPN:new Set(results.map(eventId)).size};
  if(state.liveScheduleFilter!=="live")renderLive();
+ }finally{fpScheduleLoading=false}
 }
 function liveModelComparison(m){
  const normalizeTeam=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -2297,6 +2310,10 @@ function liveModelComparison(m){
  return `<div class="fixture-comparison">${fpDrawBadge({...data,leagueId:m.leagueId})}${fpStatusTag({...b,leagueId:m.leagueId})}<div class="model-grid">${cell(b,'Prediction')}</div></div>`;
 }
 function renderLiveScheduleCategory(){
+ if(fpScheduleLoading&&!state.liveSchedule.length){
+  $("liveList").innerHTML='<div class="empty">Loading match schedule…</div>';
+  return;
+ }
  const mode=state.liveScheduleFilter,now=new Date(),todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
  const dayKey=m=>new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(m.date));
  let matches=state.liveSchedule.filter(m=>{
@@ -2377,10 +2394,10 @@ function renderCalculationBreakdown(){
    <div class="fp-calc-probs">HOME ${fmt(100*Number(p.H))}% · DRAW ${fmt(100*Number(p.D))}% · AWAY ${fmt(100*Number(p.A))}%</div>
    <details class="fp-calc-details"><summary>Calculation details</summary>${details}</details></article>`;
  };
- const o=m.originalPrediction,r=m.rankedPrediction;
+ const o=m.originalPrediction;
  const oDetails=`<p>League-adjusted Poisson model. Form windows: ${esc((WINDOW_SETS[originalSettings().windowIndex]||[]).join(' / '))}. HOME SELECT gap ${esc(originalSettings().homeGap)}; AWAY SELECT gap ${esc(originalSettings().awayGap)}.</p><p class="muted smalltext">Only calculation components exposed by the engine are shown.</p>`;
  root.innerHTML=`<div class="fp-calc-intro"><h3>${esc(m.home)} vs ${esc(m.away)}</h3><span class="muted smalltext">${esc(m.league)} · ${esc(fmtDate(m.date))}</span></div>
- <div class="fp-calc-grid">${fpDrawDetail(m)}${card('Model 2 · Team-form',m,expectedGoalAuditHtml(m)+confidenceAuditHtml(m))}${card('Model 3 · Opposition-ranked goals',r,r?rankedDetail(r):'')}</div>
+ <div class="fp-calc-grid">${fpDrawDetail(m)}${card('Team-form prediction',m,expectedGoalAuditHtml(m)+confidenceAuditHtml(m))}</div>
  <details class="fp-calc-evidence"><summary>Recent form and supporting evidence</summary>${insidePredictionHtml(m)}</details>`;
 }
 
@@ -2398,43 +2415,10 @@ function showTab(tab){
  if(tab==="calculations")renderCalculationBreakdown();
  if(tab==="live"){
   renderLive();
-  fetchLive();if(!state.liveSchedule?.length)fetchLiveSchedule();
+  fetchLive();
+  if(state.liveScheduleFilter!=="live"&&!state.liveSchedule?.length)fetchLiveSchedule();
  }
 }
-
-initLeagueSelects();
-for(const [id,name] of Object.entries(LEAGUES))$("fpTestLeague").add(new Option(name,id));
-$("fpTestLeague").value=$("league").value;
-document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
-$("load").addEventListener("click",loadData);$("league").addEventListener("change",()=>{if(state.loaded){$("fixtureStatus").textContent="Competition changed. Refresh predictions to load this league.";}renderFixtures()});$("days").addEventListener("change",renderFixtures);$("sort").addEventListener("change",renderFixtures);
-$("top10").addEventListener("click",()=>{state.topMode=!state.topMode;$("top10").textContent=state.topMode?"Hide Top 10 picks":"Show Top 10 picks";if(state.topMode)renderTop10();else $("topbox").innerHTML=""});
-$("goalThreats").addEventListener("click",()=>{state.goalThreatMode=!state.goalThreatMode;$("goalThreats").textContent=state.goalThreatMode?"Hide Goal Threats":"Show Goal Threats";if(state.goalThreatMode)renderGoalThreats();else $("goalThreatBox").innerHTML=""});
-$("clearAcc").addEventListener("click",()=>{if(confirm("Clear all accumulator selections?")){state.acc=[];store("fp_acc",state.acc);renderAccumulator();renderFixtures()}});
-document.querySelectorAll('#fixtureFilters button').forEach(b=>b.addEventListener('click',()=>{fpFixtureFilter=b.dataset.fpFilter;renderFixtures()}));
-document.querySelectorAll('#resultFilters button').forEach(b=>b.addEventListener('click',()=>{fpResultFilter=b.dataset.resultFilter;renderHistory()}));
-document.querySelectorAll('#weeklyFilters button').forEach(b=>b.addEventListener('click',()=>{fpWeeklyFilter=b.dataset.weeklyFilter;renderWeeklyTop6()}));
-$("historyDays").addEventListener("change",renderHistory);$("historyLeague").addEventListener("change",renderHistory);$("refreshHistory").addEventListener("click",()=>{if(!state.loading)loadData()});
-$("clearPredictionHistory").addEventListener("click",()=>{if(confirm("Reset all saved pre-match predictions and their accuracy history on this browser? This cannot be undone. Completed match data and Live Centre tracking will remain.")){state.history=[];try{localStorage.removeItem("fp_prediction_history")}catch{}renderHistory();}});
-for(let i=0;i<=100;i+=10)$("historicalXgChoice").add(new Option(`${i}%`,String(i)));
-for(let i=0;i<=30;i+=5)$("finishingChoice").add(new Option(`${i}%`,String(i)));
-historicalXgStatus();
-
-$("cancelTest").addEventListener("click",()=>{testCancelRequested=true;$("testStatus").textContent="Cancelling test after the current calculation…"});$("analysisRefresh").addEventListener("click",renderAnalysis);$("saveSettings").addEventListener("click",saveSettings);$("runTest").addEventListener("click",doTest);
-
-$("liveRefresh").addEventListener("click",()=>{fetchLive();fetchLiveSchedule()});
- $("live").addEventListener("click",event=>{const btn=event.target.closest("[data-live-toggle]");if(btn)toggleHideLiveGame(btn.dataset.liveToggle)});
- $("refreshWeekly").addEventListener("click",renderWeeklyTop6);
- $("liveStatusFilter").addEventListener("change",e=>{state.liveScheduleFilter=e.target.value;renderLive();fetchLiveSchedule()});
-document.querySelectorAll("#liveFilters button").forEach(b=>b.addEventListener("click",()=>{state.liveSituationFilter=b.dataset.situation;document.querySelectorAll("#liveFilters button").forEach(x=>x.classList.toggle("active",x===b));renderLive()}));
-$("liveLeagueFilter").addEventListener("change",e=>{state.liveLeagueFilter=e.target.value;renderLive();fetchLive();fetchLiveSchedule()});
-window.addToAccumulator=addToAccumulator;window.removeAcc=removeAcc;
-loadSettings();renderAccumulator();renderHistory();renderLive();
-if(state.history.length){const n=state.history.filter(x=>new Date(x.date).getTime()>Date.now()).length;const status=$('fixtureStatus');if(status)status.textContent=`${n} upcoming pre-match prediction snapshots retained in this browser. Refresh fixtures to retrieve the latest schedule.`;}
-
-/* Automatically refresh while the page is open. */
-setInterval(()=>{if(!document.getElementById("live").hidden){fetchLive();fetchLiveSchedule()}},60000);
-
-window.addEventListener('load',()=>setTimeout(fpInitThreeModelUI,50));
 
 /* Confirmed-bet tracking. No odds, stake or other manual data entry. */
 const FP_BACKED_STORE="fp_confirmed_bets_v1";
@@ -2533,7 +2517,15 @@ function fpBetHistory(){
  ${fpBacked.length?fpBacked.slice().sort((a,b)=>new Date(b.date)-new Date(a.date)).map(b=>`<div class="fp-bet-row"><div class="grow"><strong>${esc(b.home)} vs ${esc(b.away)}</strong><div class="fp-bet-mini">${esc(b.league||"")} · ${esc(b.date?fmtDate(b.date):"Date unavailable")} · ${esc(fpBetLabel(b))}${b.finalScore?" · FT "+esc(b.finalScore):""}</div></div><span class="fp-bet-state ${b.settlement==="won"?"winning":b.settlement==="lost"?"losing":""}">${esc(b.settlement.toUpperCase())}</span></div>`).join(""):'<div class="empty">Use Bet on in Fixtures to track confirmed selections.</div>'}
  <p class="muted smalltext" style="margin-top:10px">Confirmed bets are recorded locally. No stake or odds are entered, so profit and ROI are not calculated.</p>`;
 }
-function fpBetRefresh(){fpBetDecorate();fpBetMonitor();fpBetHistory()}
+function fpBetRefresh(){
+ fpBetDecorate();fpBetMonitor();fpBetHistory();
+ const box=$("betsTabList");
+ if(box){
+  const rows=fpBacked.slice().sort((a,b)=>new Date(b.markedAt)-new Date(a.markedAt));
+  box.innerHTML=`<div class="row between wrap"><h3 style="margin:0">✓ Confirmed bets</h3><span class="tag">${rows.length} backed</span></div>`+
+   (rows.length?rows.map(b=>`<div class="fp-bet-row"><div class="grow"><strong>${esc(b.home)} vs ${esc(b.away)}</strong><div class="fp-bet-mini">${esc(b.league||"")} · ${esc(fpBetLabel(b))} · ${esc(b.settlement.toUpperCase())}</div></div><button class="btn small fp-bet-button is-backed" data-bet-toggle="${esc(b.id)}" type="button">✓ Backed</button></div>`).join(""):'<p class="muted smalltext">No confirmed bets yet. Click Bet on beside a fixture to record one.</p>');
+ }
+}
 function fpBackedLiveMatch(m){
  const b=fpBetRecord(eventId(m));if(!b)return false;
  const status=fpBetCurrent(b,m);
@@ -2600,6 +2592,47 @@ document.addEventListener("click",e=>{
  }
 });
 fpBetRefresh();
+
+
+initLeagueSelects();
+for(const [id,name] of Object.entries(LEAGUES))$("fpTestLeague").add(new Option(name,id));
+$("fpTestLeague").value=$("league").value;
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+$("load").addEventListener("click",loadData);$("league").addEventListener("change",()=>{if(state.loaded){$("fixtureStatus").textContent="Competition changed. Refresh predictions to load this league.";}renderFixtures()});$("days").addEventListener("change",renderFixtures);$("sort").addEventListener("change",renderFixtures);
+$("top10").addEventListener("click",()=>{state.topMode=!state.topMode;$("top10").textContent=state.topMode?"Hide Top 10 picks":"Show Top 10 picks";if(state.topMode)renderTop10();else $("topbox").innerHTML=""});
+$("goalThreats").addEventListener("click",()=>{state.goalThreatMode=!state.goalThreatMode;$("goalThreats").textContent=state.goalThreatMode?"Hide Goal Threats":"Show Goal Threats";if(state.goalThreatMode)renderGoalThreats();else $("goalThreatBox").innerHTML=""});
+$("clearAcc").addEventListener("click",()=>{if(confirm("Clear all accumulator selections?")){state.acc=[];store("fp_acc",state.acc);renderAccumulator();renderFixtures()}});
+document.querySelectorAll('#fixtureFilters button').forEach(b=>b.addEventListener('click',()=>{fpFixtureFilter=b.dataset.fpFilter;renderFixtures()}));
+document.querySelectorAll('#resultFilters button').forEach(b=>b.addEventListener('click',()=>{fpResultFilter=b.dataset.resultFilter;renderHistory()}));
+document.querySelectorAll('#weeklyFilters button').forEach(b=>b.addEventListener('click',()=>{fpWeeklyFilter=b.dataset.weeklyFilter;renderWeeklyTop6()}));
+$("historyDays").addEventListener("change",renderHistory);$("historyLeague").addEventListener("change",renderHistory);$("refreshHistory").addEventListener("click",()=>{if(!state.loading)loadData()});
+$("clearPredictionHistory").addEventListener("click",()=>{if(confirm("Reset all saved pre-match predictions and their accuracy history on this browser? This cannot be undone. Completed match data and Live Centre tracking will remain.")){state.history=[];try{localStorage.removeItem("fp_prediction_history")}catch{}renderHistory();}});
+for(let i=0;i<=100;i+=10)$("historicalXgChoice").add(new Option(`${i}%`,String(i)));
+for(let i=0;i<=30;i+=5)$("finishingChoice").add(new Option(`${i}%`,String(i)));
+historicalXgStatus();
+
+$("cancelTest").addEventListener("click",()=>{testCancelRequested=true;$("testStatus").textContent="Cancelling test after the current calculation…"});$("analysisRefresh").addEventListener("click",renderAnalysis);$("saveSettings").addEventListener("click",saveSettings);$("runTest").addEventListener("click",doTest);
+
+$("liveRefresh").addEventListener("click",()=>{fetchLive();if(state.liveScheduleFilter!=="live")fetchLiveSchedule()});
+ $("live").addEventListener("click",event=>{const btn=event.target.closest("[data-live-toggle]");if(btn)toggleHideLiveGame(btn.dataset.liveToggle)});
+ $("refreshWeekly").addEventListener("click",renderWeeklyTop6);
+ $("liveStatusFilter").addEventListener("change",e=>{
+ state.liveScheduleFilter=e.target.value;
+ renderLive();
+ if(e.target.value==="live")fetchLive();
+ else if(!state.liveSchedule?.length)fetchLiveSchedule();
+});
+document.querySelectorAll("#liveFilters button").forEach(b=>b.addEventListener("click",()=>{state.liveSituationFilter=b.dataset.situation;document.querySelectorAll("#liveFilters button").forEach(x=>x.classList.toggle("active",x===b));renderLive()}));
+$("liveLeagueFilter").addEventListener("change",e=>{state.liveLeagueFilter=e.target.value;renderLive();fetchLive();if(state.liveScheduleFilter!=="live")fetchLiveSchedule()});
+window.addToAccumulator=addToAccumulator;window.removeAcc=removeAcc;
+loadSettings();renderAccumulator();renderHistory();renderLive();
+if(state.history.length){const n=state.history.filter(x=>new Date(x.date).getTime()>Date.now()).length;const status=$('fixtureStatus');if(status)status.textContent=`${n} upcoming pre-match prediction snapshots retained in this browser. Refresh fixtures to retrieve the latest schedule.`;}
+
+/* Automatically refresh while the page is open. */
+setInterval(()=>{if(!document.getElementById("live").hidden){fetchLive();if(state.liveScheduleFilter!=="live")fetchLiveSchedule()}},60000);
+
+window.addEventListener('load',()=>setTimeout(fpInitThreeModelUI,50));
+
 
 </script>
 </body>
