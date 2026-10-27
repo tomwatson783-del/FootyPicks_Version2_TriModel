@@ -418,6 +418,26 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 .tablewrap{max-width:100%;overflow-x:auto}
 @media(max-width:720px){#test .fp-dashboard,#settings .fp-model-grid{grid-template-columns:1fr}}
 </style>
+<style>
+/* V4.2: streamlined live events and independent model probability cards */
+.fp-prob-panel{display:grid;gap:10px;margin-top:12px}
+.fp-prob-panel h4{margin:0}
+.fp-prob-model{padding:12px 14px;background:var(--panel,#15243a);border:1px solid var(--border,#344258);border-radius:12px}
+.fp-prob-model>strong{display:block;font-size:12px;margin-bottom:9px}
+.fp-prob-triplet{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.fp-prob-triplet span{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px;border-radius:8px;background:rgba(125,155,190,.08);font-size:10px;letter-spacing:.3px}
+.fp-prob-triplet b{font-size:15px;letter-spacing:0}
+.fp-prob-active{outline:1px solid rgba(91,211,169,.65);background:rgba(91,211,169,.12)!important}
+.fp-combined{border-color:rgba(91,211,169,.55);background:linear-gradient(130deg,rgba(91,211,169,.12),rgba(68,104,160,.08))}
+.recent-goals-panel,.recent-reds-panel{padding:14px;border:1px solid var(--border,#344258);border-radius:15px;background:var(--panel,#15243a);box-shadow:0 6px 22px rgba(0,0,0,.10)}
+.recent-goal-row,.recent-red-row{display:grid!important;grid-template-columns:minmax(76px,auto) minmax(0,1fr) auto;align-items:center;gap:12px;margin-top:8px;padding:12px!important;border:1px solid var(--border,#344258)!important;border-radius:12px;background:rgba(120,150,185,.06);animation:none!important}
+.recent-goal-row>div,.recent-red-row>div{min-width:0;overflow-wrap:anywhere}
+.recent-goal-row .goal-age,.recent-red-row .red-age{display:inline-flex;align-items:center;justify-content:center;min-height:29px;padding:5px 8px;border-radius:8px;font-weight:800;animation:none!important}
+.recent-goal-row.goal-now{border-color:rgba(74,204,137,.6)!important;background:rgba(74,204,137,.10)}
+.recent-red-row.red-now{border-color:rgba(240,89,105,.55)!important;background:rgba(240,89,105,.10)}
+@media(max-width:560px){.recent-goal-row,.recent-red-row{grid-template-columns:auto 1fr}.recent-goal-row>.tag,.recent-red-row>.tag{grid-column:2;justify-self:start}.fp-prob-triplet span{display:block}.fp-prob-triplet b{display:block;margin-top:3px}}
+@media(prefers-reduced-motion:reduce){.recent-goal-row,.recent-red-row{animation:none!important}}
+</style>
 </head>
 <body>
 <header>
@@ -523,7 +543,7 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 <section id="test" hidden>
  <h2>Model Test</h2><p class="muted smalltext">One 12-month evaluation · three independent models · recommended draw gaps, confidence and SELECT.</p>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><p class="muted smalltext">Recommendations do not change active settings until you apply and save them.</p><details class="panel fp-advanced"><summary><strong>Model 3 · optimisation detail</strong></summary><div id="rankedTestResults" class="panel notice">Model 3 optimisation results will appear here.</div></details><details class="panel fp-advanced"><summary><strong>Outcome and confidence comparisons</strong></summary><div id="outcomeCompare"></div><div id="confidenceCompare"></div></details><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view the three-model scorecard.</div></div><details class="panel fp-advanced"><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><p class="muted smalltext">Validated recommendations are saved automatically after the complete three-model test. Existing settings are retained if safeguards fail.</p><details class="panel fp-advanced"><summary><strong>Model 3 · optimisation detail</strong></summary><div id="rankedTestResults" class="panel notice">Model 3 optimisation results will appear here.</div></details><div id="outcomeCompare"></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view the three-model scorecard.</div></div><details class="panel fp-advanced"><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced"><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -1288,7 +1308,32 @@ function fpAverageConfidence(m){const a=m.originalPrediction||m.original,c=m.ran
 function fpStatusTag(m){const f=fpModelFlags(m);if(!f.matching)return '';const premium=f.consensus&&Math.round(fpAverageConfidence(m))>=8;return `<span class="fp-status ${f.consensus?(premium?'fp-status-purple':'fp-status-green'):'fp-status-amber'}">${f.consensus?'Bet on Outcome':'Matching Outcome'}</span>`}
 function fpExplicitFlags(m){const f=fpModelFlags(m);if(!f.valid)return '<span class="tag">Three-model comparison unavailable</span>';return `<span class="fp-status ${f.matching?'fp-status-amber':'fp-status-neutral'}">${f.matching?'Same outcome':'Different outcomes'}</span><span class="fp-status ${f.consensus?'fp-status-green':'fp-status-neutral'}">${f.consensus?'Bet on outcome':'No unanimous SELECT'}</span>`}
 function comparisonTag(m){return fpStatusTag(m)}
-function fpCombinedProbs(m){const a=m.originalPrediction||m.original;if(!a?.probs||!m.probs)return m.probs;const o={};for(const k of ['H','D','A'])o[k]=((Number(a.probs[k])||0)+(Number(m.probs[k])||0))/2;return o}
+function fpIndependentProbs(v){
+ if(!v)return null;
+ const raw=v.probs;
+ if(raw&&['H','D','A'].every(k=>Number.isFinite(Number(raw[k])))){
+  const total=['H','D','A'].reduce((t,k)=>t+Math.max(0,Number(raw[k])),0);
+  if(total>0)return Object.fromEntries(['H','D','A'].map(k=>[k,Math.max(0,Number(raw[k]))/total]));
+ }
+ // Display-only estimate from THIS model's expected goals, not another model's probabilities.
+ const h=Number(v.homeLambda),a=Number(v.awayLambda);
+ if(!Number.isFinite(h)||!Number.isFinite(a)||h<0||a<0)return null;
+ const p={H:0,D:0,A:0};
+ for(let x=0;x<=12;x++)for(let y=0;y<=12;y++)p[x>y?'H':x<y?'A':'D']+=poisson(x,h)*poisson(y,a);
+ const total=p.H+p.D+p.A;
+ return total>0?Object.fromEntries(['H','D','A'].map(k=>[k,p[k]/total])):null;
+}
+function fpCombinedProbs(m){
+ const inputs=[m.originalPrediction||m.original,m,m.rankedPrediction].map(fpIndependentProbs).filter(Boolean);
+ if(!inputs.length)return null;
+ return Object.fromEntries(['H','D','A'].map(k=>[k,inputs.reduce((t,p)=>t+p[k],0)/inputs.length]));
+}
+function fpModelProbabilityHtml(v,label){
+ const p=fpIndependentProbs(v);
+ if(!p)return `<div class="fp-prob-model"><strong>${esc(label)}</strong><p class="muted smalltext">Probabilities unavailable for this model.</p></div>`;
+ const pct=integerOutcomePercents(p);
+ return `<div class="fp-prob-model"><strong>${esc(label)}</strong><div class="fp-prob-triplet">${[['H','HOME'],['D','DRAW'],['A','AWAY']].map(([k,n])=>`<span class="${v.prediction===k?'fp-prob-active':''}">${n}<b>${pct[k]}%</b></span>`).join('')}</div></div>`;
+}
 function fpEvidenceLine(m){const a=m.risk?.supportFlags||[],r=m.risk?.flags||[];const first=a[0]?.text||r[0]?.text||'';const label=a.length?'Supporting form':r.length?'Form risk':'';return label?`<details class="fp-evidence"><summary>${label}${first?' · '+esc(String(first).slice(0,90)):''}</summary><div class="fp-evidence-detail">${riskDetailsHtml(m)}</div></details>`:''}
 function comparisonRows(m){
  const frozen=state.history?.find(x=>x.id===eventId(m));
@@ -1340,8 +1385,15 @@ function updatePredictions(matches,index=state.activeIndex){
 }
 function resultString(m){return isFinished(m)?`${m.homeScore}–${m.awayScore}`:"vs"}
 function probsHtml(m){
- const pct=integerOutcomePercents(fpCombinedProbs(m));
- return`<div class="probrow">${[["H","Home"],["D","Draw"],["A","Away"]].map(([k,n])=>`<div class="prob"><span>${n}</span><strong>${pct[k]}%</strong><div class="progress"><span style="width:${pct[k]}%"></span></div></div>`).join("")}</div>`;
+ const combined=fpCombinedProbs(m);
+ const pct=combined?integerOutcomePercents(combined):null;
+ return `<div class="fp-prob-panel"><h4>Independent outcome outlooks</h4>
+ <p class="muted smalltext">Each distribution is based on that model's own data. Where a model does not store probabilities, these are display-only Poisson estimates from its own expected goals. Existing prediction and SELECT rules remain unchanged.</p>
+ ${fpModelProbabilityHtml(m.originalPrediction||m.original,'01 · League-adjusted')}
+ ${fpModelProbabilityHtml(m,'02 · Team-form')}
+ ${fpModelProbabilityHtml(m.rankedPrediction,'03 · Opposition-ranked')}
+ <div class="fp-prob-model fp-combined"><strong>Combined outlook · equal-weight model average</strong>${pct?`<div class="fp-prob-triplet">${[['H','HOME'],['D','DRAW'],['A','AWAY']].map(([k,n])=>`<span class="${combined[k]===Math.max(combined.H,combined.D,combined.A)?'fp-prob-active':''}">${n}<b>${pct[k]}%</b></span>`).join('')}</div>`:'<p class="muted smalltext">Unavailable</p>'}</div>
+ <p class="muted smalltext">The combined outlook is informational and does not change individual predictions, confidence or SELECT decisions. Equal weighting is not yet historically validated.</p></div>`;
 }
 function formHtml(f){
  return!f?.history?.length?`<span class="muted smalltext">No league form yet</span>`:`<div class="formchips">${f.history.map(x=>`<span class="chip ${x.result}" title="${esc(x.opponent)}">${x.result}</span>`).join("")}</div>`;
@@ -1465,7 +1517,7 @@ function matchCard(m){
  return`<article class="match"><div class="row between"><span class="league">${esc(m.league)}</span><div class="row wrap">${Math.min(m.h?.count??0,m.a?.count??0)<5?`<span class="tag">Limited history</span>`:""}</div></div>
  <div class="meta" style="margin:7px 0">${esc(fmtDate(m.date))}${m.venue?" · "+esc(m.venue):""}</div>
  <div class="row between"><div class="grow teamline">${esc(m.home)}<div class="meta">${m.h.count} prior league matches</div></div><strong style="white-space:nowrap;font-size:19px">${shownScore}</strong><div class="grow teamline" style="text-align:right">${esc(m.away)}<div class="meta">${m.a.count} prior league matches</div></div></div>
- ${comparisonRows(m)}<div class="fp-flag-row">${fpExplicitFlags(m)}</div>${fpEvidenceLine(m)}${fpDrawDecision(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" ${added?"disabled":""} onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?"Added":"Add pick"}</button></div><details class="fixture-secondary"><summary>Probabilities &amp; calculation breakdown</summary>${probsHtml(m)}${explainHtml(m)}${rankedDetail(m.rankedPrediction)}</details></article>`;
+ ${comparisonRows(m)}${fpEvidenceLine(m)}${fpDrawDecision(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" ${added?"disabled":""} onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?"Added":"Add pick"}</button></div><details class="fixture-secondary"><summary>Probabilities &amp; calculation breakdown</summary>${probsHtml(m)}${explainHtml(m)}${rankedDetail(m.rankedPrediction)}</details></article>`;
 }
 function upcoming(){
  const now=new Date(),v=$("days").value,league=$("league").value,todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
@@ -1497,7 +1549,7 @@ function renderFixtures(){
 }
 function fpCompactFixture(m,heading='',extra=''){
  const id=eventId(m),added=state.acc.some(x=>x.id===id);
- return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="muted smalltext">${esc(fmtDate(m.date))}</span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}<div class="fp-flag-row">${fpExplicitFlags(m)}</div>${fpEvidenceLine(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" ${added?'disabled':''} onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button></div><details class="fixture-secondary"><summary>Calculation breakdown &amp; probabilities</summary>${probsHtml(m)}${explainHtml(m)}${rankedDetail(m.rankedPrediction)}</details></article>`;
+ return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="muted smalltext">${esc(fmtDate(m.date))}</span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpEvidenceLine(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" ${added?'disabled':''} onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button></div><details class="fixture-secondary"><summary>Calculation breakdown &amp; probabilities</summary>${probsHtml(m)}${explainHtml(m)}${rankedDetail(m.rankedPrediction)}</details></article>`;
 }
 function fpDrawDecision(m){
  const gap=Math.abs(Number(m.xgDifference)),prob=Number(m.probs?.D),stability=Number(m.stability??1),messages=[];
@@ -2837,7 +2889,7 @@ function renderWeeklyTop6(){
  <div class="stat"><span class="muted smalltext">Correct picks</span><strong>${correctPicks.length} / ${settledPicks.length}</strong><span class="muted smalltext">Settled selections only</span></div>
  </div><p class="muted smalltext" style="margin:8px 2px 0">Current week: ${shown}/6 credible selections. Weeks with fewer than six saved picks are excluded from the all-six accumulator rate. Pending or incomplete matches are excluded from settled rates.</p>`;
  if(!rows.length){root.innerHTML=`<div class="empty">${state.matches.length?"No Saturday 3:00 pm English-league fixtures currently meet the minimum selection standard. This list will not force weak picks.":"Load / refresh predictions on the Fixtures tab, then return here."}</div>`}
- else root.innerHTML=rows.map(({m,pick,risk},i)=>`<article class="match"><div class="row between wrap"><span class="league">#${i+1} · ${esc(m.league)}</span><span class="muted smalltext">${esc(weeklyWeekLabel(m.date))}</span></div><div class="row between" style="margin-top:9px"><strong class="grow">${esc(m.home)}</strong><strong>vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}<div class="fp-flag-row">${fpExplicitFlags(m)}</div>${fpEvidenceLine(m)}<details class="fixture-secondary"><summary>Calculation breakdown &amp; probabilities</summary>${probsHtml(m)}${explainHtml(m)}${rankedDetail(m.rankedPrediction)}</details></article>`).join("");
+ else root.innerHTML=rows.map(({m,pick,risk},i)=>`<article class="match"><div class="row between wrap"><span class="league">#${i+1} · ${esc(m.league)}</span><span class="muted smalltext">${esc(weeklyWeekLabel(m.date))}</span></div><div class="row between" style="margin-top:9px"><strong class="grow">${esc(m.home)}</strong><strong>vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpEvidenceLine(m)}<details class="fixture-secondary"><summary>Calculation breakdown &amp; probabilities</summary>${probsHtml(m)}${explainHtml(m)}${rankedDetail(m.rankedPrediction)}</details></article>`).join("");
  const weeklyModels=[['League-adjusted',x=>x.original],['Team-form',x=>x],['Opposition-ranked Goals',x=>x.ranked]];
  const weeklyModelRows=weeklyModels.map(([name,get])=>{const available=settledPicks.filter(x=>{const v=get(x);return v&&['H','D','A'].includes(v.prediction)}),hits=available.filter(x=>get(x).prediction===x.actualOutcome).length,selected=available.filter(x=>get(x).selection===get(x).prediction),selectedHits=selected.filter(x=>get(x).prediction===x.actualOutcome).length;return `<tr><td>${name}</td><td>${hits}/${available.length} (${fpRate(hits,available.length)})</td><td>${selectedHits}/${selected.length} (${fpRate(selectedHits,selected.length)})</td></tr>`}).join('');
  const weeklyModelPanel=`<h3>Weekly picks · all-model accuracy</h3><p class="muted smalltext">Only saved pre-kickoff predictions count. Older records without a model snapshot are excluded.</p><div class="tablewrap"><table><thead><tr><th>Model</th><th>Outcome correct</th><th>SELECT correct</th></tr></thead><tbody>${weeklyModelRows}</tbody></table></div>`;
