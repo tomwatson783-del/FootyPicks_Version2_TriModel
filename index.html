@@ -541,9 +541,9 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 </section>
 
 <section id="test" hidden>
- <h2>Model Test</h2><p class="muted smalltext">Historical prediction validation for the existing three models, plus an independent Model 4 event-data eligibility audit.</p>
+ <h2>Model Test</h2><p class="muted smalltext">Historical prediction validation for all four independent models, with automatic league-specific three-model fallback.</p>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><p class="muted smalltext">Validated recommendations are saved automatically after the complete three-model test. Existing settings are retained if safeguards fail.</p><details class="panel fp-advanced"><summary><strong>Model 3 · optimisation detail</strong></summary><div id="rankedTestResults" class="panel notice">Model 3 optimisation results will appear here.</div></details><details class="panel fp-advanced" id="fp4AuditPanel" open><summary><strong>Model 4 · Historical match-event eligibility (all leagues)</strong></summary><p class="muted smalltext">Checks actual ESPN historical goal timelines, final-score reconciliation and sample coverage. This is a data eligibility audit, NOT proof of predictive accuracy. Model 4 remains inactive until a separate chronological prediction/SELECT validation passes. The existing three models continue unchanged.</p><div class="row wrap" style="gap:8px"><button class="btn secondary" type="button" id="fp4AuditRun">Audit all leagues</button><button class="btn secondary" type="button" id="fp4AuditCopy">Copy diagnostic report</button><button class="btn secondary" type="button" id="fp4AuditCancel" disabled>Stop audit</button></div><p id="fp4AuditStatus" class="muted smalltext">Not tested yet. Run the audit and paste the copied report into ChatGPT.</p><div id="fp4AuditOutput" class="fp4-audit-output"></div><textarea id="fp4AuditReport" readonly aria-label="Copyable Model 4 diagnostic report" style="width:100%;min-height:140px;margin-top:10px;font-size:11px" placeholder="Diagnostic JSON will appear here after the audit."></textarea></details><div id="outcomeCompare"></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view the three-model scorecard.</div></div><details class="panel fp-advanced"><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><p class="muted smalltext">Validated recommendations are saved automatically after the complete historical test. Existing settings are retained if safeguards fail.</p><details class="panel fp-advanced"><summary><strong>Model 3 · optimisation detail</strong></summary><div id="rankedTestResults" class="panel notice">Model 3 optimisation results will appear here.</div></details><details class="panel fp-advanced" id="fp4AuditPanel" open><summary><strong>Model 4 · Historical match-event eligibility (all leagues)</strong></summary><p class="muted smalltext">Checks actual ESPN historical goal timelines, final-score reconciliation and sample coverage. This is a data eligibility audit, NOT proof of predictive accuracy. Model 4 activates per league only after chronological prediction/SELECT validation passes. The existing three models continue unchanged.</p><div class="row wrap" style="gap:8px"><button class="btn secondary" type="button" id="fp4AuditRun">Audit all leagues</button><button class="btn secondary" type="button" id="fp4AuditCopy">Copy diagnostic report</button><button class="btn secondary" type="button" id="fp4AuditCancel" disabled>Stop audit</button></div><p id="fp4AuditStatus" class="muted smalltext">Not tested yet. Run the audit and paste the copied report into ChatGPT.</p><div id="fp4AuditOutput" class="fp4-audit-output"></div><textarea id="fp4AuditReport" readonly aria-label="Copyable Model 4 diagnostic report" style="width:100%;min-height:140px;margin-top:10px;font-size:11px" placeholder="Diagnostic JSON will appear here after the audit."></textarea></details><details class="panel fp-advanced" open><summary><strong>Model 4 · Chronological predictive validation and league fallback</strong></summary><p class="muted smalltext">A league uses four models only after verified event history and unseen holdout tests pass. Otherwise it automatically uses the original three. Testing fetches match summaries with four bounded workers and reuses cached sequences.</p><div id="fp4PredictiveResults">Run historical model test to validate Match Dynamics.</div><textarea id="fp4PredictiveReport" readonly style="width:100%;min-height:150px;margin-top:10px;font-size:11px" aria-label="Model 4 predictive validation JSON"></textarea></details><div id="outcomeCompare"></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view the model scorecard and Model 4 validation.</div></div><details class="panel fp-advanced"><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced"><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -569,7 +569,7 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
   <div style="margin-top:12px"><label for="windowChoice">Recent-form windows (Manual mode)</label><select id="windowChoice"><option value="0">15 / 10 / 5</option><option value="1">10 / 6 / 3</option><option value="2">8 / 5 / 3</option></select></div><div style="margin-top:12px"><label for="minSample">Minimum test matches before Auto changes model</label><select id="minSample"><option value="50">50 matches</option><option value="100" selected>100 matches</option><option value="150">150 matches</option><option value="200">200 matches</option></select></div>
   <p class="muted smalltext">Auto uses Brier score, which measures the accuracy of all three outcome probabilities. If there are too few eligible test matches, Auto falls back to your manual model.</p>
   <div style="display:none"><h3 style="margin-top:16px">Hybrid prediction foundation</h3><p class="muted smalltext">Blend team-first attacking/defensive performance with the original league-normalised estimate. 100% reproduces the existing model; 0% uses only team-first xG. Model Test checks 0–100% in 5% steps.</p><label for="leagueInfluenceChoice">League-based influence</label><select id="leagueInfluenceChoice"><option value="0">0% league / 100% team</option><option value="5">5% league / 95% team</option><option value="10">10% league / 90% team</option><option value="15">15% league / 85% team</option><option value="20">20% league / 80% team</option><option value="25">25% league / 75% team</option><option value="30">30% league / 70% team</option><option value="35">35% league / 65% team</option><option value="40">40% league / 60% team</option><option value="45">45% league / 55% team</option><option value="50">50% league / 50% team</option><option value="55">55% league / 45% team</option><option value="60">60% league / 40% team</option><option value="65">65% league / 35% team</option><option value="70">70% league / 30% team</option><option value="75">75% league / 25% team</option><option value="80">80% league / 20% team</option><option value="85">85% league / 15% team</option><option value="90">90% league / 10% team</option><option value="95">95% league / 5% team</option><option value="100">100% league / 0% team</option></select><h3 style="margin-top:16px">Historical xG &amp; finishing — automatic</h3><p class="muted smalltext">ESPN match summaries are checked automatically for actual historical xG. Where adequate xG is missing, the standard prediction remains unchanged. Model Test evaluates the influence weights and recommends changes only when supported by historical evidence. No imports or manual statistics.</p><div class="controls"><div><label for="historicalXgChoice">Historical xG influence (Model Test recommended)</label><select id="historicalXgChoice"></select></div><div><label for="finishingChoice">Finishing efficiency influence (Model Test recommended)</label><select id="finishingChoice"></select></div></div><div id="xgImportStatus" class="muted smalltext">Historical xG availability not checked yet.</div><div id="xgTestResult" class="notice" style="margin:10px 0">Run Model Test to evaluate available historical xG automatically.</div></div><h3 style="display:none">Legacy outcome boundary inputs (superseded by model draw gap)</h3><p class="muted smalltext">Predicted goals determine HOME / DRAW / AWAY. Model Test compares these boundaries for outcome accuracy before assessing SELECT precision.</p><div class="controls"><div><label>HOME / DRAW xG gap</label><input id="predictionHomeBoundaryChoice" type="number" min="0" max="1.5" step="0.05" value="0.25"></div><div><label>AWAY / DRAW xG gap</label><input id="predictionAwayBoundaryChoice" type="number" min="0" max="1.5" step="0.05" value="0.25"></div></div><h3 style="margin-top:16px">Selection thresholds</h3><p class="muted smalltext">Minimum predicted-goals advantage required for SELECT. Predicted outcome comes directly from the signed goal difference and the trained draw band.</p><div class="controls"><div><label for="homeGapChoice">Home-win xG gap</label><input id="homeGapChoice" type="number" min="0.05" max="2" step="0.05" value="0.50"></div><div><label for="awayGapChoice">Away-win xG gap</label><input id="awayGapChoice" type="number" min="0.05" max="2" step="0.05" value="0.50"></div></div><div id="settingsOutcomeRecommendation" class="notice" style="margin:10px 0">Run Model Test to compare your settings with a recommendation.</div>
- <div style="margin-top:12px"><label for="selectionMethodChoice">Winner selection method (Model Test recommended)</label><select id="selectionMethodChoice"><option value="gap">xG gap</option><option value="prob">Win probability</option><option value="combined">xG gap AND win probability</option></select><label for="minimumStabilityChoice">Minimum agreement across form windows for SELECT</label><select id="minimumStabilityChoice"><option value="0">Not required</option><option value="0.67">At least two of three windows</option><option value="1">All three windows</option></select><label for="winProbChoice">Minimum win probability (probability / combined modes)</label><select id="winProbChoice"><option value="0.40">40%</option><option value="0.45">45%</option><option value="0.50">50%</option><option value="0.55">55%</option><option value="0.60">60%</option><option value="0.65">65%</option><option value="0.70">70%</option></select></div>
+ <div class="panel" style="margin:12px 0"><label for="fpMinSelectCoverage"><strong>Minimum SELECT coverage for automatic recommendations (%)</strong></label><input id="fpMinSelectCoverage" type="number" min="1" max="60" step="0.5" value="12" style="max-width:110px"><p class="muted smalltext">Default 12%. Lower coverage permits stricter, potentially more accurate selections. Candidates must still pass chronological holdout precision, sample-size and outcome checks. Does not force approval or change prediction probabilities.</p></div><div style="margin-top:12px"><label for="selectionMethodChoice">Winner selection method (Model Test recommended)</label><select id="selectionMethodChoice"><option value="gap">xG gap</option><option value="prob">Win probability</option><option value="combined">xG gap AND win probability</option></select><label for="minimumStabilityChoice">Minimum agreement across form windows for SELECT</label><select id="minimumStabilityChoice"><option value="0">Not required</option><option value="0.67">At least two of three windows</option><option value="1">All three windows</option></select><label for="winProbChoice">Minimum win probability (probability / combined modes)</label><select id="winProbChoice"><option value="0.40">40%</option><option value="0.45">45%</option><option value="0.50">50%</option><option value="0.55">55%</option><option value="0.60">60%</option><option value="0.65">65%</option><option value="0.70">70%</option></select></div>
  <h3 style="margin-top:16px">DRAW selection</h3>
   <p class="muted smalltext">Draws are predicted naturally. Draw selections require both a small xG gap and sufficient draw probability. Confidence remains advisory.</p>
   <label class="row"><input id="allowDrawChoice" type="checkbox"> <span>Allow qualifying draw selections (enabled for all models)</span></label>
@@ -680,7 +680,7 @@ function predictionBadge(m){
 const state={
  matches:[],loaded:false,loading:false,topMode:false,goalThreatMode:false,
  acc:readStore("fp_acc",[]),history:readStore("fp_prediction_history",[]),
- homeGap:.5,awayGap:.5,predictionHomeBoundary:.20,predictionAwayBoundary:.20,leagueInfluence:0,historicalXgInfluence:0,finishingInfluence:0,xgRecords:readStore("fp_historical_xg",{}),hiddenLiveGames:readStore("fp_hidden_live_games",[]),recommendation:null,confidenceRecommendation:null,lastTest:null,activeIndex:1,activeWindow:0,manualWindow:0,mode:"manual",manualIndex:1,minSample:100,confidenceConfig:JSON.parse(JSON.stringify(DEFAULT_CONF)),confidenceMultiplier:3,selectionMethod:"gap",winProb:.50,minimumStability:0,allowDraw:true,drawGap:.20,drawProb:.32,
+ homeGap:.5,awayGap:.5,predictionHomeBoundary:.20,predictionAwayBoundary:.20,leagueInfluence:0,historicalXgInfluence:0,finishingInfluence:0,xgRecords:readStore("fp_historical_xg",{}),hiddenLiveGames:readStore("fp_hidden_live_games",[]),recommendation:null,confidenceRecommendation:null,lastTest:null,activeIndex:1,activeWindow:0,manualWindow:0,mode:"manual",manualIndex:1,minSample:100,confidenceConfig:JSON.parse(JSON.stringify(DEFAULT_CONF)),confidenceMultiplier:3,selectionMethod:"gap",winProb:.50,minimumStability:0,minSelectCoverage:.12,allowDraw:true,drawGap:.20,drawProb:.32,
  liveMatches:[],liveSchedule:[],liveScheduleFilter:"live",weeklyPicks:readStore("fp_weekly_top6",[]),liveStats:{},liveHistory:readStore("fp_live_prediction_history",[]),liveFilter:"all",liveLeagueFilter:"all",liveSituationFilter:"all",liveLoading:false,liveLastUpdated:null
 };
 
@@ -1305,8 +1305,8 @@ function originalSettings(){return state.originalSettings||{modelIndex:1,windowI
 function originalPick(m){const o=originalSettings(),gap=m.xgDifference;return m.prediction==="D"&&Math.abs(gap)<=state.drawGap&&Number(m.probs?.D)>=state.drawProb?"D":m.prediction==="H"&&gap>=o.homeGap?"H":m.prediction==="A"&&-gap>=o.awayGap?"A":"N"}
 function calculateOriginalIndependent(m,previous){const o=originalSettings();const v=calculateOriginalPrediction(m,previous,{...MODELS[o.modelIndex],windows:WINDOW_SETS[o.windowIndex]});v.selection=originalPick(v);v.confidence=Math.min(v.confidence,hardGoalGapConfidenceCap(Math.abs(v.xgDifference),v.prediction,o.confidenceMultiplier,o.homeGap,o.awayGap));return v}
 function fpAverageConfidence(m){const a=m.originalPrediction||m.original,c=m.rankedPrediction||m.ranked;return a&&c?(Number(a.confidence)+Number(m.confidence)+Number(c.confidence))/3:Number(m.confidence)||0}
-function fpStatusTag(m){const f=fpModelFlags(m);if(!f.matching)return '';const premium=f.consensus&&Math.round(fpAverageConfidence(m))>=8;return `<span class="fp-status ${f.consensus?(premium?'fp-status-purple':'fp-status-green'):'fp-status-amber'}">${f.consensus?'Bet on Outcome':'Matching Outcome'}</span>`}
-function fpExplicitFlags(m){const f=fpModelFlags(m);if(!f.valid)return '<span class="tag">Three-model comparison unavailable</span>';return `<span class="fp-status ${f.matching?'fp-status-amber':'fp-status-neutral'}">${f.matching?'Same outcome':'Different outcomes'}</span><span class="fp-status ${f.consensus?'fp-status-green':'fp-status-neutral'}">${f.consensus?'Bet on outcome':'No unanimous SELECT'}</span>`}
+function fpStatusTag(m){const f=fpModelFlags(m);if(!f.matching)return '';const premium=f.consensus&&Math.round(fpAverageConfidence(m))>=8;return `<span class="fp-status ${f.consensus?(premium?'fp-status-purple':'fp-status-green'):'fp-status-amber'}">${f.consensus?'Bet on Outcome · '+f.count+'/'+f.count:'Matching Outcome · '+f.count+'/'+f.count}</span>`}
+function fpExplicitFlags(m){const f=fpModelFlags(m);if(!f.valid)return '<span class="tag">Three-model comparison unavailable</span>';return `<span class="fp-status ${f.matching?'fp-status-amber':'fp-status-neutral'}">${f.matching?'Same outcome · '+f.count+'/'+f.count:'Different outcomes'}</span><span class="fp-status ${f.consensus?'fp-status-green':'fp-status-neutral'}">${f.consensus?'Bet on outcome · '+f.count+'/'+f.count:'No unanimous SELECT'}</span>`}
 function comparisonTag(m){return fpStatusTag(m)}
 function fpIndependentProbs(v){
  if(!v)return null;
@@ -1324,7 +1324,7 @@ function fpIndependentProbs(v){
  return total>0?Object.fromEntries(['H','D','A'].map(k=>[k,p[k]/total])):null;
 }
 function fpCombinedProbs(m){
- const inputs=[m.originalPrediction||m.original,m,m.rankedPrediction].map(fpIndependentProbs).filter(Boolean);
+ const inputs=[m.originalPrediction||m.original,m,m.rankedPrediction,...(m.model4Prediction?[m.model4Prediction]:[])].map(fpIndependentProbs).filter(Boolean);
  if(!inputs.length)return null;
  return Object.fromEntries(['H','D','A'].map(k=>[k,inputs.reduce((t,p)=>t+p[k],0)/inputs.length]));
 }
@@ -1341,7 +1341,7 @@ function comparisonRows(m){
  const mode=state.activePredictionView||'both';
  const cell=(v,label)=>{const chosen=v.selection===v.prediction;return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${Number(v.xgDifference??(v.homeLambda-v.awayLambda)).toFixed(2)}</div><div class="model-bottom"><span class="${chosen?'model-select':'model-no-select'}">${chosen?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">Confidence ${v.confidence}/10</span></div></div>`};
  if(!original&&mode==='original')return '';
- return `<div class="fixture-comparison">${mode==='both'&&original?comparisonTag(m):''}<div class="model-grid ${mode==='both'&&original?'':'single'}">${mode!=='updated'&&original?cell(original,'League-adjusted · Poisson'):''}${mode!=='original'?cell(m,'Team-form · Goal difference'):''}${mode==='both'?rankedCell(m.rankedPrediction):''}</div></div>`;
+ return `<div class="fixture-comparison">${mode==='both'&&original?comparisonTag(m):''}<div class="model-grid ${mode==='both'&&original?'':'single'}">${mode!=='updated'&&original?cell(original,'League-adjusted · Poisson'):''}${mode!=='original'?cell(m,'Team-form · Goal difference'):''}${mode==='both'?rankedCell(m.rankedPrediction):''}${mode==='both'&&m.model4Prediction?`<div class="model-cell"><div class="model-title">Match Dynamics · Model 4</div><div class="model-primary"><span class="model-outcome">${outcomeName(m.model4Prediction.prediction)}</span></div><div class="model-sub">${esc(m.model4Prediction.explanation)}</div><div class="model-bottom"><span class="${m.model4Prediction.selection===m.model4Prediction.prediction?'model-select':'model-no-select'}">${m.model4Prediction.selection===m.model4Prediction.prediction?'SELECT':'NO SELECT'}</span><span class="model-confidence">Confidence ${m.model4Prediction.confidence}/10</span></div></div>`:''}</div></div>`;
 }
 function comparisonHistoryRows(x){
  const mode=state.activePredictionView||'both';
@@ -1376,7 +1376,7 @@ function updatePredictions(matches,index=state.activeIndex){
   let i=0;
   while(i<rows.length){const kickoff=new Date(rows[i].date).getTime();let end=i+1;
    while(end<rows.length&&new Date(rows[end].date).getTime()===kickoff)end++;
-   for(let j=i;j<end;j++){const m=rows[j];Object.assign(m,calculatePrediction(m,previous,{...MODELS[index],windows:WINDOW_SETS[state.activeWindow]}));m.originalPrediction=calculateOriginalIndependent(m,previous);m.rankedPrediction=rankedGoalModel(m,previous)}
+   for(let j=i;j<end;j++){const m=rows[j];Object.assign(m,calculatePrediction(m,previous,{...MODELS[index],windows:WINDOW_SETS[state.activeWindow]}));m.originalPrediction=calculateOriginalIndependent(m,previous);m.rankedPrediction=rankedGoalModel(m,previous);fp4Attach(m,previous)}
    for(let j=i;j<end;j++)if(isFinished(rows[j]))previous.push(rows[j]);
    i=end;
   }
@@ -1392,6 +1392,7 @@ function probsHtml(m){
  ${fpModelProbabilityHtml(m.originalPrediction||m.original,'01 · League-adjusted')}
  ${fpModelProbabilityHtml(m,'02 · Team-form')}
  ${fpModelProbabilityHtml(m.rankedPrediction,'03 · Opposition-ranked')}
+ ${m.model4Prediction?fpModelProbabilityHtml(m.model4Prediction,'04 · Match Dynamics'):''}
  <div class="fp-prob-model fp-combined"><strong>Combined outlook · equal-weight model average</strong>${pct?`<div class="fp-prob-triplet">${[['H','HOME'],['D','DRAW'],['A','AWAY']].map(([k,n])=>`<span class="${combined[k]===Math.max(combined.H,combined.D,combined.A)?'fp-prob-active':''}">${n}<b>${pct[k]}%</b></span>`).join('')}</div>`:'<p class="muted smalltext">Unavailable</p>'}</div>
  <p class="muted smalltext">The combined outlook is informational and does not change individual predictions, confidence or SELECT decisions. Equal weighting is not yet historically validated.</p></div>`;
 }
@@ -1532,9 +1533,9 @@ function upcoming(){
 function fpModelFlags(m){
  const a=m.originalPrediction||m.original,b=m,c=m.rankedPrediction||m.ranked;
  const valid=!!(a&&['H','D','A'].includes(a.prediction)&&['H','D','A'].includes(b.prediction)&&c&&['H','D','A'].includes(c.prediction));
- const matching=valid&&a.prediction===b.prediction&&a.prediction===c.prediction;
- const aSelect=valid&&a.selection===a.prediction,bSelect=valid&&b.selection===b.prediction,cSelect=valid&&c.selection===c.prediction;
- return {valid,matching,selected:aSelect||bSelect,consensus:matching&&aSelect&&bSelect&&cSelect};
+ const available=[a,b,c,...(m.model4Prediction?[m.model4Prediction]:[])];const matching=valid&&available.every(v=>v.prediction===b.prediction);
+ const aSelect=valid&&a.selection===a.prediction,bSelect=valid&&b.selection===b.prediction;
+ return {valid,matching,count:available.length,selected:aSelect||bSelect,consensus:matching&&available.every(v=>v.selection===v.prediction)};
 }
 let fpFixtureFilter='all',fpResultFilter='all',fpWeeklyFilter='all';
 function fpFilterButtons(id,attr,value,fn){document.querySelectorAll(`#${id} button`).forEach(b=>{b.classList.toggle('active',b.dataset[attr]===value);b.onclick=()=>{fn(b.dataset[attr]);};});}
@@ -2103,6 +2104,8 @@ function fpCopyV3Selection(){const v=state.lastTest?.v3;if(!v?.selectionApproved
 /* V4: independent, outcome-aware test policy. Prediction engines untouched. */
 const FP_V4_GAPS=[.05,.10,.15,.20,.25,.30,.35,.40,.45,.50,.60];
 const FP_V4_SELECT=[.15,.25,.35,.45,.55,.65,.75,.90];
+// SELECT candidate ranking favours conservative precision, with coverage as a tie-breaker.
+// Coverage is a user-controlled floor, not a target to maximise.
 function fpV4Project(rows,gap){return rows.map(r=>({...r,prediction:goalDifferenceOutcome(r.xgDifference,gap,gap)}));}
 function fpV4Pick(rows,h,a,d,kind="generic",drawProbability=state.drawProb){
  const by={H:{n:0,hits:0},D:{n:0,hits:0},A:{n:0,hits:0}},n=rows.length;let hits=0,picks=0;
@@ -2144,8 +2147,8 @@ function fpV4Choose(name,train,hold,settings){
  const opts=[];
  for(const h of FP_V4_SELECT)for(const a of FP_V4_SELECT)for(const d of (name==='League-adjusted'?[settings.draw]:[.05,.10,.15,.20,.25,.30,.40]))for(const drawProbability of (name==='Team-form'?[.20,.25,.30,.35,.40,.45]:[settings.drawProbability??state.drawProb])){
   const m=fpV4Pick(trainFixed,h,a,d,name==='Team-form'?'team':'generic',drawProbability);
-  if(m.picks<Math.max(75,Math.floor(train.length*.12))||m.coverage<.12||
-     m.by.H.n<25||m.by.A.n<20||m.by.D.n<15)continue;
+  if(m.picks<Math.max(40,Math.floor(train.length*state.minSelectCoverage))||m.coverage<state.minSelectCoverage||
+     m.by.H.n<20||m.by.A.n<12||m.by.D.n<3)continue;
   opts.push({h,a,d,drawProbability,m});
  }
  opts.sort((x,y)=>y.m.lower-x.m.lower||y.m.coverage-x.m.coverage);
@@ -2153,9 +2156,9 @@ function fpV4Choose(name,train,hold,settings){
  const sr=[];
  if(!select)sr.push('No training SELECT candidate has enough HOME, DRAW and AWAY evidence');
  else{
-  if(selectHold.picks<60)sr.push('Fewer than 60 holdout selections');
-  if(selectHold.by.H.n<15||selectHold.by.A.n<12||selectHold.by.D.n<8)sr.push('Insufficient outcome-specific holdout SELECT evidence');
-  if(selectHold.coverage<Math.max(.12,baseSel.coverage*.5))sr.push('Coverage below safeguard');
+  if(selectHold.picks<Math.max(30,Math.ceil(holdFixed.length*state.minSelectCoverage)))sr.push('Insufficient holdout selections at configured minimum coverage');
+  if(selectHold.by.H.n<12||selectHold.by.A.n<8||selectHold.by.D.n<3)sr.push('Insufficient outcome-specific holdout SELECT evidence');
+  if(selectHold.coverage<state.minSelectCoverage)sr.push('Coverage below configured minimum of '+(state.minSelectCoverage*100).toFixed(1)+'%');
   if(selectHold.precision<baseSel.precision+.01)sr.push('SELECT precision gain below 1 percentage point');
   if(selectHold.lower<=baseSel.lower)sr.push('No improvement in conservative precision bound');
   if(Math.abs(select.h-settings.home)<.001&&Math.abs(select.a-settings.away)<.001&&Math.abs(select.d-settings.draw)<.001&&Math.abs(select.drawProbability-(settings.drawProbability??state.drawProb))<.001)sr.push('Current SELECT thresholds already chosen');
@@ -2247,8 +2250,8 @@ function loadSettings(){
  rankedInitSettings();winRankInit();
  state.teamDrawBoundary=Number(readStore("fp_three_model_draw_gap_v2",.20))||.20;state.activePredictionView="both";state.originalSettings={modelIndex:1,windowIndex:0,homeGap:.5,awayGap:.5,confidenceMultiplier:3,drawBoundary:.20,...readStore("fp_original_settings",{})};$("activePredictionView").value=state.activePredictionView;for(const [id,value] of [["originalModelChoice",state.originalSettings.modelIndex],["originalWindowChoice",state.originalSettings.windowIndex],["originalHomeGap",state.originalSettings.homeGap],["originalAwayGap",state.originalSettings.awayGap],["originalConfidenceMultiplier",state.originalSettings.confidenceMultiplier]])$(id).value=String(value);
  const s=readStore("fp_settings",{mode:"manual",manualIndex:1,minSample:100});
- state.mode=s.mode==="auto"?"auto":"manual";state.manualIndex=clamp(Number(s.manualIndex)||0,0,3);state.manualWindow=clamp(Number(s.manualWindow)||0,0,2);state.activeWindow=state.manualWindow;state.minSample=Number(s.minSample)||100;state.homeGap=Number.isFinite(+s.homeGap)&&+s.homeGap>=.05?+s.homeGap:.5;state.awayGap=Number.isFinite(+s.awayGap)&&+s.awayGap>=.05?+s.awayGap:.5;state.historicalXgInfluence=Number.isFinite(+s.historicalXgInfluence)?clamp(+s.historicalXgInfluence,0,100):0;state.finishingInfluence=Number.isFinite(+s.finishingInfluence)?clamp(+s.finishingInfluence,0,30):0;state.leagueInfluence=0;state.predictionHomeBoundary=state.teamDrawBoundary;state.predictionAwayBoundary=state.teamDrawBoundary;state.confidenceConfig={...DEFAULT_CONF,...readStore("fp_confidence_settings",{})};state.selectionMethod=["gap","prob","combined"].includes(s.selectionMethod)?s.selectionMethod:"gap";state.winProb=[.40,.45,.50,.55,.60,.65,.70].includes(+s.winProb)?+s.winProb:.50;state.minimumStability=[0,.67,1].includes(+s.minimumStability)?+s.minimumStability:0;state.confidenceMultiplier=[1,2,3,4,5].includes(+s.confidenceMultiplier)?+s.confidenceMultiplier:3;state.allowDraw=true;state.drawGap=[.05,.10,.15,.20,.25,.30,.40].includes(+s.drawGap)?+s.drawGap:.20;state.drawProb=[.25,.28,.30,.32,.35,.38,.40].includes(+s.drawProb)?+s.drawProb:.32;
- $("modeManual").checked=state.mode==="manual";$("modeAuto").checked=state.mode==="auto";$("modelChoice").value=state.manualIndex;$("windowChoice").value=state.manualWindow;$("minSample").value=String(state.minSample);$("predictionHomeBoundaryChoice").value=state.predictionHomeBoundary.toFixed(2);$("predictionAwayBoundaryChoice").value=state.predictionAwayBoundary.toFixed(2);$("homeGapChoice").value=state.homeGap.toFixed(2);$("awayGapChoice").value=state.awayGap.toFixed(2);$("leagueInfluenceChoice").value=String(state.leagueInfluence);$("historicalXgChoice").value=String(state.historicalXgInfluence);$("finishingChoice").value=String(state.finishingInfluence);$("confidenceMultiplierChoice").value=String(state.confidenceMultiplier);$("selectionMethodChoice").value=state.selectionMethod;$("winProbChoice").value=state.winProb.toFixed(2);$("minimumStabilityChoice").value=String(state.minimumStability);$("allowDrawChoice").checked=true;$("allowDrawChoice").disabled=true;$("drawGapChoice").value=state.drawGap.toFixed(2);$("drawProbChoice").value=state.drawProb.toFixed(2);for(const [id,v] of [["confProb",state.confidenceConfig.points[0]],["confGoal",state.confidenceConfig.points[1]],["confHist",state.confidenceConfig.points[2]],["confSupport",state.confidenceConfig.points[3]],["confMedium",state.confidenceConfig.mediumPenalty],["confHigh",state.confidenceConfig.highPenalty]])$(id).value=v;
+ state.mode=s.mode==="auto"?"auto":"manual";state.manualIndex=clamp(Number(s.manualIndex)||0,0,3);state.manualWindow=clamp(Number(s.manualWindow)||0,0,2);state.activeWindow=state.manualWindow;state.minSample=Number(s.minSample)||100;state.homeGap=Number.isFinite(+s.homeGap)&&+s.homeGap>=.05?+s.homeGap:.5;state.awayGap=Number.isFinite(+s.awayGap)&&+s.awayGap>=.05?+s.awayGap:.5;state.historicalXgInfluence=Number.isFinite(+s.historicalXgInfluence)?clamp(+s.historicalXgInfluence,0,100):0;state.finishingInfluence=Number.isFinite(+s.finishingInfluence)?clamp(+s.finishingInfluence,0,30):0;state.leagueInfluence=0;state.predictionHomeBoundary=state.teamDrawBoundary;state.predictionAwayBoundary=state.teamDrawBoundary;state.confidenceConfig={...DEFAULT_CONF,...readStore("fp_confidence_settings",{})};state.selectionMethod=["gap","prob","combined"].includes(s.selectionMethod)?s.selectionMethod:"gap";state.winProb=[.40,.45,.50,.55,.60,.65,.70].includes(+s.winProb)?+s.winProb:.50;state.minimumStability=[0,.67,1].includes(+s.minimumStability)?+s.minimumStability:0;state.minSelectCoverage=Number.isFinite(+s.minSelectCoverage)?clamp(+s.minSelectCoverage,.01,.60):.12;state.confidenceMultiplier=[1,2,3,4,5].includes(+s.confidenceMultiplier)?+s.confidenceMultiplier:3;state.allowDraw=true;state.drawGap=[.05,.10,.15,.20,.25,.30,.40].includes(+s.drawGap)?+s.drawGap:.20;state.drawProb=[.25,.28,.30,.32,.35,.38,.40].includes(+s.drawProb)?+s.drawProb:.32;
+ $("modeManual").checked=state.mode==="manual";$("modeAuto").checked=state.mode==="auto";$("modelChoice").value=state.manualIndex;$("windowChoice").value=state.manualWindow;$("minSample").value=String(state.minSample);$("predictionHomeBoundaryChoice").value=state.predictionHomeBoundary.toFixed(2);$("predictionAwayBoundaryChoice").value=state.predictionAwayBoundary.toFixed(2);$("homeGapChoice").value=state.homeGap.toFixed(2);$("awayGapChoice").value=state.awayGap.toFixed(2);$("leagueInfluenceChoice").value=String(state.leagueInfluence);$("historicalXgChoice").value=String(state.historicalXgInfluence);$("finishingChoice").value=String(state.finishingInfluence);$("confidenceMultiplierChoice").value=String(state.confidenceMultiplier);$("selectionMethodChoice").value=state.selectionMethod;$("winProbChoice").value=state.winProb.toFixed(2);$("minimumStabilityChoice").value=String(state.minimumStability);$("fpMinSelectCoverage").value=String(+(state.minSelectCoverage*100).toFixed(1));$("allowDrawChoice").checked=true;$("allowDrawChoice").disabled=true;$("drawGapChoice").value=state.drawGap.toFixed(2);$("drawProbChoice").value=state.drawProb.toFixed(2);for(const [id,v] of [["confProb",state.confidenceConfig.points[0]],["confGoal",state.confidenceConfig.points[1]],["confHist",state.confidenceConfig.points[2]],["confSupport",state.confidenceConfig.points[3]],["confMedium",state.confidenceConfig.mediumPenalty],["confHigh",state.confidenceConfig.highPenalty]])$(id).value=v;
  state.activeIndex=state.manualIndex;updateModelBanner();
 }
 function saveSettings(){
@@ -2256,11 +2259,11 @@ function saveSettings(){
  const old={drawBoundary:+$("fpDrawLeague").value,modelIndex:+$("originalModelChoice").value,windowIndex:+$("originalWindowChoice").value,homeGap:+$("originalHomeGap").value,awayGap:+$("originalAwayGap").value,confidenceMultiplier:+$("originalConfidenceMultiplier").value};if(![old.homeGap,old.awayGap].every(v=>Number.isFinite(v)&&v>=.05&&v<=2)||!Number.isFinite(old.drawBoundary)||old.drawBoundary<.05||old.drawBoundary>.60||!Number.isFinite(+$('fpDrawTeam').value)||+$('fpDrawTeam').value<.05||+$('fpDrawTeam').value>.60){ $("settingsStatus").textContent="Original SELECT thresholds must be 0.05–2.00";return;}state.originalSettings=old;store("fp_original_settings",old);state.teamDrawBoundary=+$("fpDrawTeam").value;store("fp_three_model_draw_gap_v2",state.teamDrawBoundary);state.activePredictionView="both";store("fp_active_prediction_view","both");
  const pts=["confProb","confGoal","confHist","confSupport"].map(id=>+$(id).value);if(pts.some(x=>!Number.isInteger(x)||x<1||x>10)||pts.reduce((a,b)=>a+b,0)!==10){$("settingsStatus").textContent="Cannot save: confidence maxima must be integers from 1 to 10 totalling exactly 10.";return;}
  const medium=+$("confMedium").value,high=+$("confHigh").value;if(!Number.isInteger(medium)||!Number.isInteger(high)||medium<0||high<medium||high>10){$("settingsStatus").textContent="Cannot save: risk deductions must be whole numbers, with high ≥ medium and both between 0 and 10.";return;}
- const hg=+$("homeGapChoice").value,ag=+$("awayGapChoice").value;if(![hg,ag].every(v=>Number.isFinite(v)&&v>=.05&&v<=2)){$("settingsStatus").textContent="Home and away xG thresholds must each be between 0.05 and 2.00.";return;}state.homeGap=hg;state.awayGap=ag;state.predictionHomeBoundary=state.teamDrawBoundary;state.predictionAwayBoundary=state.teamDrawBoundary;const li=Number($("leagueInfluenceChoice").value);if(!Number.isInteger(li)||li<0||li>100||li%5){$("settingsStatus").textContent="League influence must be 0–100% in 5% steps.";return;}state.leagueInfluence=0;state.historicalXgInfluence=+$("historicalXgChoice").value;state.finishingInfluence=+$("finishingChoice").value;state.selectionMethod=$("selectionMethodChoice").value;state.winProb=+$("winProbChoice").value;state.minimumStability=+$("minimumStabilityChoice").value;state.confidenceMultiplier=+$("confidenceMultiplierChoice").value;state.allowDraw=true;state.drawGap=+$("drawGapChoice").value;state.drawProb=+$("drawProbChoice").value;
+ const hg=+$("homeGapChoice").value,ag=+$("awayGapChoice").value;if(![hg,ag].every(v=>Number.isFinite(v)&&v>=.05&&v<=2)){$("settingsStatus").textContent="Home and away xG thresholds must each be between 0.05 and 2.00.";return;}state.homeGap=hg;state.awayGap=ag;state.predictionHomeBoundary=state.teamDrawBoundary;state.predictionAwayBoundary=state.teamDrawBoundary;const li=Number($("leagueInfluenceChoice").value);if(!Number.isInteger(li)||li<0||li>100||li%5){$("settingsStatus").textContent="League influence must be 0–100% in 5% steps.";return;}state.leagueInfluence=0;state.historicalXgInfluence=+$("historicalXgChoice").value;state.finishingInfluence=+$("finishingChoice").value;state.selectionMethod=$("selectionMethodChoice").value;state.winProb=+$("winProbChoice").value;state.minimumStability=+$("minimumStabilityChoice").value;const minCoverageInput=+$("fpMinSelectCoverage").value;if(!Number.isFinite(minCoverageInput)||minCoverageInput<1||minCoverageInput>60){$("settingsStatus").textContent="Minimum SELECT coverage must be between 1% and 60%.";return;}state.minSelectCoverage=minCoverageInput/100;state.confidenceMultiplier=+$("confidenceMultiplierChoice").value;state.allowDraw=true;state.drawGap=+$("drawGapChoice").value;state.drawProb=+$("drawProbChoice").value;
  state.confidenceConfig={...state.confidenceConfig,points:pts,mediumPenalty:medium,highPenalty:high};store("fp_confidence_settings",state.confidenceConfig);
  state.mode=$("modeAuto").checked?"auto":"manual";state.manualIndex=+$("modelChoice").value;state.manualWindow=+$("windowChoice").value;state.minSample=+$("minSample").value;
  store("fp_architecture_v3",{version:3,models:{league:{drawGap:old.drawBoundary},team:{drawGap:state.teamDrawBoundary},ranked:{drawGap:Number($("fpDrawRank").value)}},savedAt:new Date().toISOString()});
- store("fp_settings",{mode:state.mode,manualIndex:state.manualIndex,manualWindow:state.manualWindow,minSample:state.minSample,homeGap:state.homeGap,awayGap:state.awayGap,predictionHomeBoundary:state.predictionHomeBoundary,predictionAwayBoundary:state.predictionAwayBoundary,leagueInfluence:state.leagueInfluence,historicalXgInfluence:state.historicalXgInfluence,finishingInfluence:state.finishingInfluence,confidenceMultiplier:state.confidenceMultiplier,selectionMethod:state.selectionMethod,winProb:state.winProb,minimumStability:state.minimumStability,allowDraw:state.allowDraw,drawGap:state.drawGap,drawProb:state.drawProb});
+ store("fp_settings",{mode:state.mode,manualIndex:state.manualIndex,manualWindow:state.manualWindow,minSample:state.minSample,homeGap:state.homeGap,awayGap:state.awayGap,predictionHomeBoundary:state.predictionHomeBoundary,predictionAwayBoundary:state.predictionAwayBoundary,leagueInfluence:state.leagueInfluence,historicalXgInfluence:state.historicalXgInfluence,finishingInfluence:state.finishingInfluence,confidenceMultiplier:state.confidenceMultiplier,selectionMethod:state.selectionMethod,winProb:state.winProb,minimumStability:state.minimumStability,minSelectCoverage:state.minSelectCoverage,allowDraw:state.allowDraw,drawGap:state.drawGap,drawProb:state.drawProb});
  if(state.mode==="manual"){state.activeIndex=state.manualIndex;state.activeWindow=state.manualWindow;if(state.matches.length){updatePredictions(state.matches,state.activeIndex);snapshotPredictions(state.matches);renderFixtures()}}
  else if(state.lastTest){const b=bestTestModel(state.lastTest);state.activeIndex=b?b.modelIndex:state.manualIndex;state.activeWindow=b?b.windowIndex:state.manualWindow;if(state.matches.length){updatePredictions(state.matches,state.activeIndex);snapshotPredictions(state.matches);renderFixtures()}}
  updateModelBanner();$("settingsStatus").textContent=state.mode==="auto"?"Settings saved. Auto will use the best eligible Brier score on the next test.":"Settings saved. Displayed predicted scores will now be consistent with the selected model.";
@@ -2329,6 +2332,10 @@ async function doTest(){
   fpV4Render(state.lastTest);
   fpV4AutoApply(state.lastTest);
   fpRenderUnifiedDashboard(state.lastTest,window.fpRankedRecommendation);
+  $("testStatus").textContent="Validating Model 4 historical match states; cached matches are reused…";
+  await fp4FetchHistory(r.matches,(done,total,valid,failed)=>{$("testStatus").textContent=`Model 4 event history ${done}/${total} · verified ${valid} · unavailable ${failed}`});
+  await fp4Backtest(r.matches);
+  if(state.matches.length){updatePredictions(state.matches,state.activeIndex);renderFixtures()}
   $("testStatus").textContent=`Completed · retrieval ${(fpFetchMs/1000).toFixed(1)}s · Models 1 & 2 ${((fpCoreMs-fpTestStart-fpFetchMs)/1000).toFixed(1)}s · Model 3 ${(fpRankMs/1000).toFixed(1)}s · total ${((performance.now()-fpTestStart)/1000).toFixed(1)}s. ${r.matches.length} retrieved matches (including warm-up).`+`${r.errors.length?" Unavailable: "+r.errors.join(", "):""}`;
   if(state.mode==="auto")$("activeModelNote")&&($("activeModelNote").textContent="Test recommendations are available below; copy to Settings and save to apply explicitly.");
   setBusy("Test complete",100);await new Promise(r=>setTimeout(r,250));hideBusy();
@@ -2367,7 +2374,7 @@ function fp4CheckSummary(summary,match){
  // ESPN goal events usually attribute own goals to the scoring side, but this must be checked.
  const countsMatch=h===match.homeScore&&a===match.awayScore;
  const complete=goals.length===expected&&countsMatch&&goals.every(g=>g.minute!==null)&&goals.every(g=>g.side);
- return {complete,reason:complete?'complete':!events.length&&expected===0?'zero-zero-without-event-proof':!events.length?'no-goal-events':goals.some(g=>!g.side)?'unknown-scoring-team':goals.some(g=>g.minute===null)?'missing-minute':goals.length!==expected?'goal-count-mismatch':'team-score-mismatch',goals:goals.length,expected,ownGoals:goals.filter(g=>g.own).length};
+ return {sequence:complete?goals.sort((a,b)=>a.minute-b.minute):null,complete,reason:complete?'complete':!events.length&&expected===0?'zero-zero-without-event-proof':!events.length?'no-goal-events':goals.some(g=>!g.side)?'unknown-scoring-team':goals.some(g=>g.minute===null)?'missing-minute':goals.length!==expected?'goal-count-mismatch':'team-score-mismatch',goals:goals.length,expected,ownGoals:goals.filter(g=>g.own).length};
 }
 async function fp4FetchSummary(match){
  const key='fp4_evt_'+match.leagueId+'_'+match.id;
@@ -2412,7 +2419,7 @@ async function fp4RunAudit(){
  }
  report.cancelled=fp4AuditState.cancel;report.finishedAt=new Date().toISOString();fp4AuditState.report=report;fp4AuditRender(report);
  const eligible=report.leagues.filter(r=>r.eligible).length;
- status.textContent=`Audit ${report.cancelled?'stopped':'finished'}: ${eligible}/${report.leagues.length} leagues passed sample data checks. Model 4 remains disabled pending predictive validation. Copy the report and paste it into ChatGPT.`;
+ status.textContent=`Audit ${report.cancelled?'stopped':'finished'}: ${eligible}/${report.leagues.length} leagues passed sample data checks. Event eligibility alone does not activate Model 4. Run historical Model Test for predictive validation.`;
  }catch(e){status.textContent='Audit failed: '+String(e.message||e)}finally{run.disabled=false;stop.disabled=true}
 }
 function fp4InitAudit(){
@@ -2420,7 +2427,100 @@ function fp4InitAudit(){
  document.getElementById('fp4AuditCancel')?.addEventListener('click',()=>{fp4AuditState.cancel=true});
  document.getElementById('fp4AuditCopy')?.addEventListener('click',async()=>{const ta=document.getElementById('fp4AuditReport');if(!ta?.value)return;try{await navigator.clipboard.writeText(ta.value);document.getElementById('fp4AuditStatus').textContent='Diagnostic report copied. Paste it into ChatGPT.'}catch{ta.focus();ta.select();document.execCommand('copy')}});
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fp4InitAudit);else fp4InitAudit();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{fp4InitAudit();fp4ReportRender(fp4Validation)});else queueMicrotask(()=>{fp4InitAudit();fp4ReportRender(fp4Validation)})
+
+
+/* MODEL 4: independent match-state frequencies, never a goals/xG Poisson forecast. */
+const FP4_VALIDATION_KEY='fp4_predictive_validation_v1';
+let fp4Validation=readStore(FP4_VALIDATION_KEY,{});
+function fp4Timeline(m){
+ const k='fp4_evt_'+m.leagueId+'_'+m.id;
+ try{const o=JSON.parse(localStorage.getItem(k)||'null');return o?.v===FP4_AUDIT_VERSION&&o.result?.complete&&Array.isArray(o.result.sequence)?o.result.sequence:null}catch{return null}
+}
+function fp4MatchStates(m){
+ const seq=fp4Timeline(m);if(!seq)return null;
+ let h=0,a=0,first=null,leadLostH=false,leadLostA=false,behindH=false,behindA=false,equalisedH=false,equalisedA=false,lateH=0,lateA=0;
+ for(const g of seq){const oldH=h,oldA=a;if(g.side==='H')h++;else if(g.side==='A')a++;else return null;
+  if(!first)first=g.side;
+  if(oldH>oldA&&h<=a)leadLostH=true;if(oldA>oldH&&a<=h)leadLostA=true;
+  if(oldH<oldA&&h===a)equalisedH=true;if(oldA<oldH&&a===h)equalisedA=true;
+  if(h<a)behindH=true;if(a<h)behindA=true;
+  if(g.minute>=75){if(g.side==='H')lateH++;else lateA++}
+ }
+ if(h!==m.homeScore||a!==m.awayScore)return null;
+ return {first,leadLostH,leadLostA,behindH,behindA,equalisedH,equalisedA,lateH,lateA,outcome:getOutcome(h,a)};
+}
+function fp4TeamForm(previous,key,windows,weights){
+ const matches=previous.filter(m=>teamKey(m,'H')===key||teamKey(m,'A')===key).slice(-windows[0]);
+ if(matches.length<Math.min(5,windows[0]))return null;
+ const rates=[];
+ for(let i=0;i<3;i++){
+  const part=matches.slice(-windows[i]);let n=0,wins=0,first=0,protect=0,lead=0,recover=0,behind=0,late=0,draws=0;
+  for(const m of part){const st=fp4MatchStates(m);if(!st)continue;
+   const home=teamKey(m,'H')===key,side=home?'H':'A',won=st.outcome===side;
+   n++;wins+=+won;draws+=+(st.outcome==='D');first+=+(st.first===side);
+   if(st.first===side){lead++;protect+=+(won)}
+   if(home?st.behindH:st.behindA){behind++;recover+=+(st.outcome!== (home?'A':'H'))}
+   late+=home?st.lateH:st.lateA;
+  }
+  if(n<Math.min(3,windows[i]))return null;
+  rates.push({wins:wins/n,first:first/n,protect:lead?protect/lead:.5,recover:behind?recover/behind:.3,late:late/n,draws:draws/n,n});
+ }
+ return Object.fromEntries(['wins','first','protect','recover','late','draws'].map(k=>[k,rates.reduce((sum,r,i)=>sum+r[k]*weights[i],0)]));
+}
+function fp4Predict(m,previous,config={windowIndex:0,weightIndex:1,selectThreshold:.47,margin:.07}){
+ const windows=WINDOW_SETS[config.windowIndex],weights=MODELS[config.weightIndex].weights;
+ const h=fp4TeamForm(previous,teamKey(m,'H'),windows,weights),a=fp4TeamForm(previous,teamKey(m,'A'),windows,weights);
+ if(!h||!a)return null;
+ // Independent match-state outcome distribution; win rate is the opponent-strength anchor.
+ // Draw receives an independent mass from draw persistence, lead protection and recovery.
+ const hs=.33*h.wins+.21*h.first+.19*h.protect+.17*h.recover+.10*Math.min(1,h.late);
+ const as=.33*a.wins+.21*a.first+.19*a.protect+.17*a.recover+.10*Math.min(1,a.late);
+ const drawBase=clamp(.16+.24*(h.draws+a.draws)/2+.15*(1-Math.abs(hs-as))+.06*(h.recover+a.recover)/2,.12,.48);
+ const homeRaw=Math.exp(2.4*hs+.14),awayRaw=Math.exp(2.4*as);
+ const probs={H:(1-drawBase)*homeRaw/(homeRaw+awayRaw),D:drawBase,A:(1-drawBase)*awayRaw/(homeRaw+awayRaw)};
+ const prediction=['H','D','A'].reduce((best,k)=>probs[k]>probs[best]?k:best,'H');
+ const ordered=Object.values(probs).sort((x,y)=>y-x),margin=ordered[0]-ordered[1];
+ const selection=probs[prediction]>=config.selectThreshold&&margin>=config.margin?prediction:'N';
+ return {prediction,probs,selection,confidence:clamp(Math.round(3+12*margin),1,10),predictedScore:'—',model4:true,margin,matchState:{home:h,away:a},explanation:'Match-state win strength, first scorer, lead protection, recovery and late-goal tendencies; no league averages or xG.'};
+}
+function fp4Approved(id){const r=fp4Validation[id];return !!(r&&r.approved&&r.version===1&&r.holdoutN>=30&&r.coverage>=state.minSelectCoverage)}
+function fp4Attach(m,previous){m.model4Prediction=null;if(!fp4Approved(m.leagueId))return;const cfg=fp4Validation[m.leagueId].config;m.model4Prediction=fp4Predict(m,previous,cfg)}
+function fp4ReportRender(report){
+ const target=document.getElementById('fp4PredictiveResults');if(!target)return;
+ const rows=Object.entries(report).map(([id,r])=>`<tr><td>${esc(LEAGUES[id]||id)}</td><td>${r.historyN||0}</td><td>${r.holdoutN||0}</td><td>${r.accuracy!=null?(100*r.accuracy).toFixed(1)+'%':'—'}</td><td>${r.selectPrecision!=null?(100*r.selectPrecision).toFixed(1)+'%':'—'}</td><td>${r.coverage!=null?(100*r.coverage).toFixed(1)+'%':'—'}</td><td>${r.approved?'FOUR MODELS':'THREE-MODEL FALLBACK'}</td><td>${esc(r.reason||'')}</td></tr>`).join('');
+ target.innerHTML=`<div class="tablewrap"><table><thead><tr><th>League</th><th>Verified history</th><th>Holdout</th><th>Accuracy</th><th>SELECT precision</th><th>SELECT coverage</th><th>Mode</th><th>Validation</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+ const output=document.getElementById('fp4PredictiveReport');if(output)output.value=JSON.stringify({generated:new Date().toISOString(),minimumCoverage:state.minSelectCoverage,leagues:report},null,2);
+}
+async function fp4FetchHistory(matches,progress){
+ const finished=matches.filter(isFinished);let i=0,done=0,failed=0;
+ async function worker(){while(i<finished.length&&!testCancelRequested){const m=finished[i++];if(fp4Timeline(m)){done++;continue}try{const result=await fp4FetchSummary(m);if(result.complete&&result.sequence)done++;else failed++}catch{failed++}
+  if((done+failed)%25===0){progress?.(done+failed,finished.length,done,failed);await new Promise(r=>setTimeout(r,0))}
+ }}
+ await Promise.all(Array.from({length:4},worker));return {done,failed,total:finished.length};
+}
+async function fp4Backtest(matches){
+ const result={};const by={};for(const m of matches)(by[m.leagueId]??=[]).push(m);
+ for(const [id,group] of Object.entries(by)){
+  if(testCancelRequested)break;
+  const rows=group.filter(isFinished).sort((a,b)=>new Date(a.date)-new Date(b.date)),n=rows.filter(m=>fp4MatchStates(m)).length;
+  const cutoff=Math.floor(rows.length*.75),candidates=[];
+  for(let wi=0;wi<3;wi++)for(let weightIndex=0;weightIndex<4;weightIndex++){
+   const config={windowIndex:wi,weightIndex,selectThreshold:.47,margin:.07};let trainHits=0,trainN=0;
+   for(let j=0;j<cutoff;j++){const p=fp4Predict(rows[j],rows.slice(0,j).filter(x=>new Date(x.date)<new Date(rows[j].date)),config);if(!p)continue;trainN++;trainHits+=+(p.prediction===getOutcome(rows[j].homeScore,rows[j].awayScore))}
+   candidates.push({...config,trainN,trainHits,trainAccuracy:trainN?trainHits/trainN:0});
+  }
+  candidates.sort((a,b)=>b.trainAccuracy-a.trainAccuracy||b.trainN-a.trainN);
+  const config=candidates[0],hold=[];
+  for(let j=cutoff;j<rows.length;j++){const p=fp4Predict(rows[j],rows.slice(0,j).filter(x=>new Date(x.date)<new Date(rows[j].date)),config);if(p)hold.push({...p,actual:getOutcome(rows[j].homeScore,rows[j].awayScore)})}
+  const hits=hold.filter(p=>p.prediction===p.actual).length,selected=hold.filter(p=>p.selection===p.prediction),selHits=selected.filter(p=>p.prediction===p.actual).length;
+  const coverage=hold.length?selected.length/hold.length:0,accuracy=hold.length?hits/hold.length:null,precision=selected.length?selHits/selected.length:null;
+  const approved=n>=80&&hold.length>=30&&selected.length>=12&&coverage>=state.minSelectCoverage&&precision>=.55&&accuracy>=.36&&hold.some(p=>p.prediction==='D');
+  result[id]={version:1,approved,historyN:n,holdoutN:hold.length,accuracy,selectPrecision:precision,coverage,selectN:selected.length,selectHits:selHits,config,reason:approved?'Chronological holdout passed':n<80?'Insufficient verified match-state history':hold.length<30?'Insufficient chronological holdout':selected.length<12?'Insufficient SELECT evidence':coverage<state.minSelectCoverage?'Below minimum SELECT coverage':precision<.55?'SELECT precision below validation floor':accuracy<.36?'Outcome accuracy below validation floor':'DRAW evidence or validation safeguard failed'};
+  fp4ReportRender(result);await new Promise(r=>setTimeout(r,0));
+ }
+ fp4Validation={...fp4Validation,...result};store(FP4_VALIDATION_KEY,fp4Validation);fp4ReportRender(result);return result;
+}
 
 /* Three-model UI: reuse historical predictions for draw-gap evaluation. */
 const FP_PREDICTION_ENGINE_VERSION="3.0-test-only";
