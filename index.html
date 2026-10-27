@@ -423,13 +423,14 @@ main section details>summary{cursor:pointer}
 @media(max-width:900px){.model-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:450px){.model-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px}.model-cell{padding:9px!important}.model-title{font-size:11px}}
 
-/* Consolidated Match Dynamics: same-height cards with a distinct confirmation accent. */
+/* Coordinated independent model cards. */
 .model-grid:not(.single)>.model-cell{min-width:0;display:flex;flex-direction:column;gap:5px}
 .model-grid:not(.single)>.model-cell .model-bottom{margin-top:auto}
 .fp-dynamics{background:linear-gradient(155deg,rgba(70,91,170,.18),rgba(16,117,112,.11))!important;box-shadow:inset 3px 0 0 rgba(119,150,229,.52)}
 .fp-dyn-support{box-shadow:inset 3px 0 0 #36d49c!important}
 .fp-dyn-caution{box-shadow:inset 3px 0 0 #f1b75c!important}
 @media(min-width:900px){.model-grid:not(.single)>.model-cell{padding:13px 12px}}
+.model-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}.model-grid.single{grid-template-columns:repeat(1,minmax(0,1fr))!important}.model-cell:has(.model-title){min-width:0}.model-title{letter-spacing:.015em} .model-cell:has(.model-title) .model-title{font-weight:750} .model-cell:has(.model-title) .model-title:where(:not(:empty)){line-height:1.35} @media(max-width:750px){.model-grid{grid-template-columns:1fr!important}}
 </style>
 <style id="fp-three-model-refresh">
 main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{line-height:1.45;max-width:70ch}
@@ -475,7 +476,7 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 @media(max-width:560px){.recent-goal-row,.recent-red-row{grid-template-columns:auto 1fr}.recent-goal-row>.tag,.recent-red-row>.tag{grid-column:2;justify-self:start}.fp-prob-triplet span{display:block}.fp-prob-triplet b{display:block;margin-top:3px}}
 @media(prefers-reduced-motion:reduce){.recent-goal-row,.recent-red-row{animation:none!important}}
 </style>
-<style>.fp4-audit-scroll{overflow-x:auto;margin-top:12px}.fp4-audit-table{width:100%;border-collapse:collapse;font-size:12px}.fp4-audit-table th,.fp4-audit-table td{padding:10px;text-align:left;border-bottom:1px solid rgba(128,148,172,.2)}.fp4-audit-table th{white-space:nowrap}.fp4-ok{color:#57cfa0}.fp4-no{color:#ef9b8e}.fp4-audit-output{margin:10px 0}.fp4-audit-table td:last-child{min-width:190px}</style></head>
+</head>
 <body>
 <header>
  <div class="row between">
@@ -586,7 +587,7 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 <section id="test" hidden>
  <h2>Model Test</h2><p class="muted smalltext">Historical prediction validation for all four independent models, with automatic league-specific three-model fallback.</p>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><p class="muted smalltext">Validated recommendations are saved automatically after the complete historical test. Existing settings are retained if safeguards fail.</p><div class="panel" id="fpTestUnifiedResults"><h3>Three prediction models + Match Dynamics confirmation</h3><p class="muted smalltext">All models use chronological pre-match histories. Model 4 validates whether scoring-sequence SUPPORT improves the existing three-model SELECT precision; it does not independently predict or SELECT.</p><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Match Dynamics · conditional SUPPORT / CAUTION holdout</summary><div id="fp4PredictiveResults">Run Model Test to validate Match Dynamics.</div><textarea id="fp4PredictiveReport" readonly aria-label="Model 4 validation export" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><details class="fp-advanced"><summary>Model 3 · configuration and holdout detail</summary><div id="rankedTestResults">Run Model Test for opposition-ranked optimisation.</div></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><div id="outcomeCompare"></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced"><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><p class="muted smalltext">Validated recommendations are saved automatically after the complete historical test. Existing settings are retained if safeguards fail.</p><div class="panel" id="fpTestUnifiedResults"><h3>Three independent models · Adaptive League Strategy</h3><p class="muted smalltext">Each league uses Core Agreement (Models 2+3) by default. Full Agreement (Models 1+2+3) is enabled only when earlier training data and a separate later holdout support Model 1's contribution. Model 1 remains visible as REFERENCE ONLY in Core leagues.</p><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced" open><summary>Adaptive League Strategy · chronological comparison</summary><div id="fpAdaptiveResults">Run Model Test to compare league strategies.</div><textarea id="fpAdaptiveReport" readonly aria-label="Adaptive league strategy report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><details class="fp-advanced"><summary>Model 3 · configuration and holdout detail</summary><div id="rankedTestResults">Run Model Test for opposition-ranked optimisation.</div></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><div id="outcomeCompare"></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced"><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced"><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -1350,8 +1351,8 @@ function originalSettings(){return state.originalSettings||{modelIndex:1,windowI
 function originalPick(m){const o=originalSettings(),gap=m.xgDifference;return m.prediction==="D"&&Math.abs(gap)<=state.drawGap&&Number(m.probs?.D)>=state.drawProb?"D":m.prediction==="H"&&gap>=o.homeGap?"H":m.prediction==="A"&&-gap>=o.awayGap?"A":"N"}
 function calculateOriginalIndependent(m,previous){const o=originalSettings();const v=calculateOriginalPrediction(m,previous,{...MODELS[o.modelIndex],windows:WINDOW_SETS[o.windowIndex]});v.selection=originalPick(v);v.confidence=Math.min(v.confidence,hardGoalGapConfidenceCap(Math.abs(v.xgDifference),v.prediction,o.confidenceMultiplier,o.homeGap,o.awayGap));return v}
 function fpAverageConfidence(m){const a=m.originalPrediction||m.original,c=m.rankedPrediction||m.ranked;return a&&c?(Number(a.confidence)+Number(m.confidence)+Number(c.confidence))/3:Number(m.confidence)||0}
-function fpStatusTag(m){const f=fpModelFlags(m);if(f.dynamicsConfirmed)return '<span class="fp-status fp-status-purple">Dynamics Confirmed · Models 2+3</span>'+(f.consensus?' <span class="fp-status fp-status-green">Bet on Outcome · 3/3</span>':' <span class="fp-status fp-status-amber">Model 1 independent</span>');if(!f.matching)return '';if(f.dynamicsCaution)return '<span class="fp-status fp-status-amber">3/3 agreement · Dynamics caution</span>';const premium=f.consensus&&Math.round(fpAverageConfidence(m))>=8;return `<span class="fp-status ${f.consensus?(premium?'fp-status-purple':'fp-status-green'):'fp-status-amber'}">${f.consensus?'Bet on Outcome · '+f.count+'/'+f.count:'Matching Outcome · '+f.count+'/'+f.count}</span>`}
-function fpExplicitFlags(m){const f=fpModelFlags(m);if(!f.valid)return '<span class="tag">Three-model comparison unavailable</span>';return `<span class="fp-status ${f.matching?'fp-status-amber':'fp-status-neutral'}">${f.matching?'Same outcome · '+f.count+'/'+f.count:'Different outcomes'}</span><span class="fp-status ${f.consensus?'fp-status-green':'fp-status-neutral'}">${f.consensus?'Bet on outcome · '+f.count+'/'+f.count:'No unanimous SELECT'}${f.dynamicsConfirmed?' · Models 2+3 Dynamics confirmed':f.dynamicsCaution?' · Dynamics caution':''}</span>`}
+function fpStatusTag(m){const f=fpModelFlags(m);if(!f.valid)return '<span class="fp-status fp-status-neutral">Agreement unavailable</span>';return `<span class="fp-status ${f.consensus?'fp-status-green':f.matching?'fp-status-amber':'fp-status-neutral'}">${f.consensus?'BET ON OUTCOME':f.matching?'SAME OUTCOME':'NO AGREEMENT'} · ${f.count}/${f.count}</span> ${fpAdaptiveBadge(m.leagueId)}`}
+function fpExplicitFlags(m){return fpStatusTag(m)}
 function comparisonTag(m){return fpStatusTag(m)}
 function fpIndependentProbs(v){
  if(!v)return null;
@@ -1386,7 +1387,7 @@ function comparisonRows(m){
  const mode=state.activePredictionView||'both';
  const cell=(v,label)=>{if(!v)return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Not prediction-validated for this league</div></div>`;const chosen=v.selection===v.prediction;return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">${v.model4&&v.probs?`HOME ${Math.round(v.probs.H*100)}% · DRAW ${Math.round(v.probs.D*100)}% · AWAY ${Math.round(v.probs.A*100)}%`:`Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${Number(v.xgDifference??(v.homeLambda-v.awayLambda)).toFixed(2)}`}</div><div class="model-bottom"><span class="${chosen?'model-select':'model-no-select'}">${chosen?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">Confidence ${v.confidence}/10</span></div></div>`};
  if(!original&&mode==='original')return '';
- return `<div class="fixture-comparison">${mode==='both'&&original?comparisonTag(m):''}<div class="model-grid ${mode==='both'&&original?'':'single'}">${mode!=='updated'&&original?cell(original,'League-adjusted · Poisson'):''}${mode!=='original'?cell(m,'Team-form · Goal difference'):''}${mode==='both'?rankedCell(m.rankedPrediction):''}${mode==='both'?fp4ConfirmationCard(m.model4Confirmation):''}</div></div>`;
+ return `<div class="fixture-comparison">${mode==='both'&&original?comparisonTag(m):''}<div class="model-grid ${mode==='both'&&original?'':'single'}">${mode!=='updated'&&original?cell(original,fpActiveStrategy(m.leagueId)==='23'?'League-adjusted · REFERENCE ONLY':'League-adjusted · Poisson'):''}${mode!=='original'?cell(m,'Team-form · Goal difference'):''}${mode==='both'?rankedCell(m.rankedPrediction):''}</div></div>`;
 }
 function comparisonHistoryRows(x){
  const mode=state.activePredictionView||'both';
@@ -1395,7 +1396,7 @@ function comparisonHistoryRows(x){
  const selected=v.selection===v.prediction;
  const numeric=Number.isFinite(Number(v.homeLambda))&&v.homeLambda!=null&&Number.isFinite(Number(v.awayLambda))&&v.awayLambda!=null;
  return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">${v.model4&&v.probs?`H ${Math.round(v.probs.H*100)}% · D ${Math.round(v.probs.D*100)}% · A ${Math.round(v.probs.A*100)}%`:numeric?`Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)}`:'Saved pre-match prediction'}</div><div class="model-bottom"><span class="${selected?'model-select':'model-no-select'}">${selected?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">${v.confidence!=null?'Confidence '+esc(String(v.confidence))+'/10':'Confidence —'}</span></div><div class="model-sub history-status ${status.toLowerCase()}">${status}${selected&&x.actualOutcome?' · SELECT '+(status==='Correct'?'won':'lost'):''}</div></div>`};
- return `<div class="fixture-comparison"><div class="model-grid">${cell(x.original,'League-adjusted · Poisson')}${cell(x,'Team-form · Goal difference')}${cell(x.ranked,'Opposition-ranked · Goals only')}${fp4ConfirmationCard(x.model4Confirmation)}</div></div>${mode==='both'?`<div class="fp-history-status">${(()=>{const f=fpHistoryFlags(x);return f.matching?`<span class="fp-status ${f.consensus?'fp-status-green':'fp-status-amber'}">${f.consensus?'Bet on Outcome':'Same Outcome'} · ${f.count}/${f.count}</span>`:''})()}</div>`:''}`;
+ return `<div class="fixture-comparison"><div class="model-grid">${cell(x.original,x.agreement?.strategy==='23'?'League-adjusted · REFERENCE ONLY':'League-adjusted · Poisson')}${cell(x,'Team-form · Goal difference')}${cell(x.ranked,'Opposition-ranked · Goals only')}</div></div>${mode==='both'?`<div class="fp-history-status">${(()=>{const f=fpHistoryFlags(x);return f.matching?`<span class="fp-status ${f.consensus?'fp-status-green':'fp-status-amber'}">${f.consensus?'Bet on Outcome':'Same Outcome'} · ${f.count}/${f.count}</span>`:''})()}</div>`:''}`;
 }
 function fpRate(h,n){return n?`${(100*h/n).toFixed(1)}%`:'—'}
 function fpHistoryPair(x){return !!(x.original&&['H','D','A'].includes(x.original.prediction)&&['H','D','A'].includes(x.prediction));}
@@ -1429,7 +1430,7 @@ function updatePredictions(matches,index=state.activeIndex){
   let i=0;
   while(i<rows.length){const kickoff=new Date(rows[i].date).getTime();let end=i+1;
    while(end<rows.length&&new Date(rows[end].date).getTime()===kickoff)end++;
-   for(let j=i;j<end;j++){const m=rows[j];Object.assign(m,calculatePrediction(m,previous,{...MODELS[index],windows:WINDOW_SETS[state.activeWindow]}));m.originalPrediction=calculateOriginalIndependent(m,previous);m.rankedPrediction=rankedGoalModel(m,previous);fp4Attach(m,previous)}
+   for(let j=i;j<end;j++){const m=rows[j];Object.assign(m,calculatePrediction(m,previous,{...MODELS[index],windows:WINDOW_SETS[state.activeWindow]}));m.originalPrediction=calculateOriginalIndependent(m,previous);m.rankedPrediction=rankedGoalModel(m,previous);/* adaptive agreement uses existing three predictions */}
    for(let j=i;j<end;j++)if(isFinished(rows[j]))previous.push(rows[j]);
    i=end;
   }
@@ -1445,7 +1446,7 @@ function probsHtml(m){
  ${fpModelProbabilityHtml(m.originalPrediction||m.original,'01 · League-adjusted')}
  ${fpModelProbabilityHtml(m,'02 · Team-form')}
  ${fpModelProbabilityHtml(m.rankedPrediction,'03 · Opposition-ranked')}
- ${m.model4Confirmation?`<div class="fp-prob-model"><strong>04 · Match Dynamics</strong><p>${esc(m.model4Confirmation.status)} · confirmation only (no independent probabilities)</p></div>`:''}
+
  <div class="fp-prob-model fp-combined"><strong>Combined outlook · equal-weight model average</strong>${pct?`<div class="fp-prob-triplet">${[['H','HOME'],['D','DRAW'],['A','AWAY']].map(([k,n])=>`<span class="${combined[k]===Math.max(combined.H,combined.D,combined.A)?'fp-prob-active':''}">${n}<b>${pct[k]}%</b></span>`).join('')}</div>`:'<p class="muted smalltext">Unavailable</p>'}</div>
  <p class="muted smalltext">The combined outlook is informational and does not change individual predictions, confidence or SELECT decisions. Equal weighting is not yet historically validated.</p></div>`;
 }
@@ -1583,13 +1584,7 @@ function upcoming(){
  if(league!=="all")list=list.filter(m=>m.leagueId===league);
  return list.sort($("sort").value==="confidence"?(a,b)=>fpAverageConfidence(b)-fpAverageConfidence(a):(a,b)=>new Date(a.date)-new Date(b.date));
 }
-function fpModelFlags(m){
- const a=m.originalPrediction||m.original,b=m,c=m.rankedPrediction||m.ranked;
- const valid=!!(a&&['H','D','A'].includes(a.prediction)&&['H','D','A'].includes(b.prediction)&&c&&['H','D','A'].includes(c.prediction));
- const available=[a,b,c];const matching=valid&&available.every(v=>v.prediction===b.prediction);
- const aSelect=valid&&a.selection===a.prediction,bSelect=valid&&b.selection===b.prediction;
- return {valid,matching,count:3,selected:aSelect||bSelect,consensus:matching&&available.every(v=>v.selection===v.prediction),dynamicsConfirmed:!!(m.model4Confirmation?.pairSelected&&m.model4Confirmation?.status==='SUPPORT'),dynamicsCaution:m.model4Confirmation?.status==='CAUTION'};
-}
+function fpModelFlags(m){const p=fpAdaptivePair(m),active=fpActiveStrategy(m.leagueId),full=active==='123';return {valid:p.valid,matching:full?p.triple:p.pair,count:full?3:2,selected:full?p.tripleSelect:p.pairSelect,consensus:full?p.tripleSelect:p.pairSelect,disagree:p.valid&&!(full?p.triple:p.pair),strategy:active,outcome:p.outcome}}
 let fpFixtureFilter='all',fpResultFilter='all',fpWeeklyFilter='all';
 function fpFilterButtons(id,attr,value,fn){document.querySelectorAll(`#${id} button`).forEach(b=>{b.classList.toggle('active',b.dataset[attr]===value);b.onclick=()=>{fn(b.dataset[attr]);};});}
 function renderFixtures(){
@@ -1616,7 +1611,7 @@ function fpDrawDecision(m){
 function renderTop10(){
  const all=upcoming().filter(m=>m.probs&&['H','D','A'].includes(m.prediction))
  .sort((a,b)=>{const fa=fpModelFlags(a),fb=fpModelFlags(b);return Number(fb.consensus)-Number(fa.consensus)||Number(fb.matching)-Number(fa.matching)||Number(b.selection===b.prediction)-Number(a.selection===a.prediction)||fpAverageConfidence(b)-fpAverageConfidence(a)||(b.probs[b.prediction]||0)-(a.probs[a.prediction]||0)}).slice(0,10);
- $('topbox').innerHTML=`<div class="fp-feature-head"><h2>Top 10 picks</h2><p class="muted smalltext">Ranked by three-model agreement, independently qualified SELECT, confidence and outcome probability. Predictions remain unchanged; NO SELECT is not a betting recommendation.</p></div>`+(all.map((m,i)=>fpCompactFixture(m,`#${i+1}`,fpDrawDecision(m))).join('')||'<div class="empty">No upcoming fixtures in this window.</div>');
+ $('topbox').innerHTML=`<div class="fp-feature-head"><h2>Top 10 picks</h2><p class="muted smalltext">Ranked by active league agreement, independently qualified SELECT, confidence and outcome probability. Predictions remain unchanged; NO SELECT is not a betting recommendation.</p></div>`+(all.map((m,i)=>fpCompactFixture(m,`#${i+1}`,fpDrawDecision(m))).join('')||'<div class="empty">No upcoming fixtures in this window.</div>');
 }
 function goalCountProbability(lambda, minimumGoals){
  let below=0;
@@ -1653,12 +1648,12 @@ function snapshotPredictions(matches){
   const id=eventId(m),existing=byId.get(id);
   const original=m.originalPrediction?{...m.originalPrediction,modelIndex:originalSettings().modelIndex,windowIndex:originalSettings().windowIndex,settingsVersion:JSON.stringify(originalSettings()),rankSettings:{...winRankSettings.league}}:null;
   const ranked=m.rankedPrediction?{...m.rankedPrediction}:null;
-  const model4=m.model4Confirmation?JSON.parse(JSON.stringify(m.model4Confirmation)):null;
+  
   const flags=fpModelFlags(m);
-  const agreement={count:3,sameOutcome:flags.matching,betOnOutcome:flags.consensus,dynamicsConfirmed:flags.dynamicsConfirmed,dynamicsCaution:flags.dynamicsCaution,models23Selected:!!model4?.pairSelected,model1Agreed:!!model4?.model1Agree};
+  const agreement={count:flags.count,strategy:flags.strategy,sameOutcome:flags.matching,betOnOutcome:flags.consensus};
   if(existing){continue;} // First saved pre-kickoff forecast is immutable, including agreement and model availability.
 
-  const snap={ranked,original,model4:null,model4Confirmation:model4,agreement,model4Config:model4?JSON.parse(JSON.stringify(fp4Validation[m.leagueId]?.config||{})):null,model3Config:JSON.parse(JSON.stringify(rankedSettings)),model2Settings:{windowIndex:state.activeWindow,modelIndex:state.activeIndex,homeGap:state.homeGap,awayGap:state.awayGap,drawGap:state.drawGap,drawProb:state.drawProb},id,leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,date:m.date,prediction:m.prediction,selection:m.selection??selectionWithDraw(m.xgDifference,m.prediction,m.probs),confidence:m.confidence,probs:{...m.probs},predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,expectedGoalBreakdown:m.expectedGoalBreakdown,supportFlags:(m.risk?.supportFlags||[]).map(f=>typeof f==='string'?f:f.text),riskLevel:m.risk?.level||'low',riskFlags:(m.risk?.flags||[]).map(f=>typeof f==='string'?f:f.text),modelIndex:state.activeIndex,windowIndex:state.activeWindow,teamRankSettings:{...winRankSettings.team},savedAt:new Date().toISOString()};
+  const snap={ranked,original,agreement,model3Config:JSON.parse(JSON.stringify(rankedSettings)),model2Settings:{windowIndex:state.activeWindow,modelIndex:state.activeIndex,homeGap:state.homeGap,awayGap:state.awayGap,drawGap:state.drawGap,drawProb:state.drawProb},id,leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,date:m.date,prediction:m.prediction,selection:m.selection??selectionWithDraw(m.xgDifference,m.prediction,m.probs),confidence:m.confidence,probs:{...m.probs},predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,expectedGoalBreakdown:m.expectedGoalBreakdown,supportFlags:(m.risk?.supportFlags||[]).map(f=>typeof f==='string'?f:f.text),riskLevel:m.risk?.level||'low',riskFlags:(m.risk?.flags||[]).map(f=>typeof f==='string'?f:f.text),modelIndex:state.activeIndex,windowIndex:state.activeWindow,teamRankSettings:{...winRankSettings.team},savedAt:new Date().toISOString()};
   state.history.push(snap);byId.set(id,snap);added++;
  }
  state.history=state.history.filter(x=>Date.now()-new Date(x.date).getTime()<730*86400000).slice(-10000);
@@ -1697,7 +1692,7 @@ function renderHistory(){
  renderConfidencePerformance(settled);
  renderRiskPerformance(settled);
  if(!visible.length){$('historyList').innerHTML=`<div class="empty">No saved predictions in this period yet. Load fixtures regularly to build your history.</div>`;return}
- $('historyList').innerHTML=visible.map(x=>{const done=!!x.actualOutcome,ok=done&&x.actualOutcome===x.prediction,score=x.actualScore||"Result pending",prob=k=>Math.round((x.probs[k]||0)*100),reason=!done?"Waiting for the final result.":ok?"The model's most likely outcome happened.":`The model favoured ${outcomeName(x.prediction)} (${prob(x.prediction)}%), but ${outcomeName(x.actualOutcome).toLowerCase()} happened.`;return`<article class="match"><div class="row between wrap"><span class="league">${esc(x.league)}</span><div class="row wrap">${confidenceBadge(x.confidence)}<span class="tag ${!done?"":ok?"good":"bad"}">${!done?"Pending":ok?"Correct":"Incorrect"}</span></div></div><div class="meta">${esc(fmtDate(x.date))} · Model ${MODELS[x.modelIndex]?.short||"?"}</div><div class="row between" style="margin-top:7px"><strong class="grow">${esc(x.home)}</strong><strong>${esc(score)}</strong><strong class="grow" style="text-align:right">${esc(x.away)}</strong></div>${comparisonHistoryRows(x)}${x.agreement?`<div class="muted smalltext">Saved agreement: ${x.agreement.count}/ ${x.agreement.count} · Same outcome ${x.agreement.sameOutcome?"YES":"NO"} · Bet on outcome ${x.agreement.betOnOutcome?"YES":"NO"}</div>`:""}${x.model4Confirmation?`<div class="muted smalltext">Saved Dynamics: ${esc(x.model4Confirmation.status)} · ${esc(outcomeName(x.model4Confirmation.proposedOutcome))} · ${x.agreement?.dynamicsConfirmed?'Confirmed':'Not confirmed'}</div>`:''}<div class="probrow">${[["H","Home"],["D","Draw"],["A","Away"]].map(([k,n])=>`<div class="prob"><span>${n}</span><strong>${prob(k)}%</strong></div>`).join("")}</div><div class="notice"><strong>${done?(ok?"Why it was correct":"Why it was wrong"):"What the model expected"}</strong><br>${esc(reason)}${done&&x.predictedScore?historyScoreReview(x):""}</div>${x.supportFlags?.length||x.riskFlags?.length?`<details><summary>Saved evidence at kick-off</summary><div class="explain">${x.supportFlags?.length?`<p><strong>Supported the prediction</strong></p><ul>${x.supportFlags.map(v=>`<li>${esc(v)}</li>`).join("")}</ul>`:""}${x.riskFlags?.length?`<p><strong>Risks against the prediction</strong></p><ul>${x.riskFlags.map(v=>`<li>${esc(v)}</li>`).join("")}</ul>`:""}</div></details>`:""}${x.expectedGoalBreakdown?`<details><summary>Original expected-goals calculation</summary><div class="explain">${expectedGoalAuditHtml({expectedGoalBreakdown:x.expectedGoalBreakdown,home:x.home,away:x.away})}</div></details>`:""}</article>`}).join("");
+ $('historyList').innerHTML=visible.map(x=>{const done=!!x.actualOutcome,ok=done&&x.actualOutcome===x.prediction,score=x.actualScore||"Result pending",prob=k=>Math.round((x.probs[k]||0)*100),reason=!done?"Waiting for the final result.":ok?"The model's most likely outcome happened.":`The model favoured ${outcomeName(x.prediction)} (${prob(x.prediction)}%), but ${outcomeName(x.actualOutcome).toLowerCase()} happened.`;return`<article class="match"><div class="row between wrap"><span class="league">${esc(x.league)}</span><div class="row wrap">${confidenceBadge(x.confidence)}<span class="tag ${!done?"":ok?"good":"bad"}">${!done?"Pending":ok?"Correct":"Incorrect"}</span></div></div><div class="meta">${esc(fmtDate(x.date))} · Model ${MODELS[x.modelIndex]?.short||"?"}</div><div class="row between" style="margin-top:7px"><strong class="grow">${esc(x.home)}</strong><strong>${esc(score)}</strong><strong class="grow" style="text-align:right">${esc(x.away)}</strong></div>${comparisonHistoryRows(x)}${x.agreement?`<div class="muted smalltext">Saved agreement: ${x.agreement.count}/ ${x.agreement.count} · Same outcome ${x.agreement.sameOutcome?"YES":"NO"} · Bet on outcome ${x.agreement.betOnOutcome?"YES":"NO"}</div>`:""}<div class="probrow">${[["H","Home"],["D","Draw"],["A","Away"]].map(([k,n])=>`<div class="prob"><span>${n}</span><strong>${prob(k)}%</strong></div>`).join("")}</div><div class="notice"><strong>${done?(ok?"Why it was correct":"Why it was wrong"):"What the model expected"}</strong><br>${esc(reason)}${done&&x.predictedScore?historyScoreReview(x):""}</div>${x.supportFlags?.length||x.riskFlags?.length?`<details><summary>Saved evidence at kick-off</summary><div class="explain">${x.supportFlags?.length?`<p><strong>Supported the prediction</strong></p><ul>${x.supportFlags.map(v=>`<li>${esc(v)}</li>`).join("")}</ul>`:""}${x.riskFlags?.length?`<p><strong>Risks against the prediction</strong></p><ul>${x.riskFlags.map(v=>`<li>${esc(v)}</li>`).join("")}</ul>`:""}</div></details>`:""}${x.expectedGoalBreakdown?`<details><summary>Original expected-goals calculation</summary><div class="explain">${expectedGoalAuditHtml({expectedGoalBreakdown:x.expectedGoalBreakdown,home:x.home,away:x.away})}</div></details>`:""}</article>`}).join("");
 }
 async function refreshHistoryScores(){await loadData()}
 function brierScore(probs,actual){return(["H","D","A"].reduce((s,k)=>s+Math.pow((probs[k]||0)-(k===actual?1:0),2),0))/3}
@@ -2365,10 +2360,10 @@ function fpRenderUnifiedDashboard(test,ranked){
  const team=metrics(chosen),rank=ranked||null;
  const card=(name,m,gap,extra='')=>`<div class="panel fp-scorecard"><span class="fp-scorecard-label">${name}</span><strong>${m?.n?fpRate(m.hits,m.n):'—'}</strong><span class="muted smalltext">${m?.n?m.hits+'/'+m.n:'Not independently evaluated'} · outcomes</span><span class="muted smalltext">DRAW ${m?.drawN?m.drawHits+'/'+m.drawN:'—'}</span>${gap==null?"":`<span class="muted smalltext">Draw gap ±${Number(gap).toFixed(2)}</span>`}${extra}</div>`;
  const original=fpDrawRecommendations?.league;
- el.innerHTML=card('01 · League-adjusted',original?.hold?{n:original.hold.n,hits:original.hold.hits,drawN:original.hold.drawPicks,drawHits:original.hold.drawHits}:null,original?.gap??originalSettings().drawBoundary)+card('02 · Team-form',team,fpDrawRecommendations?.team?.gap??state.teamDrawBoundary)+card('03 · Opposition-ranked goals',rank?{n:rank.holdN,hits:rank.holdHits,drawN:rank.holdDrawPicks,drawHits:rank.holdDrawHits}:null,rank?.boundary??rankedSettings.homeBoundary,rank?`<span class="muted smalltext">Training ${rank.trainHits}/${rank.trainN} · validation ${rank.holdHits}/${rank.holdN}</span>`:'')+`<div class="panel fp-scorecard"><span class="fp-scorecard-label">04 · Match Dynamics · Models 2+3</span><strong>${Object.values(fp4Validation).filter(r=>r.version===4&&r.confirmationApproved).length} leagues</strong><span class="muted smalltext">Models 2+3 conditional SUPPORT / CAUTION · Model 1 independent</span></div>`+fpSelectionEvidencePanel(test);
+ el.innerHTML=card('01 · League-adjusted',original?.hold?{n:original.hold.n,hits:original.hold.hits,drawN:original.hold.drawPicks,drawHits:original.hold.drawHits}:null,original?.gap??originalSettings().drawBoundary)+card('02 · Team-form',team,fpDrawRecommendations?.team?.gap??state.teamDrawBoundary)+card('03 · Opposition-ranked goals',rank?{n:rank.holdN,hits:rank.holdHits,drawN:rank.holdDrawPicks,drawHits:rank.holdDrawHits}:null,rank?.boundary??rankedSettings.homeBoundary,rank?`<span class="muted smalltext">Training ${rank.trainHits}/${rank.trainN} · validation ${rank.holdHits}/${rank.holdN}</span>`:'')+`<div class="panel fp-scorecard"><span class="fp-scorecard-label">Adaptive League Strategy</span><strong>${Object.values(fpAdaptiveStrategies).filter(r=>r.active==='123'&&r.validated).length} Full leagues</strong><span class="muted smalltext">${Object.values(fpAdaptiveStrategies).filter(r=>r.active==='23').length} Core 2+3 leagues · independent league holdouts</span></div>`+fpSelectionEvidencePanel(test);
 }
 
-const fpTestStages=["League-adjusted","Team-form","Opposition-ranked goals","Match Dynamics confirmation"];
+const fpTestStages=["League-adjusted","Team-form","Opposition-ranked goals","Adaptive League Strategy"];
 const fpTestStageState=Array.from({length:4},()=>({pct:0,detail:"Waiting",status:"Waiting"}));
 function fpStageUpdate(index,pct,detail,status){
  const item=fpTestStageState[index];if(!item)return;
@@ -2400,9 +2395,8 @@ async function doTest(){
   fpV4Render(state.lastTest);
   fpV4AutoApply(state.lastTest);
   fpRenderUnifiedDashboard(state.lastTest,window.fpRankedRecommendation);
-  $("testStatus").textContent="Validating Model 4 historical match states; cached matches are reused…";
-  fpStageUpdate(3,2,"Retrieving verified scoring timelines");fpPerfUpdate("Model 4: retrieving scoring sequences",68,"Starting match-summary retrieval",true);await fp4FetchHistory(r.matches,(done,total,valid,failed)=>{fpStageUpdate(3,Math.round(65*done/Math.max(1,total)),`${done}/${total} events checked · ${valid} verified`);fpPerfUpdate("Model 4: retrieving scoring sequences",68+Math.round(30*done/Math.max(1,total)),`${done}/${total} checked · ${valid} verified · ${failed} unavailable`);$("testStatus").textContent=`Model 4 event history ${done}/${total} · verified ${valid} · unavailable ${failed}`});
-  fpPerfUpdate("Model 4: chronological validation",85,"Testing 12 pooled configurations with league holdouts",true);await fp4Backtest(r.matches);fpStageUpdate(3,100,"Confirmation thresholds and holdout evidence saved");
+  $("testStatus").textContent="Comparing Core 2+3 against Full 1+2+3 using chronological league holdouts…";
+  fpStageUpdate(3,2,"Training and holdout league agreement");await fpAdaptiveBacktest(r.matches);fpStageUpdate(3,100,"League strategy evidence saved");
   if(state.matches.length){updatePredictions(state.matches,state.activeIndex);snapshotPredictions(state.matches);renderFixtures()}
   $("testStatus").textContent=`Completed · ${window.fpHistorySaveStatus||"Prediction history unchanged"} · retrieval ${(fpFetchMs/1000).toFixed(1)}s · Models 1 & 2 ${((fpCoreMs-fpTestStart-fpFetchMs)/1000).toFixed(1)}s · Model 3 ${(fpRankMs/1000).toFixed(1)}s · total ${((performance.now()-fpTestStart)/1000).toFixed(1)}s. ${r.matches.length} retrieved matches (including warm-up).`+`${r.errors.length?" Unavailable: "+r.errors.join(", "):""}`;
   if(state.mode==="auto")$("activeModelNote")&&($("activeModelNote").textContent="Test recommendations are available below; copy to Settings and save to apply explicitly.");
@@ -2413,214 +2407,23 @@ async function doTest(){
 
 
 
-/* Model 4 historical event audit: read-only, independent of prediction and settings. */
-const FP4_AUDIT_VERSION=1;
-function fp4GoalEvent(play){
- const t=String(play?.type?.text||play?.type?.displayName||play?.type?.name||play?.text||play?.shortText||'').toLowerCase();
- return play?.scoringPlay===true||play?.scoring_play===true||play?.type?.scoringPlay===true||play?.type?.scoring_play===true||/\bgoal\b/.test(t)&&!/disallowed|cancelled|overturned|no goal|goal kick|goalkeeper|goalkeeper save|goal line clearance|goal attempt|own goal disallowed/.test(t);
-}
-function fp4SummaryEvents(summary){
- const arrays=[summary?.keyEvents,summary?.plays,summary?.plays?.items,summary?.scoringPlays,summary?.commentary,summary?.header?.competitions?.[0]?.details];
- // Prefer one event feed to avoid counting the same goal twice across representations.
- return arrays.find(a=>Array.isArray(a)&&a.some(fp4GoalEvent))||[];
-}
-function fp4TeamOf(play,match){
- const id=String(play?.team?.id||play?.teamId||play?.team?.uid?.split?.(':')?.at(-1)||'');
- if(id&&id===String(match.homeId))return'H';if(id&&id===String(match.awayId))return'A';
- return null;
-}
-function fp4Minute(play){
- const str=String(play?.clock?.displayValue||play?.clock?.displayClock||play?.displayClock||play?.clock||play?.minute||play?.period?.clock?.displayValue||'');
- const m=str.match(/(\d{1,3})(?:\s*\+\s*(\d{1,2}))?/);return m?Number(m[1])+Number(m[2]||0)/100:null;
-}
-function fp4CheckSummary(summary,match){
- const events=fp4SummaryEvents(summary).filter(fp4GoalEvent);
- const goals=events.map(p=>({side:fp4TeamOf(p,match),minute:fp4Minute(p),own:/own goal/i.test(String(p?.type?.text||p?.text||''))}));
- const expected=(match.homeScore||0)+(match.awayScore||0);
- const h=goals.filter(g=>g.side==='H').length,a=goals.filter(g=>g.side==='A').length;
- // ESPN goal events usually attribute own goals to the scoring side, but this must be checked.
- const countsMatch=h===match.homeScore&&a===match.awayScore;
- const complete=goals.length===expected&&countsMatch&&goals.every(g=>g.minute!==null)&&goals.every(g=>g.side);
- return {sequence:complete?goals.sort((a,b)=>a.minute-b.minute):null,complete,reason:complete?'complete':!events.length&&expected===0?'zero-zero-without-event-proof':!events.length?'no-goal-events':goals.some(g=>!g.side)?'unknown-scoring-team':goals.some(g=>g.minute===null)?'missing-minute':goals.length!==expected?'goal-count-mismatch':'team-score-mismatch',goals:goals.length,expected,ownGoals:goals.filter(g=>g.own).length};
-}
-let fp4DbPromise;
-function fp4Db(){if(!('indexedDB' in window))return Promise.resolve(null);if(!fp4DbPromise)fp4DbPromise=new Promise(resolve=>{try{const r=indexedDB.open('footypicks-match-events',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('summaries'))r.result.createObjectStore('summaries')};r.onsuccess=()=>resolve(r.result);r.onerror=()=>resolve(null)}catch{resolve(null)}});return fp4DbPromise}
-async function fp4CacheRead(key){const db=await fp4Db();if(db){try{const x=await new Promise(resolve=>{const t=db.transaction('summaries','readonly').objectStore('summaries').get(key);t.onsuccess=()=>resolve(t.result);t.onerror=()=>resolve(null)});if(x)return x}catch{}}try{return JSON.parse(localStorage.getItem(key)||'null')}catch{return null}}
-async function fp4CacheWrite(key,obj){const db=await fp4Db();if(db){try{await new Promise(resolve=>{const t=db.transaction('summaries','readwrite');t.objectStore('summaries').put(obj,key);t.oncomplete=resolve;t.onerror=resolve});return}catch{}}try{localStorage.setItem(key,JSON.stringify(obj))}catch{}}
-const fp4MemoryEvents=new Map();
-async function fp4FetchSummary(match){
- const key='fp4_evt_'+match.leagueId+'_'+match.id;
- const old=await fp4CacheRead(key);if(old?.v===FP4_AUDIT_VERSION&&(old.result?.complete||Date.now()-old.ts<86400000)){if(old.result?.complete)fp4MemoryEvents.set(key,old.result.sequence);return {...old.result,cache:true}}
- const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
- try{const url=`https://site.api.espn.com/apis/site/v2/sports/soccer/${encodeURIComponent(match.leagueId)}/summary?event=${encodeURIComponent(match.id)}`;
- const response=await fetch(url,{signal:controller.signal});if(!response.ok)throw Error('HTTP '+response.status);
- const result=fp4CheckSummary(await response.json(),match);
- if(result.complete)fp4MemoryEvents.set(key,result.sequence);await fp4CacheWrite(key,{v:FP4_AUDIT_VERSION,ts:Date.now(),result})
- return result;
- }finally{clearTimeout(timer)}
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>fp4ReportRender(fp4Validation));else queueMicrotask(()=>fp4ReportRender(fp4Validation));
-
-/* MODEL 4: independent match-state frequencies, never a goals/xG Poisson forecast. */
-const FP4_LEGACY_VALIDATION_KEY='fp4_predictive_validation_v1';
-let fp4Validation=readStore('fp4_dynamics_confirmation_v4_m23',{});
-function fp4Timeline(m){
- const k='fp4_evt_'+m.leagueId+'_'+m.id;
- if(fp4MemoryEvents.has(k))return fp4MemoryEvents.get(k);try{const o=JSON.parse(localStorage.getItem(k)||'null');return o?.v===FP4_AUDIT_VERSION&&o.result?.complete&&Array.isArray(o.result.sequence)?o.result.sequence:null}catch{return null}
-}
-function fp4MatchStates(m){
- const seq=fp4Timeline(m);if(!seq)return null;
- let h=0,a=0,first=null,leadLostH=false,leadLostA=false,behindH=false,behindA=false,equalisedH=false,equalisedA=false,lateH=0,lateA=0;
- for(const g of seq){const oldH=h,oldA=a;if(g.side==='H')h++;else if(g.side==='A')a++;else return null;
-  if(!first)first=g.side;
-  if(oldH>oldA&&h<=a)leadLostH=true;if(oldA>oldH&&a<=h)leadLostA=true;
-  if(oldH<oldA&&h===a)equalisedH=true;if(oldA<oldH&&a===h)equalisedA=true;
-  if(h<a)behindH=true;if(a<h)behindA=true;
-  if(g.minute>=75){if(g.side==='H')lateH++;else lateA++}
- }
- if(h!==m.homeScore||a!==m.awayScore)return null;
- return {first,leadLostH,leadLostA,behindH,behindA,equalisedH,equalisedA,lateH,lateA,outcome:getOutcome(h,a)};
-}
-function fp4TeamForm(previous,key,windows,weights){
- const matches=previous.filter(m=>teamKey(m,'H')===key||teamKey(m,'A')===key).slice(-windows[0]);
- if(matches.length<Math.min(5,windows[0]))return null;
- const rates=[];
- for(let i=0;i<3;i++){
-  const part=matches.slice(-windows[i]);let n=0,wins=0,first=0,protect=0,lead=0,recover=0,behind=0,late=0,draws=0;
-  for(const m of part){const st=fp4MatchStates(m);if(!st)continue;
-   const home=teamKey(m,'H')===key,side=home?'H':'A',won=st.outcome===side;
-   n++;wins+=+won;draws+=+(st.outcome==='D');first+=+(st.first===side);
-   if(st.first===side){lead++;protect+=+(won)}
-   if(home?st.behindH:st.behindA){behind++;recover+=+(st.outcome!== (home?'A':'H'))}
-   late+=home?st.lateH:st.lateA;
-  }
-  if(n<Math.min(3,windows[i]))return null;
-  rates.push({wins:wins/n,first:first/n,protect:lead?protect/lead:.5,recover:behind?recover/behind:.3,late:late/n,draws:draws/n,n});
- }
- return Object.fromEntries(['wins','first','protect','recover','late','draws'].map(k=>[k,rates.reduce((sum,r,i)=>sum+r[k]*weights[i],0)]));
-}
-/* MATCH DYNAMICS — a conditional confirmation layer, never an independent winner or SELECT. */
-const FP4_VALIDATION_KEY='fp4_dynamics_confirmation_v4_m23';
-// The legacy prediction-validation key is deliberately not read: old approvals cannot authorize a new role.
-function fp4Dynamics(m,previous,config={windowIndex:0,weightIndex:1},outcome='N'){
- const windows=WINDOW_SETS[config.windowIndex],weights=MODELS[config.weightIndex].weights;
- const home=fp4TeamForm(previous,teamKey(m,'H'),windows,weights),away=fp4TeamForm(previous,teamKey(m,'A'),windows,weights);
- if(!home||!away||!['H','A','D'].includes(outcome))return null;
- // Match-up interactions, rather than a fourth estimate of win probability.
- const hFirst=home.first*(1-away.first),aFirst=away.first*(1-home.first);
- const hProtect=home.protect*(1-away.recover),aProtect=away.protect*(1-home.recover);
- const hRecovery=home.recover*(1-away.protect),aRecovery=away.recover*(1-home.protect);
- const hLate=Math.min(1,home.late)/(1+Math.min(1,away.late)),aLate=Math.min(1,away.late)/(1+Math.min(1,home.late));
- const hBreak=.36*hFirst+.29*hProtect+.21*hRecovery+.14*hLate;
- const aBreak=.36*aFirst+.29*aProtect+.21*aRecovery+.14*aLate;
- const drawHold=.40*(home.draws+away.draws)/2+.30*(1-hFirst)*(1-aFirst)+.30*(1-Math.abs(hBreak-aBreak));
- const score=outcome==='H'?hBreak-aBreak:outcome==='A'?aBreak-hBreak:drawHold-(hBreak+aBreak)/2;
- return {score,proposedOutcome:outcome,matchState:{home,away},factors:{homeBreak:hBreak,awayBreak:aBreak,drawHold},explanation:'First-goal matchups, lead protection versus recovery, and late-goal vulnerability. Scoring-event proxies do not prove ability to break down a defensive formation.'};
-}
-function fp4PairAgreement(m){
- const a=m.originalPrediction||m.original,b=m,c=m.rankedPrediction||m.ranked;
- const valid=!!(b&&c&&['H','D','A'].includes(b.prediction)&&b.prediction===c.prediction);
- const selected=valid&&b.selection===b.prediction&&c.selection===c.prediction;
- const model1Agree=!!(a&&valid&&a.prediction===b.prediction);
- const model1Select=!!(model1Agree&&a.selection===a.prediction);
- return {matching:valid,selected,outcome:valid?b.prediction:'N',model1Agree,model1Select};
-}
-function fp4ThreeAgreement(m){const p=fp4PairAgreement(m);return {matching:p.model1Agree,outcome:p.model1Agree?p.outcome:'N',selected:p.selected&&p.model1Select}}
-function fp4Attach(m,previous){
- m.model4Prediction=null;const pair=fp4PairAgreement(m),validation=fp4Validation[m.leagueId];
- const config=validation?.version===4?validation.config:{windowIndex:0,weightIndex:1};
- const evidence=pair.selected?fp4Dynamics(m,previous,config,pair.outcome):null;
- const validated=!!(validation?.version===4&&validation.confirmationApproved);
- const support=validated&&evidence&&evidence.score>=validation.supportThreshold;
- const caution=validated&&evidence&&evidence.score<=validation.cautionThreshold;
- m.model4Confirmation={model4:true,role:'m2-m3-confirmation',proposedOutcome:pair.outcome,pairSelected:pair.selected,model1Agree:pair.model1Agree,model1Select:pair.model1Select,status:!pair.selected?'NOT APPLICABLE':!evidence?'INSUFFICIENT DATA':!validated?'UNVALIDATED':support?'SUPPORT':caution?'CAUTION':'NEUTRAL',validated,score:evidence?.score??null,explanation:evidence?.explanation||'Requires Models 2 and 3 to agree and independently SELECT, plus verified scoring sequences.',matchState:evidence?.matchState||null,factors:evidence?.factors||null,config};
-}
-function fp4ConfirmationCard(v){const label='04 · Match Dynamics';if(!v)return `<div class="model-cell fp-dynamics"><div class="model-title">${label}</div><div class="model-sub">Confirmation unavailable</div></div>`;
- const status=v.status||'UNVALIDATED',color=status==='SUPPORT'?'fp-dyn-support':status==='CAUTION'?'fp-dyn-caution':'fp-dyn-neutral';
- return `<div class="model-cell fp-dynamics ${color}"><div class="model-title">${label} · Confirmation</div><div class="model-primary"><span class="model-outcome">${esc(status)}</span></div><div class="model-sub">${v.proposedOutcome&&v.proposedOutcome!=='N'?`Models 2 + 3: ${outcomeName(v.proposedOutcome)} · `:''}${v.score==null?'No validated score':`Matchup score ${Number(v.score).toFixed(3)}`}</div><div class="model-bottom"><span class="${status==='SUPPORT'?'model-select':'model-no-select'}">${status==='SUPPORT'?'DYNAMICS CONFIRMED':status==='CAUTION'?'DYNAMICS WARNING':'NO CONFIRMATION'}</span></div></div>`;
-}
-function fp4ReportRender(report){const target=document.getElementById('fp4PredictiveResults');if(!target)return;
- const pct=(a,b)=>b?`${(100*a/b).toFixed(1)}%`:'—';
- const rows=Object.entries(report||{}).filter(([id,r])=>r.version===4&&id!=='_pooled').map(([id,r])=>`<tr><td>${esc(LEAGUES[id]||id)}</td><td>${r.historyN||0}</td><td>${r.holdoutN||0}</td><td>${r.baselineHits||0}/${r.baselineN||0} · ${pct(r.baselineHits,r.baselineN)}</td><td>${r.supportHits||0}/${r.supportN||0} · ${pct(r.supportHits,r.supportN)}</td><td>${r.cautionHits||0}/${r.cautionN||0} · ${pct(r.cautionHits,r.cautionN)}</td><td>${r.supportN&&r.baselineN?((100*(r.supportHits/r.supportN-r.baselineHits/r.baselineN)).toFixed(1)+' pp'):'—'}</td><td>${r.baselineN?pct(r.supportN,r.baselineN):'—'}</td><td>${r.confirmationApproved?'VALIDATED':'NEUTRAL ONLY'}</td><td>${esc(r.reason||'')}</td></tr>`).join('');
- target.innerHTML=`<p class="muted smalltext">Model 4 tests whether scoring-sequence evidence improves selections where Models 2 and 3 independently agree and SELECT. Model 1 remains an independent reference. SUPPORT precision and CAUTION accuracy use the same later chronological holdout. A confirmation is never an independent bet.</p><div class="tablewrap"><table><thead><tr><th>League</th><th>Verified</th><th>Holdout</th><th>Models 2+3 SELECT correct</th><th>SUPPORT correct</th><th>CAUTION correct</th><th>Precision lift</th><th>Retained coverage</th><th>Confirmation</th><th>Reason</th></tr></thead><tbody>${rows||'<tr><td colspan="10">Run Model Test to validate confirmation</td></tr>'}</tbody></table></div>`;
- const pooled=report?._pooled; if(pooled){const note=document.createElement('div');note.className='panel';note.style.marginBottom='12px';note.innerHTML=`<strong>Pooled chronological confirmation · ${pooled.confirmationApproved?'VALIDATED':'INFORMATIONAL ONLY'}</strong><p class="muted smalltext">Models 2+3: ${pooled.baselineHits}/${pooled.baselineN} (${pct(pooled.baselineHits,pooled.baselineN)}); SUPPORT ${pooled.supportHits}/${pooled.supportN} (${pct(pooled.supportHits,pooled.supportN)}); CAUTION ${pooled.cautionHits}/${pooled.cautionN} (${pct(pooled.cautionHits,pooled.cautionN)}). Confidence-only benchmark: ${pooled.confidenceHits}/${pooled.confidenceN} (${pct(pooled.confidenceHits,pooled.confidenceN)}). Retained ${pct(pooled.supportN,pooled.baselineN)} of eligible 2+3 picks. ${esc(pooled.reason||'')}</p><p class="muted smalltext">Model 1 agreement: ${pooled.model1AgreeHits}/${pooled.model1AgreeN} (${pct(pooled.model1AgreeHits,pooled.model1AgreeN)}); Model 1 disagreement: ${pooled.model1DisagreeHits}/${pooled.model1DisagreeN} (${pct(pooled.model1DisagreeHits,pooled.model1DisagreeN)}). Historical testing is diagnostic; no new bet is created by Dynamics.</p>`;target.prepend(note)}
- const output=document.getElementById('fp4PredictiveReport');if(output)output.value=JSON.stringify({generated:new Date().toISOString(),role:'models-2-and-3-conditional-confirmation',leagues:report},null,2);
-}
-async function fp4FetchHistory(matches,progress){const finished=matches.filter(isFinished);let i=0,done=0,failed=0;
- async function worker(){while(i<finished.length&&!testCancelRequested){const m=finished[i++];try{const r=await fp4FetchSummary(m);if(r.complete&&r.sequence)done++;else failed++}catch{failed++}if((done+failed)%25===0){progress?.(done+failed,finished.length,done,failed);await new Promise(r=>setTimeout(r,0))}}}
- await Promise.all(Array.from({length:4},worker));progress?.(done+failed,finished.length,done,failed);return {done,failed,total:finished.length};}
-async function fp4Backtest(matches){
- // Each league is split chronologically BEFORE pooling; configurations and thresholds are fitted only on training fixtures.
- const by={};for(const m of matches)(by[m.leagueId]??=[]).push(m);
- const entries=Object.entries(by),prepared=[],trainAll=[];let completed=0;
- for(const [id,group] of entries){testCheckpoint();
-  const rows=group.filter(isFinished).sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const prior=[],history=[];let cursor=0;
-  for(let j=0;j<rows.length;j++){while(cursor<j&&new Date(rows[cursor].date)<new Date(rows[j].date)){history.push(rows[cursor]);cursor++}prior.push(history.slice())}
-  const cutoff=Math.floor(rows.length*.75),base=[];
-  for(let j=0;j<rows.length;j++){
-   const m=rows[j],previous=prior[j];try{
-    const team=calculatePrediction(m,previous,{...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]});
-    const original=calculateOriginalIndependent(m,previous),ranked=rankedGoalModel(m,previous);
-    const pair=fp4PairAgreement({...team,originalPrediction:original,rankedPrediction:ranked});
-    if(pair.selected){const actual=getOutcome(m.homeScore,m.awayScore);base.push({id,j,m,previous,outcome:pair.outcome,correct:pair.outcome===actual,model1Agree:pair.model1Agree,model1Select:pair.model1Select,confidence:(Number(team.confidence||0)+Number(ranked.confidence||0))/2,train:j<cutoff})}
-   }catch(e){/* Warm-up fixtures are not fabricated. */}
-   if(j%35===0){testCheckpoint();await new Promise(r=>setTimeout(r,0))}
-  }
-  prepared.push({id,rows,cutoff,base});trainAll.push(...base.filter(x=>x.train));
-  completed++;fpStageUpdate(3,10+Math.round(35*completed/entries.length),`Preparing Models 2+3 selections · ${completed}/${entries.length} leagues`);
- }
- let winner=null;
- for(let wi=0;wi<3;wi++)for(let weightIndex=0;weightIndex<4;weightIndex++){
-  testCheckpoint();const config={windowIndex:wi,weightIndex};
-  const scored=trainAll.map(x=>({...x,d:fp4Dynamics(x.m,x.previous,config,x.outcome)})).filter(x=>x.d);
-  if(scored.length<20)continue;
-  const sorted=scored.map(x=>x.d.score).sort((a,b)=>a-b);
-  for(const supportQ of [.50,.60,.70])for(const cautionQ of [.20,.30]){
-   const supportThreshold=sorted[Math.floor((sorted.length-1)*supportQ)],cautionThreshold=sorted[Math.floor((sorted.length-1)*cautionQ)];
-   const supported=scored.filter(x=>x.d.score>=supportThreshold),cautioned=scored.filter(x=>x.d.score<=cautionThreshold);
-   if(supported.length<10||cautioned.length<5)continue;
-   const baseline=scored.filter(x=>x.correct).length/scored.length,precision=supported.filter(x=>x.correct).length/supported.length;
-   const cautionPrecision=cautioned.filter(x=>x.correct).length/cautioned.length;
-   const retained=supported.length/scored.length;
-   if(retained<state.minSelectCoverage)continue;
-   const objective=(precision-baseline)+.25*(baseline-cautionPrecision)+.02*retained;
-   if(!winner||objective>winner.objective)winner={config,supportThreshold,cautionThreshold,objective,trainN:scored.length};
-  }
-  fpStageUpdate(3,45+Math.round(15*(wi*4+weightIndex+1)/12),`Training confirmation · ${wi*4+weightIndex+1}/12 configurations`);
-  await new Promise(r=>setTimeout(r,0));
- }
- const result={},all=[];completed=0;
- for(const {id,rows,cutoff,base} of prepared){testCheckpoint();
-  const hold=base.filter(x=>!x.train),scored=winner?hold.map(x=>({...x,d:fp4Dynamics(x.m,x.previous,winner.config,x.outcome)})).filter(x=>x.d):[];
-  all.push(...scored);
-  const supported=winner?scored.filter(x=>x.d.score>=winner.supportThreshold):[],cautioned=winner?scored.filter(x=>x.d.score<=winner.cautionThreshold):[];
-  const baselineHits=scored.filter(x=>x.correct).length,supportHits=supported.filter(x=>x.correct).length,cautionHits=cautioned.filter(x=>x.correct).length;
-  const lift=scored.length&&supported.length?supportHits/supported.length-baselineHits/scored.length:null;
-  const n=rows.filter(m=>fp4MatchStates(m)).length;
-  result[id]={version:4,historyN:n,holdoutN:rows.length-cutoff,baselineN:scored.length,baselineHits,supportN:supported.length,supportHits,cautionN:cautioned.length,cautionHits,confirmationApproved:false,config:winner?.config||{windowIndex:0,weightIndex:1},supportThreshold:winner?.supportThreshold??Infinity,cautionThreshold:winner?.cautionThreshold??-Infinity,reason:!winner?'Insufficient pooled training evidence':!scored.length?'No eligible Models 2+3 holdout selections':'Awaiting pooled validation',lift};
-  completed++;fpStageUpdate(3,60+Math.round(30*completed/prepared.length),`Independent league holdout · ${completed}/${prepared.length}`);
-  await new Promise(r=>setTimeout(r,0));
- }
- const supported=winner?all.filter(x=>x.d.score>=winner.supportThreshold):[],cautioned=winner?all.filter(x=>x.d.score<=winner.cautionThreshold):[];
- const baselineHits=all.filter(x=>x.correct).length,supportHits=supported.filter(x=>x.correct).length,cautionHits=cautioned.filter(x=>x.correct).length;
- const baseRate=all.length?baselineHits/all.length:0,supportRate=supported.length?supportHits/supported.length:0,cautionRate=cautioned.length?cautionHits/cautioned.length:0;
- const sortedConfidence=all.slice().sort((a,b)=>b.confidence-a.confidence),confidenceOnly=sortedConfidence.slice(0,supported.length),confidenceHits=confidenceOnly.filter(x=>x.correct).length;
- const model1Agree=all.filter(x=>x.model1Agree),model1Disagree=all.filter(x=>!x.model1Agree);
- const confirmationApproved=!!(winner&&all.length>=60&&supported.length>=20&&cautioned.length>=10&&supported.length/all.length>=state.minSelectCoverage&&supportRate>baseRate&&supportRate>confidenceHits/Math.max(1,confidenceOnly.length)&&cautionRate<baseRate);
- const reason=!winner?'Insufficient pooled training selections':all.length<60?'Insufficient pooled chronological holdout':supported.length<20?'Insufficient SUPPORT sample':cautioned.length<10?'Insufficient CAUTION sample':supportRate<=baseRate?'SUPPORT does not improve Models 2+3 precision':supportRate<=confidenceHits/Math.max(1,confidenceOnly.length)?'Confidence-only filter performs as well or better':cautionRate>=baseRate?'CAUTION does not identify weaker selections':'Pooled chronological validation passed';
- result._pooled={version:4,confirmationApproved,reason,baselineN:all.length,baselineHits,supportN:supported.length,supportHits,cautionN:cautioned.length,cautionHits,confidenceN:confidenceOnly.length,confidenceHits,model1AgreeN:model1Agree.length,model1AgreeHits:model1Agree.filter(x=>x.correct).length,model1DisagreeN:model1Disagree.length,model1DisagreeHits:model1Disagree.filter(x=>x.correct).length,config:winner?.config||null};
- for(const [id,r] of Object.entries(result)){if(id==='_pooled')continue;
-  // Pooled approval cannot overrule strong negative league-specific evidence; small samples remain informational.
-  const localRate=r.supportN?r.supportHits/r.supportN:0,localBaseline=r.baselineN?r.baselineHits/r.baselineN:0;
-  const localHarm=r.supportN>=8&&localRate+0.08<localBaseline;
-  r.confirmationApproved=confirmationApproved&&r.baselineN>=3&&!localHarm;
-  r.reason=!confirmationApproved?reason:r.baselineN<3?'Insufficient local evidence':localHarm?'Local SUPPORT underperforms':'Pooled validated · local safeguard passed';
- }
- fp4Validation={...result};store(FP4_VALIDATION_KEY,fp4Validation);fp4ReportRender(result);fpRenderUnifiedDashboard(state.lastTest,window.fpRankedRecommendation);
- fpStageUpdate(3,100,'Pooled and league-specific chronological checks complete');return result;
-}
-
+/* Adaptive League Strategy: three independent prediction engines; no event summaries. */
+const FP_ADAPT_KEY='fp_adaptive_league_strategy_v1';
+let fpAdaptiveStrategies=readStore(FP_ADAPT_KEY,{});
+function fpActiveStrategy(id){const r=fpAdaptiveStrategies[id];return r?.active==='123'&&r?.validated?'123':'23'}
+function fpAdaptivePair(m){const a=m.originalPrediction||m.original,b=m,c=m.rankedPrediction||m.ranked;const valid=!!(b&&c&&['H','D','A'].includes(b.prediction)&&['H','D','A'].includes(c.prediction));const pair=valid&&b.prediction===c.prediction;const pairSelect=pair&&b.selection===b.prediction&&c.selection===c.prediction;const triple=pair&&a&&a.prediction===b.prediction;const tripleSelect=!!(pairSelect&&triple&&a.selection===a.prediction);return {valid,pair,triple,pairSelect,tripleSelect,outcome:pair?b.prediction:'N'}}
+function fpAdaptiveBadge(id){const r=fpAdaptiveStrategies[id],active=fpActiveStrategy(id);return `<span class="tag ${active==='123'?'good':''}">${active==='123'?'FULL AGREEMENT · 1+2+3':'CORE AGREEMENT · 2+3'}</span> <span class="tag">${active==='123'?'VALIDATED':r?.validated?'VALIDATED':'PROVISIONAL'}</span>`}
+function fpAdaptiveReportRender(report){const el=document.getElementById('fpAdaptiveResults');if(!el)return;const rows=Object.entries(report||{}).sort((a,b)=>String(a[1].league).localeCompare(String(b[1].league))).map(([id,r])=>{const pct=(h,n)=>n?`${(100*h/n).toFixed(1)}% · ${h}/${n}`:'—';return `<tr><td>${esc(r.league)}</td><td>${pct(r.hold23Hits,r.hold23N)}</td><td>${pct(r.hold123Hits,r.hold123N)}</td><td>${pct(r.excludedHits,r.excludedN)}</td><td>${r.train23N} / ${r.train123N}</td><td>${r.hold23N} / ${r.hold123N}</td><td><strong>${r.active==='123'?'FULL · 1+2+3':'CORE · 2+3'}</strong><br><span class="muted smalltext">${r.validated?'Validated':'Provisional'}</span></td><td>${esc(r.reason)}</td></tr>`}).join('');el.innerHTML=`<p class="muted smalltext">Both strategies use identical chronological fixtures. Training chooses whether Model 1 adds a meaningful precision improvement; later holdout can veto that choice, but never chooses a new winner. Core 2+3 is the conservative default when evidence is insufficient. No scoring-event requests or Model 4 calculations.</p><div class="tablewrap"><table><thead><tr><th>League</th><th>Core 2+3 holdout</th><th>Full 1+2+3 holdout</th><th>Excluded by Model 1</th><th>Training SELECTs 2+3 / 3/3</th><th>Holdout SELECTs 2+3 / 3/3</th><th>Active approach</th><th>Reason</th></tr></thead><tbody>${rows||'<tr><td colspan="8">Run Model Test to evaluate league strategies.</td></tr>'}</tbody></table></div>`;const out=document.getElementById('fpAdaptiveReport');if(out)out.value=JSON.stringify({generated:new Date().toISOString(),method:'chronological train choice; holdout veto only',leagues:report},null,2)}
+async function fpAdaptiveBacktest(matches){const by={};for(const m of matches.filter(isFinished))(by[m.leagueId]??=[]).push(m);const result={},entries=Object.entries(by);let completed=0;for(const [id,group] of entries){testCheckpoint();const rows=group.sort((a,b)=>new Date(a.date)-new Date(b.date));const cutoff=Math.floor(rows.length*.75),previous=[],samples=[];let cursor=0;for(let j=0;j<rows.length;j++){const m=rows[j];while(cursor<j&&new Date(rows[cursor].date)<new Date(m.date)){previous.push(rows[cursor]);cursor++}try{const team=calculatePrediction(m,previous,{...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]});const original=calculateOriginalIndependent(m,previous),ranked=rankedGoalModel(m,previous);const a=fpAdaptivePair({...team,originalPrediction:original,rankedPrediction:ranked});if(a.pairSelect){samples.push({train:j<cutoff,correct:a.outcome===getOutcome(m.homeScore,m.awayScore),full:a.tripleSelect})}}catch(e){}if(j%45===0){testCheckpoint();await new Promise(r=>setTimeout(r,0))}}
+ const train=samples.filter(x=>x.train),hold=samples.filter(x=>!x.train);const count=a=>({n:a.length,h:a.filter(x=>x.correct).length});const t23=count(train),t123=count(train.filter(x=>x.full)),h23=count(hold),h123=count(hold.filter(x=>x.full)),excluded=count(hold.filter(x=>!x.full));const trainLift=t123.n&&t23.n?t123.h/t123.n-t23.h/t23.n:0;const holdLift=h123.n&&h23.n?h123.h/h123.n-h23.h/h23.n:0;
+ // Conservative switch: credible training uplift, meaningful retained sample, and a non-negative later holdout check.
+ const candidate=t23.n>=30&&t123.n>=15&&t123.n/t23.n>=Math.max(.12,state.minSelectCoverage||.12)&&trainLift>=.05;
+ const validated=!!(candidate&&h23.n>=12&&h123.n>=8&&holdLift>=-.01);
+ const active=validated?'123':'23';const reason=!candidate?(t23.n<30||t123.n<15?'Insufficient training SELECT evidence':trainLift<.05?'Model 1 adds less than 5 pp training precision':'Insufficient retained training coverage'):h23.n<12||h123.n<8?'Insufficient holdout SELECT evidence':holdLift<-.01?'Holdout did not support including Model 1':'Model 1 improved training precision; holdout safeguard passed';
+ result[id]={league:rows[0]?.league||id,active,validated,reason,train23N:t23.n,train23Hits:t23.h,train123N:t123.n,train123Hits:t123.h,hold23N:h23.n,hold23Hits:h23.h,hold123N:h123.n,hold123Hits:h123.h,excludedN:excluded.n,excludedHits:excluded.h,trainLift,holdLift,verified:rows.length,updated:new Date().toISOString()};completed++;fpStageUpdate(3,Math.round(100*completed/Math.max(1,entries.length)),`League strategy checks ${completed}/${entries.length}`);fpPerfUpdate('Adaptive league strategy',85+Math.round(14*completed/Math.max(1,entries.length)),`${completed}/${entries.length} leagues`);await new Promise(r=>setTimeout(r,0))}
+ // A scoped league test must not erase strategies of other leagues.
+ fpAdaptiveStrategies={...fpAdaptiveStrategies,...result};store(FP_ADAPT_KEY,fpAdaptiveStrategies);fpAdaptiveReportRender(fpAdaptiveStrategies);fpRenderUnifiedDashboard(state.lastTest,window.fpRankedRecommendation);return result}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>fpAdaptiveReportRender(fpAdaptiveStrategies));else queueMicrotask(()=>fpAdaptiveReportRender(fpAdaptiveStrategies));
 /* Unified test UI: preserve historical predictions for draw-gap evaluation. */
 const FP_PREDICTION_ENGINE_VERSION="3.0-test-only";
 const FP_DRAW_CANDIDATES=[.10,.15,.20,.25,.30,.35,.40,.45,.50];
@@ -3217,7 +3020,7 @@ function liveModelComparison(m){
  const b=data;
  const cell=(v,label)=>v&&['H','D','A'].includes(v.prediction)?`<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">${Number.isFinite(Number(v.homeLambda))&&Number.isFinite(Number(v.awayLambda))&&v.homeLambda!=null&&v.awayLambda!=null?`Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${(Number(v.homeLambda)-Number(v.awayLambda)).toFixed(2)}`:(v.model4&&v.probs?`H ${Math.round(v.probs.H*100)}% · D ${Math.round(v.probs.D*100)}% · A ${Math.round(v.probs.A*100)}%`:"Expected goals unavailable")}</div><div class="model-bottom"><span class="${v.selection===v.prediction?'model-select':'model-no-select'}">${v.selection===v.prediction?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">${Number.isFinite(+v.confidence)?v.confidence+'/10':'—'}</span></div></div>`:`<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Prediction unavailable</div></div>`;
  const mode=state.activePredictionView||'both';
- return `<div class="fixture-comparison">${mode==='both'&&a?(snap&&snap.agreement?`<span class="fp-status ${snap.agreement.betOnOutcome?'fp-status-green':'fp-status-amber'}">${snap.agreement.betOnOutcome?'Bet on Outcome':snap.agreement.sameOutcome?'Same Outcome':'Different outcomes'} · ${snap.agreement.count||3} models</span>`:fpStatusTag({...b,originalPrediction:a,rankedPrediction:data.ranked||data.rankedPrediction,model4Confirmation:data.model4Confirmation||data.dynamics})):''}<div class="model-grid ${mode==='both'?'':'single'}">${mode!=='updated'?cell(a,'League-adjusted · Poisson'):''}${mode!=='original'?cell(b,'Team-form · Goal difference'):''}${mode==='both'?rankedCell(data.ranked||data.rankedPrediction):''}${mode==='both'?fp4ConfirmationCard(data.model4Confirmation||data.dynamics):''}</div></div>`;
+ return `<div class="fixture-comparison">${mode==='both'&&a?(snap&&snap.agreement?`<span class="fp-status ${snap.agreement.betOnOutcome?'fp-status-green':'fp-status-amber'}">${snap.agreement.betOnOutcome?'Bet on Outcome':snap.agreement.sameOutcome?'Same Outcome':'Different outcomes'} · ${snap.agreement.count||3} models</span>`:fpStatusTag({...b,originalPrediction:a,rankedPrediction:data.ranked||data.rankedPrediction,model4Confirmation:data.model4Confirmation||data.dynamics})):''}<div class="model-grid ${mode==='both'?'':'single'}">${mode!=='updated'?cell(a,snap?.agreement?.strategy==='23'?'League-adjusted · REFERENCE ONLY':'League-adjusted · Poisson'):''}${mode!=='original'?cell(b,'Team-form · Goal difference'):''}${mode==='both'?rankedCell(data.ranked||data.rankedPrediction):''}</div></div>`;
 }
 function renderLiveScheduleCategory(){
  const mode=state.liveScheduleFilter,now=new Date(),todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
@@ -3294,7 +3097,7 @@ function renderCalculationBreakdown(){
  const o=m.originalPrediction,r=m.rankedPrediction;
  const oDetails=`<p>League-adjusted Poisson model. Form windows: ${esc((WINDOW_SETS[originalSettings().windowIndex]||[]).join(' / '))}. HOME SELECT gap ${esc(originalSettings().homeGap)}; AWAY SELECT gap ${esc(originalSettings().awayGap)}.</p><p class="muted smalltext">Only calculation components exposed by the engine are shown.</p>`;
  root.innerHTML=`<div class="fp-calc-intro"><h3>${esc(m.home)} vs ${esc(m.away)}</h3><span class="muted smalltext">${esc(m.league)} · ${esc(fmtDate(m.date))}</span></div>
- <div class="fp-calc-grid">${card('Model 1 · League-adjusted',o,oDetails)}${card('Model 2 · Team-form',m,expectedGoalAuditHtml(m)+confidenceAuditHtml(m))}${card('Model 3 · Opposition-ranked goals',r,r?rankedDetail(r):'')}${`<article class="fp-calc-card fp-dynamics"><h3>Model 4 · Match Dynamics confirmation</h3>${m.model4Confirmation?`<p><strong>${esc(m.model4Confirmation.status)}</strong> · Proposed outcome ${esc(outcomeName(m.model4Confirmation.proposedOutcome))}</p><p>${esc(m.model4Confirmation.explanation)}</p><p>Matchup score ${m.model4Confirmation.score==null?'—':Number(m.model4Confirmation.score).toFixed(3)} · Historical confirmation ${m.model4Confirmation.validated?'validated':'not validated'}</p>`:'No historical dynamics confirmation available.'}</article>`}</div>
+ <div class="fp-calc-grid">${card('Model 1 · League-adjusted',o,oDetails)}${card('Model 2 · Team-form',m,expectedGoalAuditHtml(m)+confidenceAuditHtml(m))}${card('Model 3 · Opposition-ranked goals',r,r?rankedDetail(r):'')}${`<article class="fp-calc-card"><h3>Adaptive league selection</h3><p>${fpAdaptiveBadge(m.leagueId)}</p><p>Model 1 is ${fpActiveStrategy(m.leagueId)==='23'?'a visible reference only; Models 2 and 3 determine agreement.':'required to agree and independently SELECT alongside Models 2 and 3.'}</p></article>`}</div>
  <details class="fp-calc-evidence"><summary>Recent form and supporting evidence</summary>${insidePredictionHtml(m)}</details>`;
 }
 
