@@ -552,6 +552,7 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 </style>
 <style>
 .fp-bet-button{background:#174d43;border:1px solid #2b957f;color:#e4fff4}
+button.added{background:#31bd8b!important;border:2px solid #9affd8!important;color:#062c25!important;font-weight:850;box-shadow:0 0 0 2px rgba(49,189,139,.2)}
 .fp-bet-button.is-backed{background:#31bd8b!important;border:2px solid #9affd8!important;color:#062c25!important;font-weight:850;box-shadow:0 0 0 2px rgba(49,189,139,.2)}
 .fp-backed-tag{background:#164b3f;border:1px solid #47bc97;color:#b9ffe3}
 .fp-backed-tag{display:inline-flex;align-items:center;padding:4px 9px;border-radius:8px;font-size:12px;font-weight:750}
@@ -565,6 +566,35 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 .fp-bet-mini{font-size:12px;color:var(--muted);margin-top:4px}
 #backedLiveFilters{margin:8px 0 13px}
 @media(max-width:600px){.fp-bet-monitor .fp-bet-row,.fp-bet-history .fp-bet-row{align-items:flex-start}.fp-bet-monitor .fp-bet-state{white-space:normal}}
+</style><style>
+#goalThreatBox .fp-feature-extra,#goalThreatBox .fp-goal-stats .stat{
+ background:#192b3e!important;color:#edf7ff!important;border:1px solid #3b536c!important;
+ box-shadow:none!important
+}
+#goalThreatBox .fp-goal-stats .stat strong{color:#a6f3d4!important}
+#goalThreatBox .fp-goal-stats .stat .muted{color:#b1c4d7!important}
+</style><style>
+/* Completely refreshed Model Test overlay, scoped to avoid altering Fixtures loading. */
+#busy.fp-test-busy{background:rgba(5,12,23,.9);backdrop-filter:blur(9px)}
+#busy.fp-test-busy .busybox{width:min(92vw,670px)!important;max-height:88vh;overflow-y:auto;
+ padding:30px 32px!important;border-radius:22px!important;background:linear-gradient(155deg,#1b3047,#101d2f 75%)!important;
+ border:1px solid #44617c!important;box-shadow:0 32px 110px rgba(0,0,0,.65)!important;text-align:left}
+#busy.fp-test-busy .spinner{display:none}
+#busy.fp-test-busy #fpTestEyebrow{display:block;color:#76dec1;font-size:11px;letter-spacing:.17em;font-weight:800;margin-bottom:10px}
+#busy.fp-test-busy #busyTitle{font-size:clamp(22px,3vw,30px);line-height:1.2;margin:0 0 8px}
+#busy.fp-test-busy #busyDetail{font-size:13px;color:#b5c8d8;margin-bottom:19px}
+#busy.fp-test-busy .busybar{height:13px;border-radius:12px;background:#30465c;overflow:hidden}
+#busy.fp-test-busy #busyBar{background:linear-gradient(90deg,#25a9a2,#69e1ad);height:100%}
+#busy.fp-test-busy #busyPercent{font-size:22px;font-weight:850;color:#9ff2ce}
+#busy.fp-test-busy #fpTestProgressRows{min-width:0!important;margin-top:20px!important}
+#busy.fp-test-busy .fp-test-stage-progress{color:#9eeed2;font-size:12px;font-weight:800;letter-spacing:.08em;margin-bottom:12px}
+#busy.fp-test-busy #fpTestModelRows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#busy.fp-test-busy .fp-progress-item{background:#172a3e!important;border:1px solid #36516a!important;border-radius:12px;padding:12px}
+#busy.fp-test-busy .fp-progress-head{font-size:12px;gap:8px}
+#busy.fp-test-busy .fp-progress-detail{font-size:11px;color:#b4c9da}
+#busy.fp-test-busy #fpTestElapsed,#busy.fp-test-busy #fpTestCurrent{line-height:1.5}
+@media(max-width:540px){#busy.fp-test-busy .busybox{padding:20px 16px!important}
+#busy.fp-test-busy #fpTestModelRows{grid-template-columns:1fr}}
 </style></head>
 <body>
 <header>
@@ -575,12 +605,13 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 </header>
 
 <div id="busy" role="status" aria-live="polite">
- <div class="busybox">
-  <div class="spinner"></div><h2 id="busyTitle">Working on predictions…</h2>
+ <div class="busybox" id="fpBusyBox">
+  <div class="spinner"></div><div id="fpTestEyebrow" hidden>FOOTY PICKS · HISTORICAL VALIDATION</div><h2 id="busyTitle">Working on predictions…</h2>
   <p class="muted" id="busyDetail">Preparing your football data…</p>
   <div class="busybar"><span id="busyBar"></span></div><strong id="busyPercent">Starting…</strong>
   <div id="fpTestProgressRows" style="display:none;text-align:left;margin-top:14px;min-width:min(76vw,540px)">
    <div id="fpTestOverallLabel" class="muted smalltext" style="margin-bottom:9px">Preparing historical data…</div>
+   <div class="fp-test-stage-progress" id="fpTestStageProgress">Waiting to start</div>
    <div id="fpTestModelRows"></div>
    <div id="fpTestElapsed" class="muted smalltext" style="margin-top:9px">Elapsed 0s</div>
    <div id="fpTestCurrent" class="muted smalltext" style="margin-top:4px">Waiting for first operation</div>
@@ -630,6 +661,7 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
   <div class="row between wrap"><span id="liveUpdated" class="smalltext muted">Waiting for data…</span><button id="liveRefresh" class="btn small secondary">Refresh live data</button></div>
  </div>
  <div id="recentGoals" aria-live="polite"></div>
+ <div id="myLiveBets" class="panel fp-bet-monitor" hidden></div>
  <div id="recentRedCards" aria-live="polite"></div>
  <div class="controls" style="margin:10px 0">
   <div><label for="liveStatusFilter">Match status</label><select id="liveStatusFilter"><option value="live">Live</option><option value="upcoming">Upcoming</option><option value="finished">Finished</option><option value="today">All Today</option></select></div>
@@ -651,7 +683,6 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
   </label>
 
  </div>
- <div id="myLiveBets" class="panel fp-bet-monitor" hidden></div>
  <div id="liveSummary" class="statgrid"></div>
  <div id="goalStormSummary"></div>
  <div id="liveList"><div class="empty">Loading live matches…</div></div>
@@ -1385,7 +1416,7 @@ function matchCard(m){
  return`<article class="match"><div class="row between"><span class="league">${esc(m.league)}</span><div class="row wrap">${Math.min(m.h?.count??0,m.a?.count??0)<5?`<span class="tag">Limited history</span>`:""}</div></div>
  <div class="meta" style="margin:7px 0">${esc(fmtDate(m.date))}${m.venue?" · "+esc(m.venue):""}</div>
  <div class="row between"><div class="grow teamline">${esc(m.home)}<div class="meta">${m.h.count} prior league matches</div></div><strong style="white-space:nowrap;font-size:19px">${shownScore}</strong><div class="grow teamline" style="text-align:right">${esc(m.away)}<div class="meta">${m.a.count} prior league matches</div></div></div>
- ${comparisonRows(m)}${fpEvidenceLine(m)}${fpDrawDecision(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" ${added?"disabled":""} onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?"Added":"Add pick"}</button><button class="btn small fp-bet-button" data-bet-toggle="${esc(id)}" type="button">Bet on</button></div><details class="fixture-secondary"><summary>Probabilities &amp; calculation breakdown</summary>${probsHtml(m)}${explainHtml(m)}</details></article>`;
+ ${comparisonRows(m)}${fpEvidenceLine(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?"Added":"Add pick"}</button><button class="btn small fp-bet-button" data-bet-toggle="${esc(id)}" type="button">Bet on</button></div><details class="fixture-secondary"><summary>Probabilities &amp; calculation breakdown</summary>${fpDrawDecision(m)}${probsHtml(m)}${explainHtml(m)}</details></article>`;
 }
 function upcoming(){
  const now=new Date(),v=$("days").value,league=$("league").value,todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
@@ -1415,7 +1446,7 @@ function renderFixtures(){
 }
 function fpCompactFixture(m,heading='',extra=''){
  const id=eventId(m),added=state.acc.some(x=>x.id===id);
- return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="muted smalltext">${esc(fmtDate(m.date))}</span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpEvidenceLine(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" ${added?'disabled':''} onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Calculation breakdown &amp; probabilities</summary>${probsHtml(m)}${explainHtml(m)}</details></article>`;
+ return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="muted smalltext">${esc(fmtDate(m.date))}</span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpEvidenceLine(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Calculation breakdown &amp; probabilities</summary>${fpDrawDecision(m)}${probsHtml(m)}${explainHtml(m)}</details></article>`;
 }
 function fpDrawDecision(m){
  const gap=Math.abs(Number(m.xgDifference)),prob=Number(m.probs?.D),stability=Number(m.stability??1),messages=[];
@@ -1428,7 +1459,7 @@ function fpDrawDecision(m){
 function renderTop10(){
  const all=upcoming().filter(m=>m.probs&&['H','D','A'].includes(m.prediction))
  .sort((a,b)=>{const fa=fpModelFlags(a),fb=fpModelFlags(b);return Number(fb.consensus)-Number(fa.consensus)||Number(fb.matching)-Number(fa.matching)||Number(b.selection===b.prediction)-Number(a.selection===a.prediction)||fpAverageConfidence(b)-fpAverageConfidence(a)||(b.probs[b.prediction]||0)-(a.probs[a.prediction]||0)}).slice(0,10);
- $('topbox').innerHTML=`<div class="fp-feature-head"><h2>Top 10 picks</h2><p class="muted smalltext">Ranked by active league agreement, independently qualified SELECT, confidence and outcome probability. Predictions remain unchanged; NO SELECT is not a betting recommendation.</p></div>`+(all.map((m,i)=>fpCompactFixture(m,`#${i+1}`,fpDrawDecision(m))).join('')||'<div class="empty">No upcoming fixtures in this window.</div>');
+ $('topbox').innerHTML=`<div class="fp-feature-head"><h2>Top 10 picks</h2><p class="muted smalltext">Ranked by active league agreement, independently qualified SELECT, confidence and outcome probability. Predictions remain unchanged; NO SELECT is not a betting recommendation.</p></div>`+(all.map((m,i)=>fpCompactFixture(m,`#${i+1}`)).join('')||'<div class="empty">No upcoming fixtures in this window.</div>');
 }
 function goalCountProbability(lambda, minimumGoals){
  let below=0;
@@ -1444,7 +1475,7 @@ function renderGoalThreats(){
  }
  threats.sort((a,b)=>b.p3-a.p3||b.p2-a.p2);
  const shown=threats.filter(x=>x.p2>=.25).slice(0,15);
- $('goalThreatBox').innerHTML=`<div class="fp-feature-head"><h2>Goal Threats</h2><p class="muted smalltext">Ranked by chance of scoring 3+ goals using the existing Team-form expected goals. Goal threat is not itself a HOME/AWAY/DRAW SELECT signal.</p></div>`+(shown.map((x,i)=>fpCompactFixture(x.match,`Goal threat #${i+1}`,`<div class="fp-goal-heading"><strong>${esc(x.team)}</strong><span class="tag">${x.venue} · xG ${x.lambda.toFixed(2)}</span></div><div class="statgrid fp-goal-stats"><div class="stat"><span class="muted smalltext">Score 2+</span><strong>${(x.p2*100).toFixed(1)}%</strong></div><div class="stat"><span class="muted smalltext">Score 3+</span><strong>${(x.p3*100).toFixed(1)}%</strong></div><div class="stat"><span class="muted smalltext">Score 4+</span><strong>${(x.p4*100).toFixed(1)}%</strong></div></div>${fpDrawDecision(x.match)}`)).join('')||'<div class="empty">No qualifying goal threats in this fixture window.</div>');
+ $('goalThreatBox').innerHTML=`<div class="fp-feature-head"><h2>Goal Threats</h2><p class="muted smalltext">Ranked by chance of scoring 3+ goals using the existing Team-form expected goals. Goal threat is not itself a HOME/AWAY/DRAW SELECT signal.</p></div>`+(shown.map((x,i)=>fpCompactFixture(x.match,`Goal threat #${i+1}`,`<div class="fp-goal-heading"><strong>${esc(x.team)}</strong><span class="tag">${x.venue} · xG ${x.lambda.toFixed(2)}</span></div><div class="statgrid fp-goal-stats"><div class="stat"><span class="muted smalltext">Score 2+</span><strong>${(x.p2*100).toFixed(1)}%</strong></div><div class="stat"><span class="muted smalltext">Score 3+</span><strong>${(x.p3*100).toFixed(1)}%</strong></div><div class="stat"><span class="muted smalltext">Score 4+</span><strong>${(x.p4*100).toFixed(1)}%</strong></div></div>`)).join('')||'<div class="empty">No qualifying goal threats in this fixture window.</div>');
 }
 function renderAccumulator(){
  $("accCount").textContent=state.acc.length?`(${state.acc.length})`:"";$("accTotal").textContent=state.acc.length;
@@ -1452,7 +1483,9 @@ function renderAccumulator(){
  $("accList").innerHTML=state.acc.length?state.acc.map((x,i)=>{const current=state.matches.find(m=>eventId(m)===x.id),savedConfidence=Number(x.confidence),currentConfidence=Number(current?.confidence),confidence=Number.isFinite(savedConfidence)?savedConfidence:currentConfidence;return`<div class="pick"><div class="row between"><div class="grow"><strong>${esc(x.home)} vs ${esc(x.away)}</strong><div class="meta">${esc(x.league)} · ${esc(fmtDate(x.date))}</div><div style="margin-top:6px">${confidenceBadge(confidence)} <span class="tag">${outcomeName(x.outcome)} · ${Math.round(x.prob*100)}%</span></div></div><button class="btn danger small" onclick="removeAcc(${i})">Remove</button></div></div>`}).join(""):`<div class="empty">Add picks from Fixtures.</div>`;
 }
 function addToAccumulator(id,outcome){
- const m=state.matches.find(x=>eventId(x)===id);if(!m||!m.probs||state.acc.some(x=>x.id===id))return;
+ const m=state.matches.find(x=>eventId(x)===id);if(!m||!m.probs)return;
+ const existing=state.acc.findIndex(x=>x.id===id);
+ if(existing!==-1){removeAcc(existing);return;}
  state.acc.push({id,home:m.home,away:m.away,league:m.league,leagueId:m.leagueId,date:m.date,outcome,prob:m.probs[outcome],confidence:m.confidence});store("fp_acc",state.acc);renderAccumulator();renderFixtures();
 }
 function removeAcc(i){state.acc.splice(i,1);store("fp_acc",state.acc);renderAccumulator();renderFixtures()}
@@ -1609,7 +1642,7 @@ function setBusy(title,percent){
     :"Loading fixtures and preparing predictions")
   :"Preparing your football data…";
 }
-function hideBusy(){$("busy").classList.remove("show")}
+function hideBusy(){$("busy").classList.remove("show","fp-test-busy");const eyebrow=$("fpTestEyebrow");if(eyebrow)eyebrow.hidden=true}
 function fpFixtureLeagueIds(){const id=$("league").value;return id&&id!=="all"?[id]:Object.keys(LEAGUES)}
 function fpTestLeagueIds(){const id=$("fpTestLeague")?.value||"all";return id==="all"?Object.keys(LEAGUES):[id]}
 async function loadData(){
@@ -1645,9 +1678,15 @@ function fpStageUpdate(index,pct,detail,status){
  item.pct=Math.max(0,Math.min(100,Math.round(pct)));item.detail=detail||item.detail;item.status=status|| (item.pct===100?"Complete":"Running");
  const host=document.getElementById('fpTestModelRows');if(!host)return;
  if(!host.children.length){host.innerHTML=fpTestStages.map((label,i)=>`<div class="fp-progress-item"><div class="fp-progress-head"><span>${i+1}. ${label}</span><span id="fpStageStatus${i}">Waiting</span></div><div class="fp-progress-track"><div id="fpStageBar${i}" class="fp-progress-fill"></div></div><div id="fpStageDetail${i}" class="fp-progress-detail">Waiting</div></div>`).join('')}
+ const active=fpTestStageState.findIndex(x=>x.pct<100);
+ const step=document.getElementById("fpTestStageProgress");
+ if(step)step.textContent=active<0?"All stages completed":`STEP ${active+1} OF 4 · ${fpTestStages[active]}`;
  for(let i=0;i<4;i++){const x=fpTestStageState[i];document.getElementById('fpStageBar'+i).style.width=x.pct+'%';document.getElementById('fpStageStatus'+i).textContent=x.status+' · '+x.pct+'%';document.getElementById('fpStageDetail'+i).textContent=x.detail}
 }
-function fpStagesReset(){fpTestStageState.forEach(x=>{x.pct=0;x.detail='Waiting';x.status='Waiting'});document.getElementById('fpTestModelRows')?.replaceChildren();document.getElementById('fpTestProgressRows').style.display='block';fpStageUpdate(0,0,'Waiting for historical fixtures','Waiting')}
+function fpStagesReset(){fpTestStageState.forEach(x=>{x.pct=0;x.detail='Waiting';x.status='Waiting'});document.getElementById('fpTestModelRows')?.replaceChildren();document.getElementById('fpTestProgressRows').style.display='block';
+ $("busy").classList.add("fp-test-busy");
+ document.getElementById("fpTestEyebrow").hidden=false;
+ fpStageUpdate(0,0,'Waiting for historical fixtures','Waiting')}
 const fpPerf={started:0,last:0,timer:null,lines:[]};
 function fpPerfUpdate(stage,percent,detail='',log=false){
  const st=document.getElementById('fpPerfStage'),bar=document.getElementById('fpPerfBar'),counts=document.getElementById('fpPerfCounts');
@@ -1693,7 +1732,7 @@ async function doTest(){
   fpPerfUpdate("Complete",100,`${report.summary.leagues} leagues · ${secs}s`,true);
   setBusy("Test complete",100);await new Promise(r=>setTimeout(r,180));hideBusy();
  }catch(e){hideBusy();$("testStatus").innerHTML=`<span class="error">Test failed: ${esc(e.message)}</span>`;fpPerfUpdate("Test interrupted",90,String(e.message),true)}
- finally{fpPerfEnd();const progress=document.getElementById('fpTestProgressRows');if(progress)progress.style.display='none';state.loading=false;$("runTest").disabled=false;$("cancelTest").style.display="none"}
+ finally{fpPerfEnd();const progress=document.getElementById('fpTestProgressRows');if(progress)progress.style.display='none';$("busy").classList.remove("fp-test-busy");state.loading=false;$("runTest").disabled=false;$("cancelTest").style.display="none"}
 }
 
 
@@ -2176,7 +2215,8 @@ function renderRecentGoals(matches){
  const root=$("recentGoals");if(!root)return;
  const rows=(matches||[]).map(m=>{const goal=state.liveStats[eventId(m)]?.lastGoal;if(!goal||goal.minute===null||!validScore(m))return null;const current=getElapsedLiveMinute(m);const age=Number.isFinite(goal.timestamp)?Math.max(0,(Date.now()-goal.timestamp)/60000):(current===null?null:Math.max(0,current-goal.minute));return{m,goal,age}}).filter(Boolean).sort((a,b)=>{const aa=a.age===null?999:a.age,bb=b.age===null?999:b.age;return aa-bb}).slice(0,5);
  if(!rows.length){root.innerHTML=`<div class="recent-goals-panel"><div class="row between wrap"><strong>⚽ Latest goals</strong><span class="muted smalltext">Up to 5 live matches</span></div><p class="muted smalltext" style="margin:7px 0 0">Recent goal events aren’t available from the feed for the current live matches.</p></div>`;return;}
- root.innerHTML=`<div class="recent-goals-panel"><div class="row between wrap" style="margin-bottom:5px"><strong>⚽ Latest goals</strong><span class="muted smalltext">Most recent first · max 5</span></div>${rows.map(({m,goal,age})=>{const cls=age!==null&&age<=1?'goal-now':age!==null&&age<=2?'goal-two':age!==null&&age<=5?'goal-five':'';const label=age===null?`${goal.minute}′`:age<=1?'JUST NOW':age<=2?'LAST 2 MIN':age<=5?'LAST 5 MIN':`${Math.round(age)} MIN AGO`;const side=goal.side==='home'?'home':goal.side==='away'?'away':null;const scorer=goal.scorer?` · ${esc(goal.scorer)}`:'';return`<div class="recent-goal-row ${cls}"><span class="goal-age">${label}</span><div><strong>${esc(m.home)} ${m.homeScore}–${m.awayScore} ${esc(m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${goal.minute}′${scorer}</div></div><span class="tag">${side==='home'?'HOME GOAL':side==='away'?'AWAY GOAL':'GOAL'}</span></div>`}).join('')}</div>`;
+ root.innerHTML=`<div class="recent-goals-panel"><div class="row between wrap" style="margin-bottom:5px"><strong>⚽ Latest goals</strong><span class="muted smalltext">Most recent first · max 5</span></div>${rows.map(({m,goal,age})=>{const cls=age!==null&&age<=1?'goal-now':age!==null&&age<=2?'goal-two':age!==null&&age<=5?'goal-five':'';const label=age===null?`${goal.minute}′`:age<=1?'JUST NOW':age<=2?'LAST 2 MIN':age<=5?'LAST 5 MIN':`${Math.round(age)} MIN AGO`;const side=goal.side==='home'?'home':goal.side==='away'?'away':null;const scorer=goal.scorer?` · ${esc(goal.scorer)}`:'';
+ const backed=fpBetRecord(eventId(m));const badge=backed?`<span class="fp-backed-tag">✓ BACKED · ${esc(fpBetLabel(backed))}</span>`:'' ;return`<div class="recent-goal-row ${cls}"><span class="goal-age">${label}</span><div><strong>${esc(m.home)} ${m.homeScore}–${m.awayScore} ${esc(m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${goal.minute}′${scorer}</div></div><span class="row wrap" style="gap:5px">${badge}<span class="tag">${side==='home'?'HOME GOAL':side==='away'?'AWAY GOAL':'GOAL'}</span></span></div>`}).join('')}</div>`;
 }
 function renderRecentRedCards(matches){
  const root=$('recentRedCards');if(!root)return;const rows=[];
@@ -2188,7 +2228,7 @@ function renderRecentRedCards(matches){
   }
  }
  if(!rows.length){root.innerHTML='';return}
- root.innerHTML=`<div class="recent-reds-panel fp-red-alert"><div class="row between wrap fp-red-heading"><strong>🟥 Red cards</strong></div>${rows.map(({m,side,count})=>`<div class="recent-red-row fp-red-item"><div class="fp-red-copy"><strong>${esc(side==='home'?m.home:m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${esc(m.home)} ${validScore(m)?m.homeScore+'–'+m.awayScore:'vs'} ${esc(m.away)}</div></div><span class="fp-red-count">${count} red card${count===1?'':'s'}</span></div>`).join('')}</div>`;
+ root.innerHTML=`<div class="recent-reds-panel fp-red-alert"><div class="row between wrap fp-red-heading"><strong>🟥 Red cards</strong></div>${rows.map(({m,side,count})=>`<div class="recent-red-row fp-red-item"><div class="fp-red-copy"><strong>${esc(side==='home'?m.home:m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${esc(m.home)} ${validScore(m)?m.homeScore+'–'+m.awayScore:'vs'} ${esc(m.away)}</div></div><span class="row wrap" style="gap:6px">${fpBetRecord(eventId(m))?`<span class="fp-backed-tag">✓ BACKED · ${esc(fpBetLabel(fpBetRecord(eventId(m))))}</span>`:''}<span class="fp-red-count">${count} red card${count===1?'':'s'}</span></span></div>`).join('')}</div>`;
 }
 
 function ukParts(date){
@@ -2454,6 +2494,7 @@ function fpBetToggle(id){
    markedAt:new Date().toISOString(),settlement:"pending"});
  }
  fpBetSave();fpBetRefresh();
+ renderRecentGoals(state.liveMatches);renderRecentRedCards(state.liveMatches);
 }
 function fpBetSettle(matches){
  const map=new Map((matches||[]).map(m=>[eventId(m),m]));
@@ -2554,16 +2595,8 @@ function fpBetAlerts(){
  }
 }
 function fpBetAlertRender(){
- for(const rootId of ["recentGoals","recentRedCards"]){
-  const root=$(rootId);if(!root)return;
-  root.querySelectorAll(".fp-bet-alert-note").forEach(x=>x.remove());
-  const relevant=fpLiveAlertHistory.filter(a=>Date.now()-a.at<180000&&
-   (rootId==="recentGoals"?a.text.includes("GOAL"):a.text.includes("RED CARD")));
-  if(!relevant.length)continue;
-  const holder=document.createElement("div");holder.className="fp-bet-alert-note";
-  holder.innerHTML=relevant.slice(0,3).map(a=>`<div class="fp-bet-alert recent-red-row" style="padding:9px;margin-top:7px;border-radius:8px"><div><strong>${esc(a.text)}</strong><div class="fp-bet-mini">${esc(a.fixture)} · ✓ BACKED ${esc(a.selection)}</div><div class="fp-bet-mini">${esc(a.status.toUpperCase())} · Live prediction ${esc(a.projection)}</div></div></div>`).join("");
-  root.appendChild(holder);
- }
+ // Existing Latest Goals / Red Cards rows carry BACKED badges.
+ // Do not create a second alert or duplicate an event.
 }
 const fpOriginalRenderFixtures=renderFixtures;
 renderFixtures=function(){fpOriginalRenderFixtures();fpBetDecorate()};
