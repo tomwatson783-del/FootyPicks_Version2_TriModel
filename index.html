@@ -543,7 +543,7 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 <section id="test" hidden>
  <h2>Model Test</h2><p class="muted smalltext">Historical prediction validation for all four independent models, with automatic league-specific three-model fallback.</p>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><p class="muted smalltext">Validated recommendations are saved automatically after the complete historical test. Existing settings are retained if safeguards fail.</p><details class="panel fp-advanced"><summary><strong>Model 3 · optimisation detail</strong></summary><div id="rankedTestResults" class="panel notice">Model 3 optimisation results will appear here.</div></details><details class="panel fp-advanced" id="fp4AuditPanel" open><summary><strong>Model 4 · Historical match-event eligibility (all leagues)</strong></summary><p class="muted smalltext">Checks actual ESPN historical goal timelines, final-score reconciliation and sample coverage. This is a data eligibility audit, NOT proof of predictive accuracy. Model 4 activates per league only after chronological prediction/SELECT validation passes. The existing three models continue unchanged.</p><div class="row wrap" style="gap:8px"><button class="btn secondary" type="button" id="fp4AuditRun">Audit all leagues</button><button class="btn secondary" type="button" id="fp4AuditCopy">Copy diagnostic report</button><button class="btn secondary" type="button" id="fp4AuditCancel" disabled>Stop audit</button></div><p id="fp4AuditStatus" class="muted smalltext">Not tested yet. Run the audit and paste the copied report into ChatGPT.</p><div id="fp4AuditOutput" class="fp4-audit-output"></div><textarea id="fp4AuditReport" readonly aria-label="Copyable Model 4 diagnostic report" style="width:100%;min-height:140px;margin-top:10px;font-size:11px" placeholder="Diagnostic JSON will appear here after the audit."></textarea></details><details class="panel fp-advanced" open><summary><strong>Model 4 · Chronological predictive validation and league fallback</strong></summary><p class="muted smalltext">A league uses four models only after verified event history and unseen holdout tests pass. Otherwise it automatically uses the original three. Testing fetches match summaries with four bounded workers and reuses cached sequences.</p><div id="fp4PredictiveResults">Run historical model test to validate Match Dynamics.</div><textarea id="fp4PredictiveReport" readonly style="width:100%;min-height:150px;margin-top:10px;font-size:11px" aria-label="Model 4 predictive validation JSON"></textarea></details><div id="outcomeCompare"></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view the model scorecard and Model 4 validation.</div></div><details class="panel fp-advanced"><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><p class="muted smalltext">Validated recommendations are saved automatically after the complete historical test. Existing settings are retained if safeguards fail.</p><details class="panel fp-advanced"><summary><strong>Model 3 · optimisation detail</strong></summary><div id="rankedTestResults" class="panel notice">Model 3 optimisation results will appear here.</div></details><details class="panel fp-advanced" id="fp4AuditPanel" open><summary><strong>Model 4 · Historical match-event eligibility (all leagues)</strong></summary><p class="muted smalltext">Checks actual ESPN historical goal timelines, final-score reconciliation and sample coverage. This is a data eligibility audit, NOT proof of predictive accuracy. Model 4 activates per league only after chronological prediction/SELECT validation passes. The existing three models continue unchanged.</p><div class="row wrap" style="gap:8px"><button class="btn secondary" type="button" id="fp4AuditRun">Audit all leagues</button><button class="btn secondary" type="button" id="fp4AuditCopy">Copy diagnostic report</button><button class="btn secondary" type="button" id="fp4AuditCancel" disabled>Stop audit</button></div><p id="fp4AuditStatus" class="muted smalltext">Not tested yet. Run the audit and paste the copied report into ChatGPT.</p><div id="fp4AuditOutput" class="fp4-audit-output"></div><textarea id="fp4AuditReport" readonly aria-label="Copyable Model 4 diagnostic report" style="width:100%;min-height:140px;margin-top:10px;font-size:11px" placeholder="Diagnostic JSON will appear here after the audit."></textarea></details><details class="panel fp-advanced" open><summary><strong>Model 4 · Chronological predictive validation and league fallback</strong></summary><p class="muted smalltext">A league uses four models only after verified event history and unseen holdout tests pass. Otherwise it automatically uses the original three. Testing fetches match summaries with four bounded workers and reuses cached sequences.</p><div id="fpPerfDashboard" class="panel" style="margin:12px 0;border:1px solid var(--border,#555);padding:12px"><strong>Model Test · activity monitor</strong><div id="fpPerfStage" style="margin:8px 0">Idle — ready to test</div><div style="height:10px;background:#8884;border-radius:8px;overflow:hidden"><div id="fpPerfBar" style="height:100%;width:0%;background:#39b89d;transition:width .25s"></div></div><div id="fpPerfCounts" class="smalltext muted" style="margin-top:8px">No active test</div><div id="fpPerfClock" class="smalltext muted">Elapsed 0s</div><div id="fpPerfLog" role="log" aria-live="off" class="smalltext" style="max-height:140px;overflow:auto;margin-top:8px;white-space:pre-line"></div></div><div id="fp4PredictiveResults">Run historical model test to validate Match Dynamics.</div><textarea id="fp4PredictiveReport" readonly style="width:100%;min-height:150px;margin-top:10px;font-size:11px" aria-label="Model 4 predictive validation JSON"></textarea></details><div id="outcomeCompare"></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view the model scorecard and Model 4 validation.</div></div><details class="panel fp-advanced"><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced"><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -2319,28 +2319,36 @@ function fpRenderUnifiedDashboard(test,ranked){
  el.innerHTML=card('01 · League-adjusted',original?.hold?{n:original.hold.n,hits:original.hold.hits,drawN:original.hold.drawPicks,drawHits:original.hold.drawHits}:null,original?.gap??originalSettings().drawBoundary)+card('02 · Team-form',team,fpDrawRecommendations?.team?.gap??state.teamDrawBoundary)+card('03 · Opposition-ranked goals',rank?{n:rank.holdN,hits:rank.holdHits,drawN:rank.holdDrawPicks,drawHits:rank.holdDrawHits}:null,rank?.boundary??rankedSettings.homeBoundary,rank?`<span class="muted smalltext">Training ${rank.trainHits}/${rank.trainN} · validation ${rank.holdHits}/${rank.holdN}</span>`:'')+fpSelectionEvidencePanel(test);
 }
 
+const fpPerf={started:0,last:0,timer:null,lines:[]};
+function fpPerfUpdate(stage,percent,detail='',log=false){
+ const st=document.getElementById('fpPerfStage'),bar=document.getElementById('fpPerfBar'),counts=document.getElementById('fpPerfCounts');
+ if(st)st.textContent=stage;if(bar)bar.style.width=Math.max(0,Math.min(100,percent))+'%';if(counts&&detail)counts.textContent=detail;
+ fpPerf.last=Date.now();if(log){fpPerf.lines.push(new Date().toLocaleTimeString()+' — '+stage+(detail?' · '+detail:''));fpPerf.lines=fpPerf.lines.slice(-18);const el=document.getElementById('fpPerfLog');if(el)el.textContent=fpPerf.lines.join('\n')}
+}
+function fpPerfStart(){fpPerf.started=Date.now();fpPerf.last=Date.now();fpPerf.lines=[];clearInterval(fpPerf.timer);fpPerf.timer=setInterval(()=>{const el=document.getElementById('fpPerfClock');if(el)el.textContent='Elapsed '+Math.floor((Date.now()-fpPerf.started)/1000)+'s · Last activity '+Math.floor((Date.now()-fpPerf.last)/1000)+'s ago'},1000)}
+function fpPerfEnd(){clearInterval(fpPerf.timer);fpPerf.timer=null}
 async function doTest(){
- if(state.loading)return;testCancelRequested=false;$("cancelTest").style.display="inline-block";state.loading=true;$("runTest").disabled=true;setBusy("Fetching historical results…",5);$("testStatus").textContent="Fetching recent results plus warm-up history for a rolling 12-month test. Please wait.";
+ if(state.loading)return;fpPerfStart();fpPerfUpdate("Fetching league results",3,"Starting historical retrieval",true);testCancelRequested=false;$("cancelTest").style.display="inline-block";state.loading=true;$("runTest").disabled=true;setBusy("Fetching historical results…",5);$("testStatus").textContent="Fetching recent results plus warm-up history for a rolling 12-month test. Please wait.";
  try{
   const fpTestStart=performance.now();
   const testIds=fpTestLeagueIds();
-  const r=await fetchAllLeagues(14,(i,n,name)=>{setBusy("Loading test data: "+name,Math.round(5+i/n*65));$("testStatus").textContent=`Fetching historical results: ${i}/${n} — ${name}`},testIds);testCheckpoint();
+  const r=await fetchAllLeagues(14,(i,n,name)=>{fpPerfUpdate("Fetching historical league results",5+Math.round(i/n*20),`${i}/${n} leagues · ${name}`,i===n);setBusy("Loading test data: "+name,Math.round(5+i/n*65));$("testStatus").textContent=`Fetching historical results: ${i}/${n} — ${name}`},testIds);testCheckpoint();
   if(!r.matches.length)throw Error("No historical matches were returned.");
   
-  const fpFetchMs=performance.now()-fpTestStart;setBusy("Running chronological model test…",78);await new Promise(r=>setTimeout(r,20));state.lastTest=await runBacktest(r.matches);renderTest(state.lastTest);fpRenderUnifiedDashboard(state.lastTest,null);const fpCoreMs=performance.now();await rankedBacktest(r.matches);const fpRankMs=performance.now()-fpCoreMs;
+  const fpFetchMs=performance.now()-fpTestStart;fpPerfUpdate("Models 1–2: chronological calculations",28,`${r.matches.length} historical matches`,true);setBusy("Running chronological model test…",78);await new Promise(r=>setTimeout(r,20));state.lastTest=await runBacktest(r.matches);renderTest(state.lastTest);fpRenderUnifiedDashboard(state.lastTest,null);const fpCoreMs=performance.now();fpPerfUpdate("Model 3: opposition-ranked optimisation",40,"Evaluating historical configurations",true);await rankedBacktest(r.matches);const fpRankMs=performance.now()-fpCoreMs;
   fpV4FinishRanked(state.lastTest,window.fpV4RankRows||[]);
   fpV4Render(state.lastTest);
   fpV4AutoApply(state.lastTest);
   fpRenderUnifiedDashboard(state.lastTest,window.fpRankedRecommendation);
   $("testStatus").textContent="Validating Model 4 historical match states; cached matches are reused…";
-  await fp4FetchHistory(r.matches,(done,total,valid,failed)=>{$("testStatus").textContent=`Model 4 event history ${done}/${total} · verified ${valid} · unavailable ${failed}`});
-  await fp4Backtest(r.matches);
+  fpPerfUpdate("Model 4: retrieving scoring sequences",50,"Starting match-summary retrieval",true);await fp4FetchHistory(r.matches,(done,total,valid,failed)=>{fpPerfUpdate("Model 4: retrieving scoring sequences",50+Math.round(30*done/Math.max(1,total)),`${done}/${total} checked · ${valid} verified · ${failed} unavailable`);$("testStatus").textContent=`Model 4 event history ${done}/${total} · verified ${valid} · unavailable ${failed}`});
+  fpPerfUpdate("Model 4: chronological validation",82,"Testing 12 configurations per league",true);await fp4Backtest(r.matches);
   if(state.matches.length){updatePredictions(state.matches,state.activeIndex);renderFixtures()}
   $("testStatus").textContent=`Completed · retrieval ${(fpFetchMs/1000).toFixed(1)}s · Models 1 & 2 ${((fpCoreMs-fpTestStart-fpFetchMs)/1000).toFixed(1)}s · Model 3 ${(fpRankMs/1000).toFixed(1)}s · total ${((performance.now()-fpTestStart)/1000).toFixed(1)}s. ${r.matches.length} retrieved matches (including warm-up).`+`${r.errors.length?" Unavailable: "+r.errors.join(", "):""}`;
   if(state.mode==="auto")$("activeModelNote")&&($("activeModelNote").textContent="Test recommendations are available below; copy to Settings and save to apply explicitly.");
-  setBusy("Test complete",100);await new Promise(r=>setTimeout(r,250));hideBusy();
- }catch(e){hideBusy();$("testStatus").innerHTML=`<span class="error">Test failed: ${esc(e.message)}</span>`}
- finally{state.loading=false;$("runTest").disabled=false;$("cancelTest").style.display="none"}
+  fpPerfUpdate("Complete",100,`${r.matches.length} matches · total ${((performance.now()-fpTestStart)/1000).toFixed(1)}s`,true);setBusy("Test complete",100);await new Promise(r=>setTimeout(r,250));hideBusy();
+ }catch(e){fpPerfUpdate("Test interrupted",100,String(e.message),true);hideBusy();$("testStatus").innerHTML=`<span class="error">Test failed: ${esc(e.message)}</span>`}
+ finally{fpPerfEnd();state.loading=false;$("runTest").disabled=false;$("cancelTest").style.display="none"}
 }
 
 
@@ -2376,14 +2384,19 @@ function fp4CheckSummary(summary,match){
  const complete=goals.length===expected&&countsMatch&&goals.every(g=>g.minute!==null)&&goals.every(g=>g.side);
  return {sequence:complete?goals.sort((a,b)=>a.minute-b.minute):null,complete,reason:complete?'complete':!events.length&&expected===0?'zero-zero-without-event-proof':!events.length?'no-goal-events':goals.some(g=>!g.side)?'unknown-scoring-team':goals.some(g=>g.minute===null)?'missing-minute':goals.length!==expected?'goal-count-mismatch':'team-score-mismatch',goals:goals.length,expected,ownGoals:goals.filter(g=>g.own).length};
 }
+let fp4DbPromise;
+function fp4Db(){if(!('indexedDB' in window))return Promise.resolve(null);if(!fp4DbPromise)fp4DbPromise=new Promise(resolve=>{try{const r=indexedDB.open('footypicks-match-events',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('summaries'))r.result.createObjectStore('summaries')};r.onsuccess=()=>resolve(r.result);r.onerror=()=>resolve(null)}catch{resolve(null)}});return fp4DbPromise}
+async function fp4CacheRead(key){const db=await fp4Db();if(db){try{const x=await new Promise(resolve=>{const t=db.transaction('summaries','readonly').objectStore('summaries').get(key);t.onsuccess=()=>resolve(t.result);t.onerror=()=>resolve(null)});if(x)return x}catch{}}try{return JSON.parse(localStorage.getItem(key)||'null')}catch{return null}}
+async function fp4CacheWrite(key,obj){const db=await fp4Db();if(db){try{await new Promise(resolve=>{const t=db.transaction('summaries','readwrite');t.objectStore('summaries').put(obj,key);t.oncomplete=resolve;t.onerror=resolve});return}catch{}}try{localStorage.setItem(key,JSON.stringify(obj))}catch{}}
+const fp4MemoryEvents=new Map();
 async function fp4FetchSummary(match){
  const key='fp4_evt_'+match.leagueId+'_'+match.id;
- try{const old=JSON.parse(localStorage.getItem(key)||'null');if(old?.v===FP4_AUDIT_VERSION&&Date.now()-old.ts<30*86400000)return {...old.result,cache:true}}catch{}
+ const old=await fp4CacheRead(key);if(old?.v===FP4_AUDIT_VERSION&&(old.result?.complete||Date.now()-old.ts<86400000)){if(old.result?.complete)fp4MemoryEvents.set(key,old.result.sequence);return {...old.result,cache:true}}
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
  try{const url=`https://site.api.espn.com/apis/site/v2/sports/soccer/${encodeURIComponent(match.leagueId)}/summary?event=${encodeURIComponent(match.id)}`;
  const response=await fetch(url,{signal:controller.signal});if(!response.ok)throw Error('HTTP '+response.status);
  const result=fp4CheckSummary(await response.json(),match);
- try{localStorage.setItem(key,JSON.stringify({v:FP4_AUDIT_VERSION,ts:Date.now(),result}))}catch{}
+ if(result.complete)fp4MemoryEvents.set(key,result.sequence);await fp4CacheWrite(key,{v:FP4_AUDIT_VERSION,ts:Date.now(),result})
  return result;
  }finally{clearTimeout(timer)}
 }
@@ -2435,7 +2448,7 @@ const FP4_VALIDATION_KEY='fp4_predictive_validation_v1';
 let fp4Validation=readStore(FP4_VALIDATION_KEY,{});
 function fp4Timeline(m){
  const k='fp4_evt_'+m.leagueId+'_'+m.id;
- try{const o=JSON.parse(localStorage.getItem(k)||'null');return o?.v===FP4_AUDIT_VERSION&&o.result?.complete&&Array.isArray(o.result.sequence)?o.result.sequence:null}catch{return null}
+ if(fp4MemoryEvents.has(k))return fp4MemoryEvents.get(k);try{const o=JSON.parse(localStorage.getItem(k)||'null');return o?.v===FP4_AUDIT_VERSION&&o.result?.complete&&Array.isArray(o.result.sequence)?o.result.sequence:null}catch{return null}
 }
 function fp4MatchStates(m){
  const seq=fp4Timeline(m);if(!seq)return null;
@@ -2494,7 +2507,7 @@ function fp4ReportRender(report){
 }
 async function fp4FetchHistory(matches,progress){
  const finished=matches.filter(isFinished);let i=0,done=0,failed=0;
- async function worker(){while(i<finished.length&&!testCancelRequested){const m=finished[i++];if(fp4Timeline(m)){done++;continue}try{const result=await fp4FetchSummary(m);if(result.complete&&result.sequence)done++;else failed++}catch{failed++}
+ async function worker(){while(i<finished.length&&!testCancelRequested){const m=finished[i++];try{const result=await fp4FetchSummary(m);if(result.complete&&result.sequence)done++;else failed++}catch{failed++}
   if((done+failed)%25===0){progress?.(done+failed,finished.length,done,failed);await new Promise(r=>setTimeout(r,0))}
  }}
  await Promise.all(Array.from({length:4},worker));return {done,failed,total:finished.length};
@@ -2505,19 +2518,29 @@ async function fp4Backtest(matches){
   if(testCancelRequested)break;
   const rows=group.filter(isFinished).sort((a,b)=>new Date(a.date)-new Date(b.date)),n=rows.filter(m=>fp4MatchStates(m)).length;
   const cutoff=Math.floor(rows.length*.75),candidates=[];
+  // One chronological walk prepares prior-match references once, not 12 times.
+  const prior=[],history=[];let cursor=0;
+  for(let j=0;j<rows.length;j++){
+   while(cursor<j&&new Date(rows[cursor].date)<new Date(rows[j].date)){history.push(rows[cursor]);cursor++}
+   prior.push(history.slice());
+  }
+  const computed=Array.from({length:12},()=>Array(rows.length));
   for(let wi=0;wi<3;wi++)for(let weightIndex=0;weightIndex<4;weightIndex++){
-   const config={windowIndex:wi,weightIndex,selectThreshold:.47,margin:.07};let trainHits=0,trainN=0;
-   for(let j=0;j<cutoff;j++){const p=fp4Predict(rows[j],rows.slice(0,j).filter(x=>new Date(x.date)<new Date(rows[j].date)),config);if(!p)continue;trainN++;trainHits+=+(p.prediction===getOutcome(rows[j].homeScore,rows[j].awayScore))}
-   candidates.push({...config,trainN,trainHits,trainAccuracy:trainN?trainHits/trainN:0});
+   const ci=wi*4+weightIndex,config={windowIndex:wi,weightIndex,selectThreshold:.47,margin:.07};let trainHits=0,trainN=0;
+   for(let j=0;j<rows.length;j++){
+    const p=fp4Predict(rows[j],prior[j],config);computed[ci][j]=p;
+    if(j<cutoff&&p){trainN++;trainHits+=+(p.prediction===getOutcome(rows[j].homeScore,rows[j].awayScore))}
+   }
+   candidates.push({...config,ci,trainN,trainHits,trainAccuracy:trainN?trainHits/trainN:0});
   }
   candidates.sort((a,b)=>b.trainAccuracy-a.trainAccuracy||b.trainN-a.trainN);
   const config=candidates[0],hold=[];
-  for(let j=cutoff;j<rows.length;j++){const p=fp4Predict(rows[j],rows.slice(0,j).filter(x=>new Date(x.date)<new Date(rows[j].date)),config);if(p)hold.push({...p,actual:getOutcome(rows[j].homeScore,rows[j].awayScore)})}
+  for(let j=cutoff;j<rows.length;j++){const p=computed[config.ci][j];if(p)hold.push({...p,actual:getOutcome(rows[j].homeScore,rows[j].awayScore)})}
   const hits=hold.filter(p=>p.prediction===p.actual).length,selected=hold.filter(p=>p.selection===p.prediction),selHits=selected.filter(p=>p.prediction===p.actual).length;
   const coverage=hold.length?selected.length/hold.length:0,accuracy=hold.length?hits/hold.length:null,precision=selected.length?selHits/selected.length:null;
   const approved=n>=80&&hold.length>=30&&selected.length>=12&&coverage>=state.minSelectCoverage&&precision>=.55&&accuracy>=.36&&hold.some(p=>p.prediction==='D');
   result[id]={version:1,approved,historyN:n,holdoutN:hold.length,accuracy,selectPrecision:precision,coverage,selectN:selected.length,selectHits:selHits,config,reason:approved?'Chronological holdout passed':n<80?'Insufficient verified match-state history':hold.length<30?'Insufficient chronological holdout':selected.length<12?'Insufficient SELECT evidence':coverage<state.minSelectCoverage?'Below minimum SELECT coverage':precision<.55?'SELECT precision below validation floor':accuracy<.36?'Outcome accuracy below validation floor':'DRAW evidence or validation safeguard failed'};
-  fp4ReportRender(result);await new Promise(r=>setTimeout(r,0));
+  fp4ReportRender(result);fpPerfUpdate("Model 4: chronological validation",82+Math.round(17*Object.keys(result).length/Math.max(1,Object.keys(by).length)),`${Object.keys(result).length}/${Object.keys(by).length} leagues · ${id}`,true);await new Promise(r=>setTimeout(r,0));
  }
  fp4Validation={...fp4Validation,...result};store(FP4_VALIDATION_KEY,fp4Validation);fp4ReportRender(result);return result;
 }
