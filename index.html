@@ -654,6 +654,17 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 .fp-dc-button:disabled{opacity:.42;cursor:not-allowed}
 @media(max-width:600px){.fp-dc-button,.fp-bet-button{font-size:11px!important;padding:8px 9px!important}
 .fp-bet-monitor .fp-bet-row{gap:7px}.fp-bet-history .tag{white-space:normal}}
+</style><style>
+.fp-at-risk{display:inline-flex;align-items:center;font-size:10px;font-weight:700;white-space:nowrap;
+ padding:3px 6px;border-radius:6px;background:#5c3b16;color:#ffd89c;border:1px solid #a16b30}
+.fp-at-risk.high{background:#612c31;color:#ffd1d3;border-color:#a8555d}
+.fp-risk-detail{margin:4px 0;font-size:11px;color:#c7d4e5;max-width:100%}
+.fp-risk-detail summary{cursor:pointer;color:#efbf82;font-size:11px}
+.fp-risk-detail span{display:block;padding:5px 0;line-height:1.5}
+.fp-result-counts .tag{font-size:11px}
+@media(max-width:600px){.fp-at-risk{font-size:9px;padding:2px 5px}
+.fp-risk-detail{font-size:10px}.fp-result-counts{gap:5px!important}
+.fp-result-counts .tag{font-size:10px;padding:4px 6px}}
 </style></head>
 <body>
 <header>
@@ -1379,7 +1390,7 @@ function comparisonSummary(list){
  const selected=settled.filter(x=>fpHistoryFlags(x).consensus),hit=a=>a.filter(x=>x.actualOutcome===x.prediction).length;
  const rate=a=>a.length?`${(100*hit(a)/a.length).toFixed(1)}%`:'—';
  const leagues={};for(const x of settled)(leagues[x.leagueId||x.league||'Unknown']??=[]).push(x);
- return `<div class="fp-metrics"><div class="fp-metric"><span class="fp-label">Prediction accuracy</span><strong>${rate(settled)}</strong><span class="fp-count">${hit(settled)}/${settled.length}</span></div><div class="fp-metric fp-bet-summary"><span class="fp-label">Bet on Outcome</span><strong>${rate(selected)}</strong><span class="fp-count">${hit(selected)}/${selected.length} correct</span></div></div><div class="panel"><h3 class="fp-section-title">League accuracy</h3><div class="tablewrap"><table><thead><tr><th>League</th><th>Predictions</th><th>Accuracy</th><th>Bet on Outcome</th></tr></thead><tbody>${Object.entries(leagues).sort((a,b)=>a[0].localeCompare(b[0])).map(([id,a])=>{const picks=a.filter(x=>fpHistoryFlags(x).consensus);return `<tr><td>${esc(a[0].league||id)}</td><td>${hit(a)}/${a.length} · ${rate(a)}</td><td>${rate(a)}</td><td>${hit(picks)}/${picks.length} · ${rate(picks)}</td></tr>`}).join('')}</tbody></table></div></div>`;
+ return `<div class="row wrap fp-result-counts" style="gap:7px;margin-bottom:12px"><span class="tag">Recorded ${list.length}</span><span class="tag">Settled ${settled.length}</span><span class="tag">Pending ${list.length-settled.length}</span><span class="tag">Leagues ${Object.keys(leagues).length}</span></div><div class="fp-metrics"><div class="fp-metric"><span class="fp-label">Prediction accuracy</span><strong>${rate(settled)}</strong><span class="fp-count">${hit(settled)}/${settled.length}</span></div><div class="fp-metric fp-bet-summary"><span class="fp-label">Bet on Outcome</span><strong>${rate(selected)}</strong><span class="fp-count">${hit(selected)}/${selected.length} correct</span></div></div><div class="panel"><h3 class="fp-section-title">League accuracy</h3><div class="tablewrap"><table><thead><tr><th>League</th><th>Predictions</th><th>Accuracy</th><th>Bet on Outcome</th></tr></thead><tbody>${Object.entries(leagues).sort((a,b)=>a[0].localeCompare(b[0])).map(([id,a])=>{const picks=a.filter(x=>fpHistoryFlags(x).consensus);return `<tr><td>${esc(a[0].league||id)}</td><td>${hit(a)}/${a.length} · ${rate(a)}</td><td>${rate(a)}</td><td>${hit(picks)}/${picks.length} · ${rate(picks)}</td></tr>` }).join('')||'<tr><td colspan="4">No settled predictions in this period.</td></tr>'}</tbody></table></div><p class="muted smalltext">Breakdowns use predictions saved before kick-off; they cannot reconstruct predictions for matches that were never recorded.</p></div>`;
 }
 
 function updatePredictions(matches,index=state.activeIndex){
@@ -1579,7 +1590,7 @@ function snapshotPredictions(matches){
 function renderConfidencePerformance(settled){
  const root=$('confidencePerformance');if(!root)return;
  const rows=Array.from({length:10},(_,i)=>i+1).map(score=>{const a=settled.filter(x=>Number(x.confidence)===score),hits=a.filter(x=>x.actualOutcome===x.prediction).length;return {score,n:a.length,hits,rate:a.length?(hits/a.length*100).toFixed(1)+'%':'—'}});
- root.innerHTML=`<div class="panel confidence-performance"><h3>Confidence accuracy</h3><div class="tablewrap"><table><thead><tr><th>Confidence</th><th>Correct / checked</th><th>Accuracy</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${x.score}/10</td><td>${x.hits}/${x.n}</td><td>${x.rate}</td></tr>`).join('')}</tbody></table></div></div>`;
+ root.innerHTML=`<div class="panel confidence-performance"><h3>Confidence accuracy</h3><div class="tablewrap"><table><thead><tr><th>Confidence</th><th>Correct / checked</th><th>Accuracy</th></tr></thead><tbody>${rows.filter(x=>x.n).map(x=>`<tr><td>${x.score}/10</td><td>${x.hits}/${x.n}</td><td>${x.rate}</td></tr>`).join('')||'<tr><td colspan="3">No settled predictions with recorded confidence.</td></tr>'}</tbody></table></div></div>`;
 }
 
 function renderRiskPerformance(settled){
@@ -2062,11 +2073,11 @@ async function fetchLive(){
     const m=state.liveMatches[statIndex++];
     try{
      const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${m.leagueId}/summary?event=${encodeURIComponent(m.id)}`,{cache:"no-store"});
-     if(r.ok)stats[eventId(m)]=extractStats(await r.json(),m);
+     if(r.ok){const summary=await r.json();fpApplySummaryScore(m,summary);stats[eventId(m)]=extractStats(summary,m)}
     }catch(e){console.warn("Live match stats unavailable",m.id,e.message)}
    }
   }));
-  state.liveStats=stats;fpReconcileFinals(scoreboardEvents);updateLiveHistory(scoreboardEvents.filter(isFinished),state.liveMatches);state.liveLastUpdated=new Date();$("liveStatus").textContent=state.liveMatches.length?`${state.liveMatches.length} LIVE MATCH${state.liveMatches.length===1?"":"ES"}`:"NO LIVE MATCHES";
+  state.liveStats=stats;for(const m of state.liveMatches)fpRiskCapture(m,stats[eventId(m)]);fpReconcileFinals(scoreboardEvents);updateLiveHistory(scoreboardEvents.filter(isFinished),state.liveMatches);state.liveLastUpdated=new Date();$("liveStatus").textContent=state.liveMatches.length?`${state.liveMatches.length} LIVE MATCH${state.liveMatches.length===1?"":"ES"}`:"NO LIVE MATCHES";
   $("liveUpdated").textContent="Updated "+state.liveLastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"});
  }catch(e){$("liveStatus").textContent="Feed unavailable";$("liveUpdated").textContent="Could not refresh the live feed."}
  finally{state.liveLoading=false;$("liveRefresh").disabled=false;renderLive()}
@@ -2305,6 +2316,20 @@ function liveCard(m,index,mode="all"){
   <div class="live-source">ESPN scoreboard${stats?" and match-summary feed":" feed"} · ${state.liveLastUpdated?"updated "+state.liveLastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"update time unavailable"}</div>
  <details class="fp-schedule-detail"><summary>Pre-match prediction</summary>${liveModelComparison(m)}</details></article>`;
 }
+function fpApplySummaryScore(m,summary){
+ const competitors=summary?.header?.competitions?.[0]?.competitors||[];
+ const bySide=side=>competitors.find(c=>c.homeAway===side);
+ const parse=c=>{const raw=c?.score;const n=Number(typeof raw==="object"?(raw?.value??raw?.displayValue):raw);return raw===undefined||raw===null||raw===""||!Number.isFinite(n)?null:n};
+ const h=parse(bySide("home")),a=parse(bySide("away"));
+ if(h===null||a===null)return false;
+ // Summary and goal events are read together; never regress a known score on an older response.
+ if(validScore(m)&&h+a<m.homeScore+m.awayScore)return false;
+ const changed=!validScore(m)||m.homeScore!==h||m.awayScore!==a;
+ m.homeScore=h;m.awayScore=a;
+ const schedule=state.liveSchedule?.find(x=>eventId(x)===eventId(m));
+ if(schedule&&(!validScore(schedule)||h+a>=schedule.homeScore+schedule.awayScore)){schedule.homeScore=h;schedule.awayScore=a}
+ return changed;
+}
 function renderRecentGoals(matches){
  const root=$("recentGoals");if(!root)return;
  const rows=(matches||[]).map(m=>{const goal=state.liveStats[eventId(m)]?.lastGoal;if(!goal||goal.minute===null||!validScore(m))return null;const current=getElapsedLiveMinute(m);const age=Number.isFinite(goal.timestamp)?Math.max(0,(Date.now()-goal.timestamp)/60000):(current===null?null:Math.max(0,current-goal.minute));return{m,goal,age}}).filter(Boolean).sort((a,b)=>{const aa=a.age===null?999:a.age,bb=b.age===null?999:b.age;return aa-bb}).slice(0,5);
@@ -2419,7 +2444,7 @@ async function fetchLiveSchedule(){
  let index=0;
  async function worker(){while(index<ids.length*months.length){const task=index++,id=ids[Math.floor(task/months.length)],mon=months[task%months.length];try{results.push(...await fetchMonth(id,mon))}catch(e){failures.push(`${LEAGUES[id]} ${mon}`);console.warn('Live Centre schedule missing',id,mon,e)}}}
  await Promise.all(Array.from({length:Math.min(5,ids.length*months.length)},()=>worker()));
- const map=new Map();results.forEach(m=>map.set(eventId(m),m));
+ const map=new Map();results.forEach(m=>{const id=eventId(m),old=map.get(id);if(!old||(isFinished(m)&&!isFinished(old))||(validScore(m)&&(!validScore(old)||m.homeScore+m.awayScore>=old.homeScore+old.awayScore)))map.set(id,m)});
  // Supplement the scoreboard with any already retrieved fixture or live match. A missing prediction never hides a match.
  for(const m of state.matches)if(!map.has(eventId(m)))map.set(eventId(m),m);
  for(const m of state.liveMatches){
@@ -2649,6 +2674,50 @@ function fpBetDecorate(){
   slot.innerHTML=bets.map(b=>`<span class="fp-backed-tag">✓ ${b.market==="doubleChance"?"DC":"Bet"} · ${esc(fpBetLabel(b))}</span>`).join(" ");
  });
 }
+/* At-risk watch: uses only observed, timestamped in-play samples, never full-match totals alone. */
+const fpRiskSamples=new Map();
+function fpRiskCapture(m,stats){
+ if(!validScore(m))return;
+ const id=eventId(m),minute=getElapsedLiveMinute(m);
+ if(!Number.isFinite(minute))return;
+ const arr=fpRiskSamples.get(id)||[];
+ const v={minute,ts:Date.now(),hs:m.homeScore,as:m.awayScore,
+  home:{shots:statNum(stats?.home?.shots),target:statNum(stats?.home?.shotsOnTarget),corners:statNum(stats?.home?.corners),xg:statNum(stats?.home?.xg)},
+  away:{shots:statNum(stats?.away?.shots),target:statNum(stats?.away?.shotsOnTarget),corners:statNum(stats?.away?.corners),xg:statNum(stats?.away?.xg)}};
+ if(arr.length&&arr[arr.length-1].minute===minute){arr[arr.length-1]=v}
+ else if(!arr.length||minute>arr[arr.length-1].minute)arr.push(v);
+ fpRiskSamples.set(id,arr.slice(-48));
+}
+function fpRiskAssess(b,m){
+ if(!isLive(m)||fpBetCurrent(b,m)!=="winning")return null;
+ const arr=fpRiskSamples.get(eventId(m))||[];
+ if(arr.length<3)return null;
+ // Start at the most recent point when the selection entered its currently winning state.
+ let start=arr.length-1;
+ while(start>0&&fpOutcomeSupported(b.outcome,getOutcome(arr[start-1].hs,arr[start-1].as)))start--;
+ const latest=arr[arr.length-1];
+ const windowStart=Math.max(start,arr.findIndex(x=>x.minute>=latest.minute-15));
+ const base=arr[windowStart];
+ if(!base||latest.minute-base.minute<6||arr.length-windowStart<3)return null;
+ const backedSide=b.outcome==="H"||b.outcome==="1X"?"home":"away";
+ const opposite=backedSide==="home"?"away":"home";
+ const delta=(side,k)=>{const a=base[side][k],z=latest[side][k];return a===null||z===null||z<a?null:z-a};
+ const opp=delta(opposite,"shots"),own=delta(backedSide,"shots");
+ const target=delta(opposite,"target"),ownTarget=delta(backedSide,"target");
+ const xg=delta(opposite,"xg"),ownXg=delta(backedSide,"xg");
+ const corners=delta(opposite,"corners"),ownCorners=delta(backedSide,"corners");
+ if(opp===null||own===null||target===null||ownTarget===null)return null;
+ const shotsEdge=opp-own, targetEdge=target-ownTarget;
+ const xgEdge=xg===null||ownXg===null?null:xg-ownXg;
+ const cornerEdge=corners===null||ownCorners===null?null:corners-ownCorners;
+ const substantial=opp>=4&&shotsEdge>=3&&target>=2&&targetEdge>=2;
+ const danger=substantial&&(xgEdge!==null?xgEdge>=.25:(cornerEdge!==null?cornerEdge>=2:target>=3));
+ if(!danger)return null;
+ const high=opp>=7&&target>=4&&shotsEdge>=5&&targetEdge>=3&&(xgEdge===null||xgEdge>=.5);
+ return{level:high?"high":"risk",minutes:latest.minute-base.minute,
+  explanation:`Opposition ${opp} shots (${target} on target) vs ${own} (${ownTarget} on target) in the last ${latest.minute-base.minute} recorded minutes${xgEdge!==null?`; xG swing ${xgEdge>0?"+":""}${xgEdge.toFixed(2)}`:""}.`,
+  note:"Observed since the bet was last in a winning position; requires multiple live snapshots."};
+}
 function fpBetMonitor(){
  const root=$("myLiveBets");if(!root)return;
  const rows=state.liveMatches.flatMap(m=>fpFixtureBets(eventId(m)).map(b=>({m,b})));
@@ -2659,10 +2728,10 @@ function fpBetMonitor(){
   const current=fpBetCurrent(b,m);counts[current]++;
   const projected=fpBetLiveProjection(m);
   const supported=projected?fpOutcomeSupported(b.outcome,projected.prediction):null;
-  return{m,b,current,projected,supported};
+  return{m,b,current,projected,supported,risk:fpRiskAssess(b,m)};
  });
  root.innerHTML=`<div class="row between wrap"><h3 style="margin:0">✓ My live bets</h3><span class="tag">${rows.length} live · ${counts.winning} winning · ${counts.drawing} drawing · ${counts.losing} losing</span></div>
- ${data.map(({m,b,current,projected,supported})=>`<div class="fp-bet-row"><div class="grow"><strong>${esc(m.home)} ${validScore(m)?`${m.homeScore}–${m.awayScore}`:"vs"} ${esc(m.away)}</strong><div class="fp-bet-mini">${esc(getLiveMinute(m))} · ${b.market==="doubleChance"?"Double chance":"Straight bet"} · ${esc(fpBetLabel(b))}</div><div class="fp-bet-mini">Live prediction: ${projected?`${esc(outcomeName(projected.prediction))} · ${esc(projected.score||"—")}`:"Unavailable"}${supported===null?"":supported?" · On track":" · Unfavourable"}</div></div><span class="fp-bet-state ${current}">${current.charAt(0).toUpperCase()+current.slice(1)}</span></div>`).join("")}`;
+ ${data.map(({m,b,current,projected,supported,risk})=>`<div class="fp-bet-row"><div class="grow"><strong>${esc(m.home)} ${validScore(m)?`${m.homeScore}–${m.awayScore}`:"vs"} ${esc(m.away)}</strong><div class="fp-bet-mini">${esc(getLiveMinute(m))} · ${b.market==="doubleChance"?"Double chance":"Straight bet"} · ${esc(fpBetLabel(b))}${risk?` <span class="fp-at-risk ${risk.level}" title="${esc(risk.explanation)}">${risk.level==="high"?"⚠ High risk":"⚠ At risk"}</span>`:""}</div>${risk?`<details class="fp-risk-detail"><summary>Why at risk?</summary><span>${esc(risk.explanation)} ${esc(risk.note)}</span></details>`:""}<div class="fp-bet-mini">Live prediction: ${projected?`${esc(outcomeName(projected.prediction))} · ${esc(projected.score||"—")}`:"Unavailable"}${supported===null?"":supported?" · On track":" · Unfavourable"}</div></div><span class="fp-bet-state ${current}">${current.charAt(0).toUpperCase()+current.slice(1)}</span></div>`).join("")}`;
 }
 function fpBetHistory(){
  const root=$("myBetsHistory");if(!root)return;
