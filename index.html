@@ -1249,7 +1249,7 @@ async function rankedBacktest(matches){
    previous.push(m);
   }
  }
- const windowsOptions=[[15,10,5],[12,8,4],[10,6,3],[8,5,3],[5,3,2]];
+ const windowsOptions=[[15,10,5],[10,6,3],[8,5,3]];
  const strengths=[0,.2,.4,.6],boundaries=[.15,.20,.30,.45];
  const output=[];
  let completed=0;
@@ -1280,25 +1280,27 @@ async function rankedBacktest(matches){
    output.push({windows,strength,boundary,n,hits,sel,selHits,trainN,trainHits,holdN,holdHits,holdDrawPicks,holdDrawHits});
   }
   completed++;
-  testProgress('Testing opposition-ranked goals',completed,windowsOptions.length*strengths.length,94,99);
+  testProgress('Model 3: configuration '+completed+'/'+(windowsOptions.length*strengths.length),completed,windowsOptions.length*strengths.length,40,62);
   await testYield();
  }
  output.sort((a,b)=>b.trainHits/Math.max(1,b.trainN)-a.trainHits/Math.max(1,a.trainN)||Math.abs(a.boundary-.20)-Math.abs(b.boundary-.20));
  // Current Model 3 inputs: evaluate independently of candidate window/strength search.
+ testProgress("Model 3: verifying current settings",0,fixtures.length,62,67);
  const fpRankRows=[];
  for(let i=0;i<fixtures.length;i++){
   const {m,previous,actual}=fixtures[i],p=rankedGoalModel(m,previous,rankedSettings);
   if(Math.min(p.rankedBreakdown.home.count,p.rankedBreakdown.away.count)<3||!Number.isFinite(p.xgDifference))continue;
   fpRankRows.push({date:new Date(m.date).getTime(),xgDifference:p.xgDifference,actualOutcome:actual});
-  if(i%80===0){testCheckpoint();await testYield()}
+  if(i%40===0){testCheckpoint();testProgress("Model 3: verifying current settings",i+1,fixtures.length,62,67);await testYield()}
  }
+ testProgress("Model 3: current settings verified",fixtures.length,fixtures.length,62,67);
  fpRankRows.sort((a,b)=>a.date-b.date);
  const fpSplit=Math.floor(fpRankRows.length*.75);
  fpRankRows.forEach((r,i)=>r.split=i<fpSplit?'train':'holdout');
  window.fpV4RankRows=fpRankRows;
  window.fpRankedRecommendation=output[0]||null;
  const el=document.getElementById('rankedTestResults');
- if(el)el.innerHTML=`<div class="panel"><h3>Model 3 · draw-gap optimisation</h3><p class="muted smalltext">80 combinations · 20 expected-goal passes. Candidate ranking uses historical accuracy; recommendations are chosen on the earlier 75% and checked on the later 25%.</p><div class="tablewrap"><table><thead><tr><th>Windows</th><th>Opposition factor</th><th>Win/draw gap</th><th>Correct</th><th>Accuracy</th><th>SELECT correct</th></tr></thead><tbody>${output.slice(0,15).map(x=>`<tr><td>${x.windows.join('/')}</td><td>${x.strength.toFixed(2)}</td><td>${x.boundary.toFixed(2)}</td><td>${x.hits}/${x.n}</td><td>${fpRate(x.hits,x.n)}</td><td>${x.selHits}/${x.sel} (${fpRate(x.selHits,x.sel)})</td></tr>`).join('')}</tbody></table></div></div>`;
+ if(el)el.innerHTML=`<div class="panel"><h3>Model 3 · draw-gap optimisation</h3><p class="muted smalltext">48 combinations · 12 expected-goal passes. Candidate ranking uses historical accuracy; recommendations are chosen on the earlier 75% and checked on the later 25%.</p><div class="tablewrap"><table><thead><tr><th>Windows</th><th>Opposition factor</th><th>Win/draw gap</th><th>Correct</th><th>Accuracy</th><th>SELECT correct</th></tr></thead><tbody>${output.slice(0,15).map(x=>`<tr><td>${x.windows.join('/')}</td><td>${x.strength.toFixed(2)}</td><td>${x.boundary.toFixed(2)}</td><td>${x.hits}/${x.n}</td><td>${fpRate(x.hits,x.n)}</td><td>${x.selHits}/${x.sel} (${fpRate(x.selHits,x.sel)})</td></tr>`).join('')}</tbody></table></div></div>`;
 }
 
 function originalSettings(){return state.originalSettings||{modelIndex:1,windowIndex:0,homeGap:.5,awayGap:.5,confidenceMultiplier:3}}
@@ -1358,7 +1360,7 @@ function fpHistoryFlags(x){const a=x.original,b=x,c=x.ranked;const valid=fpHisto
 function fpResultMatches(x){const f=fpHistoryFlags(x);return fpResultFilter==='all'||!!f[fpResultFilter];}
 function comparisonSummary(list){
  const settled=list.filter(x=>x.actualOutcome);
- const models=[['League-adjusted',x=>x.original],['Team-form',x=>x],['Opposition-ranked Goals',x=>x.ranked]];
+ const models=[['League-adjusted',x=>x.original],['Team-form',x=>x],['Opposition-ranked Goals',x=>x.ranked],['Match Dynamics',x=>x.model4]];
  const valid=(x,get)=>{const v=get(x);return v&&['H','D','A'].includes(v.prediction)};
  const measure=(arr,get)=>{const a=arr.filter(x=>valid(x,get));const hits=a.filter(x=>get(x).prediction===x.actualOutcome).length;return {hits,n:a.length,rate:fpRate(hits,a.length)}};
  const match=settled.filter(x=>fpHistoryFlags(x).matching),consensus=settled.filter(x=>fpHistoryFlags(x).consensus);
@@ -1600,29 +1602,33 @@ function snapshotPredictions(matches){
   const id=eventId(m),existing=byId.get(id);
   const original=m.originalPrediction?{...m.originalPrediction,modelIndex:originalSettings().modelIndex,windowIndex:originalSettings().windowIndex,settingsVersion:JSON.stringify(originalSettings()),rankSettings:{...winRankSettings.league}}:null;
   const ranked=m.rankedPrediction?{...m.rankedPrediction}:null;
+  const model4=m.model4Prediction?JSON.parse(JSON.stringify(m.model4Prediction)):null;
+  const flags=fpModelFlags(m);
+  const agreement={count:flags.count,sameOutcome:flags.matching,betOnOutcome:flags.consensus};
   if(existing){
    // Older snapshots sometimes lacked one or two models. Fill only BEFORE kickoff;
    // never replace a prediction that was already saved.
    if(!existing.original&&original){existing.original=original;filled++}
    if(!existing.ranked&&ranked){existing.ranked=ranked;filled++}
+   // Never add Model 4 or alter agreement retrospectively: the original forecast is immutable.
    if(existing.homeLambda==null&&m.homeLambda!=null){existing.homeLambda=m.homeLambda;existing.awayLambda=m.awayLambda}
    if(existing.confidence==null&&m.confidence!=null)existing.confidence=m.confidence;
    continue;
   }
-  const snap={ranked,original,id,leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,date:m.date,prediction:m.prediction,selection:m.selection??selectionWithDraw(m.xgDifference,m.prediction,m.probs),confidence:m.confidence,probs:{...m.probs},predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,expectedGoalBreakdown:m.expectedGoalBreakdown,supportFlags:(m.risk?.supportFlags||[]).map(f=>typeof f==='string'?f:f.text),riskLevel:m.risk?.level||'low',riskFlags:(m.risk?.flags||[]).map(f=>typeof f==='string'?f:f.text),modelIndex:state.activeIndex,windowIndex:state.activeWindow,teamRankSettings:{...winRankSettings.team},savedAt:new Date().toISOString()};
+  const snap={ranked,original,model4,agreement,model4Config:model4?JSON.parse(JSON.stringify(fp4Validation[m.leagueId]?.config||{})):null,model3Config:JSON.parse(JSON.stringify(rankedSettings)),model2Settings:{windowIndex:state.activeWindow,modelIndex:state.activeIndex,homeGap:state.homeGap,awayGap:state.awayGap,drawGap:state.drawGap,drawProb:state.drawProb},id,leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,date:m.date,prediction:m.prediction,selection:m.selection??selectionWithDraw(m.xgDifference,m.prediction,m.probs),confidence:m.confidence,probs:{...m.probs},predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,expectedGoalBreakdown:m.expectedGoalBreakdown,supportFlags:(m.risk?.supportFlags||[]).map(f=>typeof f==='string'?f:f.text),riskLevel:m.risk?.level||'low',riskFlags:(m.risk?.flags||[]).map(f=>typeof f==='string'?f:f.text),modelIndex:state.activeIndex,windowIndex:state.activeWindow,teamRankSettings:{...winRankSettings.team},savedAt:new Date().toISOString()};
   state.history.push(snap);byId.set(id,snap);added++;
  }
  state.history=state.history.filter(x=>Date.now()-new Date(x.date).getTime()<730*86400000).slice(-10000);
- store('fp_prediction_history',state.history);
+ try{localStorage.setItem('fp_prediction_history',JSON.stringify(state.history));window.fpHistorySaveStatus='Saved '+state.history.length+' pre-match snapshots';}catch(e){window.fpHistorySaveStatus='SAVE FAILED: '+e.message;const status=document.getElementById('connection');if(status)status.textContent=window.fpHistorySaveStatus;}
  return added;
 }
 
 function renderConfidencePerformance(settled){
  const root=$('confidencePerformance');if(!root)return;
- const models=[['League-adjusted',x=>x.original],['Team-form',x=>x],['Opposition-ranked Goals',x=>x.ranked]];
+ const models=[['League-adjusted',x=>x.original],['Team-form',x=>x],['Opposition-ranked Goals',x=>x.ranked],['Match Dynamics',x=>x.model4]];
  const rows=Array.from({length:10},(_,i)=>10-i);
  const stats=(score,get)=>{const a=settled.filter(x=>{const v=get(x);return v&&['H','D','A'].includes(v.prediction)&&Number(v.confidence)===score});const h=a.filter(x=>get(x).prediction===x.actualOutcome).length;return `${a.length?(100*h/a.length).toFixed(1)+'%':'—'} <span class="muted smalltext">(${h}/${a.length})</span>`};
- root.innerHTML=`<div class="panel confidence-performance"><h3>Confidence Performance · all three models</h3><p class="muted smalltext">Saved pre-match confidence ratings versus actual outcomes, for the selected period and league. Each cell shows hit rate (correct/checked). Missing older-model snapshots are excluded, never reconstructed.</p><div class="tablewrap"><table><thead><tr><th>Confidence</th>${models.map(([name])=>`<th>${name}</th>`).join('')}</tr></thead><tbody>${rows.map(score=>`<tr><td><strong>${score}/10</strong></td>${models.map(([,get])=>`<td>${stats(score,get)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="analytics-note">Confidence is a model rating, not a calibrated probability. Compare hit rates alongside sample sizes.</p></div>`;
+ root.innerHTML=`<div class="panel confidence-performance"><h3>Confidence Performance · saved available models</h3><p class="muted smalltext">Saved pre-match confidence ratings versus actual outcomes, for the selected period and league. Each cell shows hit rate (correct/checked). Missing older-model snapshots are excluded, never reconstructed.</p><div class="tablewrap"><table><thead><tr><th>Confidence</th>${models.map(([name])=>`<th>${name}</th>`).join('')}</tr></thead><tbody>${rows.map(score=>`<tr><td><strong>${score}/10</strong></td>${models.map(([,get])=>`<td>${stats(score,get)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="analytics-note">Confidence is a model rating, not a calibrated probability. Compare hit rates alongside sample sizes.</p></div>`;
 }
 function renderRiskPerformance(settled){
  const root=$("riskPerformance");if(!root)return;
@@ -1648,7 +1654,7 @@ function renderHistory(){
  renderConfidencePerformance(settled);
  renderRiskPerformance(settled);
  if(!visible.length){$('historyList').innerHTML=`<div class="empty">No saved predictions in this period yet. Load fixtures regularly to build your history.</div>`;return}
- $('historyList').innerHTML=visible.map(x=>{const done=!!x.actualOutcome,ok=done&&x.actualOutcome===x.prediction,score=x.actualScore||"Result pending",prob=k=>Math.round((x.probs[k]||0)*100),reason=!done?"Waiting for the final result.":ok?"The model's most likely outcome happened.":`The model favoured ${outcomeName(x.prediction)} (${prob(x.prediction)}%), but ${outcomeName(x.actualOutcome).toLowerCase()} happened.`;return`<article class="match"><div class="row between wrap"><span class="league">${esc(x.league)}</span><div class="row wrap">${confidenceBadge(x.confidence)}<span class="tag ${!done?"":ok?"good":"bad"}">${!done?"Pending":ok?"Correct":"Incorrect"}</span></div></div><div class="meta">${esc(fmtDate(x.date))} · Model ${MODELS[x.modelIndex]?.short||"?"}</div><div class="row between" style="margin-top:7px"><strong class="grow">${esc(x.home)}</strong><strong>${esc(score)}</strong><strong class="grow" style="text-align:right">${esc(x.away)}</strong></div>${comparisonHistoryRows(x)}<div class="probrow">${[["H","Home"],["D","Draw"],["A","Away"]].map(([k,n])=>`<div class="prob"><span>${n}</span><strong>${prob(k)}%</strong></div>`).join("")}</div><div class="notice"><strong>${done?(ok?"Why it was correct":"Why it was wrong"):"What the model expected"}</strong><br>${esc(reason)}${done&&x.predictedScore?historyScoreReview(x):""}</div>${x.supportFlags?.length||x.riskFlags?.length?`<details><summary>Saved evidence at kick-off</summary><div class="explain">${x.supportFlags?.length?`<p><strong>Supported the prediction</strong></p><ul>${x.supportFlags.map(v=>`<li>${esc(v)}</li>`).join("")}</ul>`:""}${x.riskFlags?.length?`<p><strong>Risks against the prediction</strong></p><ul>${x.riskFlags.map(v=>`<li>${esc(v)}</li>`).join("")}</ul>`:""}</div></details>`:""}${x.expectedGoalBreakdown?`<details><summary>Original expected-goals calculation</summary><div class="explain">${expectedGoalAuditHtml({expectedGoalBreakdown:x.expectedGoalBreakdown,home:x.home,away:x.away})}</div></details>`:""}</article>`}).join("");
+ $('historyList').innerHTML=visible.map(x=>{const done=!!x.actualOutcome,ok=done&&x.actualOutcome===x.prediction,score=x.actualScore||"Result pending",prob=k=>Math.round((x.probs[k]||0)*100),reason=!done?"Waiting for the final result.":ok?"The model's most likely outcome happened.":`The model favoured ${outcomeName(x.prediction)} (${prob(x.prediction)}%), but ${outcomeName(x.actualOutcome).toLowerCase()} happened.`;return`<article class="match"><div class="row between wrap"><span class="league">${esc(x.league)}</span><div class="row wrap">${confidenceBadge(x.confidence)}<span class="tag ${!done?"":ok?"good":"bad"}">${!done?"Pending":ok?"Correct":"Incorrect"}</span></div></div><div class="meta">${esc(fmtDate(x.date))} · Model ${MODELS[x.modelIndex]?.short||"?"}</div><div class="row between" style="margin-top:7px"><strong class="grow">${esc(x.home)}</strong><strong>${esc(score)}</strong><strong class="grow" style="text-align:right">${esc(x.away)}</strong></div>${comparisonHistoryRows(x)}${x.agreement?`<div class="muted smalltext">Saved agreement: ${x.agreement.count}/ ${x.agreement.count} · Same outcome ${x.agreement.sameOutcome?"YES":"NO"} · Bet on outcome ${x.agreement.betOnOutcome?"YES":"NO"}</div>`:""}${x.model4?`<div class="muted smalltext">Saved Model 4: ${outcomeName(x.model4.prediction)} · ${x.model4.selection===x.model4.prediction?"SELECT":"NO SELECT"} · Confidence ${x.model4.confidence}/10</div>`:""}<div class="probrow">${[["H","Home"],["D","Draw"],["A","Away"]].map(([k,n])=>`<div class="prob"><span>${n}</span><strong>${prob(k)}%</strong></div>`).join("")}</div><div class="notice"><strong>${done?(ok?"Why it was correct":"Why it was wrong"):"What the model expected"}</strong><br>${esc(reason)}${done&&x.predictedScore?historyScoreReview(x):""}</div>${x.supportFlags?.length||x.riskFlags?.length?`<details><summary>Saved evidence at kick-off</summary><div class="explain">${x.supportFlags?.length?`<p><strong>Supported the prediction</strong></p><ul>${x.supportFlags.map(v=>`<li>${esc(v)}</li>`).join("")}</ul>`:""}${x.riskFlags?.length?`<p><strong>Risks against the prediction</strong></p><ul>${x.riskFlags.map(v=>`<li>${esc(v)}</li>`).join("")}</ul>`:""}</div></details>`:""}${x.expectedGoalBreakdown?`<details><summary>Original expected-goals calculation</summary><div class="explain">${expectedGoalAuditHtml({expectedGoalBreakdown:x.expectedGoalBreakdown,home:x.home,away:x.away})}</div></details>`:""}</article>`}).join("");
 }
 async function refreshHistoryScores(){await loadData()}
 function brierScore(probs,actual){return(["H","D","A"].reduce((s,k)=>s+Math.pow((probs[k]||0)-(k===actual?1:0),2),0))/3}
@@ -2051,14 +2057,14 @@ async function fpModelTestV3(test){
  const gapsSelect=[.15,.25,.35,.45,.55,.65,.75];
  for(const hg of gapsSelect){for(const ag of gapsSelect){
   const m=fpV3Selections(selectedTrain,hg,ag,state.drawGap,state.drawProb);
-  if(m.picks>=Math.max(60,Math.floor(train.length*.12))&&m.coverage>=.12&&m.by.H.n>=20&&m.by.A.n>=15)
+  if(m.picks>=Math.max(60,Math.floor(train.length*state.minSelectCoverage))&&m.coverage>=state.minSelectCoverage&&m.by.H.n>=20&&m.by.A.n>=15)
    options.push({hg,ag,train:m});
  }testCheckpoint();await testYield();}
  options.sort((a,b)=>b.train.lower-a.train.lower||b.train.coverage-a.train.coverage);
  const selection=options[0]||null;
  const selectionHold=selection?fpV3Selections(selectedHold,selection.hg,selection.ag,state.drawGap,state.drawProb):null;
  const selectionApproved=!!(selectionHold&&selectionHold.picks>=30&&selectionHold.by.H.n>=8&&selectionHold.by.A.n>=8&&
-  selectionHold.precision>=base.precision+.005&&selectionHold.coverage>=base.coverage*.5);
+  selectionHold.precision>=base.precision+.005&&selectionHold.coverage>=state.minSelectCoverage);
  return {key,trainN:train.length,holdN:hold.length,baselineTrain,baselineHold,candidate,candidateHold,
   predictionApproved,selection,selectionHold,selectionApproved,base,sufficient};
 }
@@ -2323,6 +2329,7 @@ const fpPerf={started:0,last:0,timer:null,lines:[]};
 function fpPerfUpdate(stage,percent,detail='',log=false){
  const st=document.getElementById('fpPerfStage'),bar=document.getElementById('fpPerfBar'),counts=document.getElementById('fpPerfCounts');
  if(st)st.textContent=stage;if(bar)bar.style.width=Math.max(0,Math.min(100,percent))+'%';if(counts&&detail)counts.textContent=detail;
+ if(fpPerf.started){setBusy(stage+ (detail?" · "+detail:""),Math.max(0,Math.min(100,Math.round(percent))));}
  fpPerf.last=Date.now();if(log){fpPerf.lines.push(new Date().toLocaleTimeString()+' — '+stage+(detail?' · '+detail:''));fpPerf.lines=fpPerf.lines.slice(-18);const el=document.getElementById('fpPerfLog');if(el)el.textContent=fpPerf.lines.join('\n')}
 }
 function fpPerfStart(){fpPerf.started=Date.now();fpPerf.last=Date.now();fpPerf.lines=[];clearInterval(fpPerf.timer);fpPerf.timer=setInterval(()=>{const el=document.getElementById('fpPerfClock');if(el)el.textContent='Elapsed '+Math.floor((Date.now()-fpPerf.started)/1000)+'s · Last activity '+Math.floor((Date.now()-fpPerf.last)/1000)+'s ago'},1000)}
@@ -2341,10 +2348,10 @@ async function doTest(){
   fpV4AutoApply(state.lastTest);
   fpRenderUnifiedDashboard(state.lastTest,window.fpRankedRecommendation);
   $("testStatus").textContent="Validating Model 4 historical match states; cached matches are reused…";
-  fpPerfUpdate("Model 4: retrieving scoring sequences",50,"Starting match-summary retrieval",true);await fp4FetchHistory(r.matches,(done,total,valid,failed)=>{fpPerfUpdate("Model 4: retrieving scoring sequences",50+Math.round(30*done/Math.max(1,total)),`${done}/${total} checked · ${valid} verified · ${failed} unavailable`);$("testStatus").textContent=`Model 4 event history ${done}/${total} · verified ${valid} · unavailable ${failed}`});
-  fpPerfUpdate("Model 4: chronological validation",82,"Testing 12 configurations per league",true);await fp4Backtest(r.matches);
-  if(state.matches.length){updatePredictions(state.matches,state.activeIndex);renderFixtures()}
-  $("testStatus").textContent=`Completed · retrieval ${(fpFetchMs/1000).toFixed(1)}s · Models 1 & 2 ${((fpCoreMs-fpTestStart-fpFetchMs)/1000).toFixed(1)}s · Model 3 ${(fpRankMs/1000).toFixed(1)}s · total ${((performance.now()-fpTestStart)/1000).toFixed(1)}s. ${r.matches.length} retrieved matches (including warm-up).`+`${r.errors.length?" Unavailable: "+r.errors.join(", "):""}`;
+  fpPerfUpdate("Model 4: retrieving scoring sequences",68,"Starting match-summary retrieval",true);await fp4FetchHistory(r.matches,(done,total,valid,failed)=>{fpPerfUpdate("Model 4: retrieving scoring sequences",68+Math.round(30*done/Math.max(1,total)),`${done}/${total} checked · ${valid} verified · ${failed} unavailable`);$("testStatus").textContent=`Model 4 event history ${done}/${total} · verified ${valid} · unavailable ${failed}`});
+  fpPerfUpdate("Model 4: chronological validation",85,"Testing 12 configurations per league",true);await fp4Backtest(r.matches);
+  if(state.matches.length){updatePredictions(state.matches,state.activeIndex);snapshotPredictions(state.matches);renderFixtures()}
+  $("testStatus").textContent=`Completed · ${window.fpHistorySaveStatus||"Prediction history unchanged"} · retrieval ${(fpFetchMs/1000).toFixed(1)}s · Models 1 & 2 ${((fpCoreMs-fpTestStart-fpFetchMs)/1000).toFixed(1)}s · Model 3 ${(fpRankMs/1000).toFixed(1)}s · total ${((performance.now()-fpTestStart)/1000).toFixed(1)}s. ${r.matches.length} retrieved matches (including warm-up).`+`${r.errors.length?" Unavailable: "+r.errors.join(", "):""}`;
   if(state.mode==="auto")$("activeModelNote")&&($("activeModelNote").textContent="Test recommendations are available below; copy to Settings and save to apply explicitly.");
   fpPerfUpdate("Complete",100,`${r.matches.length} matches · total ${((performance.now()-fpTestStart)/1000).toFixed(1)}s`,true);setBusy("Test complete",100);await new Promise(r=>setTimeout(r,250));hideBusy();
  }catch(e){fpPerfUpdate("Test interrupted",100,String(e.message),true);hideBusy();$("testStatus").innerHTML=`<span class="error">Test failed: ${esc(e.message)}</span>`}
@@ -2540,7 +2547,7 @@ async function fp4Backtest(matches){
   const coverage=hold.length?selected.length/hold.length:0,accuracy=hold.length?hits/hold.length:null,precision=selected.length?selHits/selected.length:null;
   const approved=n>=80&&hold.length>=30&&selected.length>=12&&coverage>=state.minSelectCoverage&&precision>=.55&&accuracy>=.36&&hold.some(p=>p.prediction==='D');
   result[id]={version:1,approved,historyN:n,holdoutN:hold.length,accuracy,selectPrecision:precision,coverage,selectN:selected.length,selectHits:selHits,config,reason:approved?'Chronological holdout passed':n<80?'Insufficient verified match-state history':hold.length<30?'Insufficient chronological holdout':selected.length<12?'Insufficient SELECT evidence':coverage<state.minSelectCoverage?'Below minimum SELECT coverage':precision<.55?'SELECT precision below validation floor':accuracy<.36?'Outcome accuracy below validation floor':'DRAW evidence or validation safeguard failed'};
-  fp4ReportRender(result);fpPerfUpdate("Model 4: chronological validation",82+Math.round(17*Object.keys(result).length/Math.max(1,Object.keys(by).length)),`${Object.keys(result).length}/${Object.keys(by).length} leagues · ${id}`,true);await new Promise(r=>setTimeout(r,0));
+  fp4Validation[id]=result[id];store(FP4_VALIDATION_KEY,fp4Validation);fp4ReportRender(result);fpPerfUpdate("Model 4: chronological validation",85+Math.round(17*Object.keys(result).length/Math.max(1,Object.keys(by).length)),`${Object.keys(result).length}/${Object.keys(by).length} leagues · ${id}`,true);await new Promise(r=>setTimeout(r,0));
  }
  fp4Validation={...fp4Validation,...result};store(FP4_VALIDATION_KEY,fp4Validation);fp4ReportRender(result);return result;
 }
