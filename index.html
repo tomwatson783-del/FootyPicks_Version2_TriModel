@@ -595,7 +595,60 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 #busy.fp-test-busy #fpTestElapsed,#busy.fp-test-busy #fpTestCurrent{line-height:1.5}
 @media(max-width:540px){#busy.fp-test-busy .busybox{padding:20px 16px!important}
 #busy.fp-test-busy #fpTestModelRows{grid-template-columns:1fr}}
-</style></head>
+</style>
+<style>
+/* Mobile-first refinement: preserve desktop design and existing information. */
+.fp-alert-backed{font-size:10px!important;line-height:1!important;padding:4px 6px!important;
+ border-radius:6px!important;white-space:nowrap;letter-spacing:0!important;flex:none}
+.fp-live-outcome{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:3px 12px}
+.fp-live-outcome span{grid-column:1/-1;font-size:11px!important;letter-spacing:.06em}
+.fp-live-outcome strong{grid-column:1/-1;font-size:clamp(17px,3.8vw,22px)!important;line-height:1.3}
+.fp-live-outcome small{grid-column:1/-1;font-size:11px!important}
+.fp-bet-monitor .fp-bet-row{align-items:center}
+.fp-bet-monitor .fp-bet-mini{line-height:1.45}
+@media(max-width:600px){
+ body{overflow-x:hidden}
+ .panel,.live-card,.fixture-card{min-width:0;max-width:100%;box-sizing:border-box}
+ .row{min-width:0}
+ .row.wrap{row-gap:6px}
+ .recent-goal-row,.recent-red-row.fp-red-item{display:grid!important;
+   grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:6px!important}
+ .recent-goal-row>div,.recent-red-row.fp-red-item .fp-red-copy{min-width:0;overflow-wrap:anywhere}
+ .recent-goal-row>span:last-child,.recent-red-row.fp-red-item>span:last-child{
+   display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center;gap:4px!important}
+ .recent-goal-row .tag{font-size:9px!important;padding:3px 5px!important;white-space:nowrap}
+ .recent-goal-row .goal-age{font-size:10px!important;white-space:nowrap}
+ .recent-goal-row strong,.recent-red-row strong{font-size:12px!important;line-height:1.3}
+ .recent-goal-row .smalltext,.recent-red-row .smalltext{font-size:10px!important;line-height:1.35}
+ .fp-red-count{font-size:9px!important;white-space:nowrap}
+ .fp-live-outcome{padding:13px 14px!important;margin:12px 0!important;border-radius:12px}
+ .fp-live-outcome strong{font-size:19px!important;color:#f0faff}
+ .fp-live-outcome span{font-size:11px!important}
+ .fp-live-outcome small{font-size:11px!important}
+ .fp-bet-monitor{padding:13px!important}
+ .fp-bet-monitor h3{font-size:16px!important;letter-spacing:0!important}
+ .fp-bet-monitor>.row{gap:6px}
+ .fp-bet-monitor>.row>.tag{font-size:10px!important;white-space:normal}
+ .fp-bet-monitor .fp-bet-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:9px!important;padding:11px 0}
+ .fp-bet-monitor .fp-bet-row strong{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+ .fp-bet-monitor .fp-bet-state{font-size:11px;padding:5px 7px;white-space:nowrap}
+ .fp-bet-monitor .fp-bet-mini{font-size:11px}
+ #busy.fp-test-busy .busybox{width:calc(100vw - 20px)!important;max-height:calc(100dvh - 24px)!important;
+ padding:19px 14px!important;border-radius:16px!important}
+ #busy.fp-test-busy #fpTestModelRows{grid-template-columns:1fr!important;gap:6px!important}
+ #busy.fp-test-busy .fp-progress-item{padding:9px 10px!important}
+ #busy.fp-test-busy .fp-progress-detail{font-size:10px!important}
+ #busy.fp-test-busy #busyTitle{font-size:22px!important}
+ #busy.fp-test-busy #busyDetail{font-size:12px!important}
+ #busy.fp-test-busy #fpTestProgressRows{margin-top:11px!important}
+}
+@media(max-width:375px){
+ .recent-goal-row .tag{display:none!important}
+ .fp-alert-backed{font-size:9px!important;padding:3px 5px!important}
+ .fp-live-outcome strong{font-size:18px!important}
+}
+</style>
+</head>
 <body>
 <header>
  <div class="row between">
@@ -1671,7 +1724,7 @@ async function refreshHistoryScoresFromLoaded(){
  store("fp_prediction_history",state.history);renderHistory();
 }
 
-const fpTestStages=["Loading fixtures","Preparing chronological form","Validating predictions","Summarising accuracy"];
+const fpTestStages=["Download fixtures","Prepare league histories","Run historical predictions","Calculate results"];
 const fpTestStageState=Array.from({length:4},()=>({pct:0,detail:"Waiting",status:"Waiting"}));
 function fpStageUpdate(index,pct,detail,status){
  const item=fpTestStageState[index];if(!item)return;
@@ -1713,7 +1766,7 @@ async function doTest(){
   testCheckpoint();
   if(!result.matches.length)throw Error("No historical matches were returned.");
   fpStageUpdate(0,100,`${result.matches.length} fixtures loaded`);
-  fpStageUpdate(1,5,"Preparing chronological predictions");
+  fpStageUpdate(1,0,"Sorting completed matches by league");
   fpPerfUpdate("Validating historical predictions",40,`${result.matches.length} fixtures`,true);
   // The single pass below produces predictions and all downstream DC statistics.
   // Legacy multi-model grid searches, ranking optimisation and draw research do not run.
@@ -1724,9 +1777,7 @@ async function doTest(){
   const reportBox=document.getElementById('fpAdaptiveReport');
   if(reportBox){try{const json=JSON.parse(reportBox.value);json.timings=timing;reportBox.value=JSON.stringify(json,null,2)}catch(_){}}
   fpPerfUpdate("Validation complete",95,`Download ${timing.downloadSeconds}s · analysis ${timing.analysisSeconds}s`,true);
-  fpStageUpdate(1,100,"Historical predictions evaluated");
-  fpStageUpdate(2,100,"League holdout validation complete");
-  fpStageUpdate(3,100,"Accuracy and Double Chance complete");
+
   const secs=((performance.now()-started)/1000).toFixed(1);
   $("testStatus").textContent=`Completed · ${report.summary.leagues} leagues · ${report.summary.holdout.n} holdout selections · ${secs}s total (download ${(downloadMs/1000).toFixed(1)}s, analysis ${(analysisMs/1000).toFixed(1)}s).${result.errors.length?' Unavailable: '+result.errors.join(', '):''}`;
   fpPerfUpdate("Complete",100,`${report.summary.leagues} leagues · ${secs}s`,true);
@@ -1757,22 +1808,38 @@ let fpDcThresholds=readStore(FP_DC_KEY,{2:.80,23:.80});
 async function fpHybridBacktest(matches){
  const groups={};for(const m of matches.filter(isFinished))(groups[m.leagueId]??=[]).push(m);
  const report={},all=[];let done=0,totalLeagues=Object.keys(groups).length;
+ const totalFixtures=Object.values(groups).reduce((n,g)=>n+g.length,0);
+ let processedFixtures=0;
+ fpStageUpdate(1,0,`Grouping ${totalFixtures} completed fixtures`,"Running");
  for(const [id,group] of Object.entries(groups)){
   testCheckpoint();const rows=group.sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
   const kickoffs=rows.map(m=>Date.parse(m.date));
   const cut=Math.floor(rows.length*.75),past=[],observations=[];let cursor=0;
+  fpStageUpdate(1,Math.round((done+1)/totalLeagues*100),`${done+1}/${totalLeagues} leagues sorted chronologically`,"Running");
+  if(done===0)fpStageUpdate(2,0,`0/${totalFixtures} historical fixtures analysed`,"Running");
   for(let j=0;j<rows.length;j++){
    const m=rows[j],kick=kickoffs[j];while(cursor<rows.length&&kickoffs[cursor]<kick)past.push(rows[cursor++]);
    try{const b=calculatePrediction(m,past,{...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]});
     if(['H','A'].includes(b.prediction)&&b.selection===b.prediction){const p=fpIndependentProbs(b);if(p){const actual=getOutcome(m.homeScore,m.awayScore);observations.push({train:j<cut,actual,win:actual===b.prediction,draw:actual==='D',loss:actual!==b.prediction&&actual!=='D',dc:p[b.prediction]+p.D,side:b.prediction==='H'?'1X':'X2',confidence:Number(b.confidence)||null});}}
    }catch(e){console.warn('Model 2 historical fixture skipped',id,e)}
-   if(j%80===0){testCheckpoint();await new Promise(r=>setTimeout(r,0))}
+   processedFixtures++;
+   if(j%50===0||j===rows.length-1){
+    fpStageUpdate(2,Math.min(99,Math.round(processedFixtures/totalFixtures*100)),`${processedFixtures}/${totalFixtures} fixtures analysed`,"Running");
+    fpPerfUpdate("Running historical predictions",40+Math.round(processedFixtures/totalFixtures*47),`${processedFixtures}/${totalFixtures} fixtures`);
+    testCheckpoint();await new Promise(r=>setTimeout(r,0));
+   }
   }
   const metric=a=>({n:a.length,wins:a.filter(x=>x.win).length,draws:a.filter(x=>x.draw).length,losses:a.filter(x=>x.loss).length,accuracy:a.length?a.filter(x=>x.win).length/a.length:null,dcHit:a.length?a.filter(x=>!x.loss).length/a.length:null});
   const train=observations.filter(x=>x.train),hold=observations.filter(x=>!x.train),flag=hold.filter(x=>x.dc>=.78);
   report[id]={league:rows[0]?.league||id,fixtures:rows.length,training:metric(train),holdout:metric(hold),flagged78:metric(flag),flaggedCoverage:hold.length?flag.length/hold.length:null};
-  for(const x of hold)all.push({...x,league:id});done++;fpStageUpdate(3,Math.round(done/totalLeagues*95),`Model 2 · ${done}/${totalLeagues} leagues`);await new Promise(r=>setTimeout(r,0));
+  for(const x of hold)all.push({...x,league:id});done++;
+  fpStageUpdate(3,Math.round(done/totalLeagues*80),`${done}/${totalLeagues} league summaries calculated`,"Running");
+  await new Promise(r=>setTimeout(r,0));
  }
+ fpStageUpdate(1,100,`${totalLeagues} leagues prepared`,"Complete");
+ fpStageUpdate(2,100,`${processedFixtures} fixtures analysed`,"Complete");
+ fpStageUpdate(3,88,"Calculating overall accuracy and confidence","Running");
+ await new Promise(r=>setTimeout(r,0));
  const metric=a=>({n:a.length,wins:a.filter(x=>x.win).length,draws:a.filter(x=>x.draw).length,losses:a.filter(x=>x.loss).length,straightAccuracy:a.length?a.filter(x=>x.win).length/a.length:null,doubleChanceHit:a.length?a.filter(x=>!x.loss).length/a.length:null});
  const confidence=Array.from({length:10},(_,i)=>i+1).map(score=>{const a=all.filter(x=>x.confidence===score);return {score,...metric(a)}});const summary={leagues:Object.keys(report).length,holdout:metric(all),flagged78:metric(all.filter(x=>x.dc>=.78)),threshold:.78};
  const pct=v=>v==null?'—':(v*100).toFixed(1)+'%';
@@ -2216,7 +2283,7 @@ function renderRecentGoals(matches){
  const rows=(matches||[]).map(m=>{const goal=state.liveStats[eventId(m)]?.lastGoal;if(!goal||goal.minute===null||!validScore(m))return null;const current=getElapsedLiveMinute(m);const age=Number.isFinite(goal.timestamp)?Math.max(0,(Date.now()-goal.timestamp)/60000):(current===null?null:Math.max(0,current-goal.minute));return{m,goal,age}}).filter(Boolean).sort((a,b)=>{const aa=a.age===null?999:a.age,bb=b.age===null?999:b.age;return aa-bb}).slice(0,5);
  if(!rows.length){root.innerHTML=`<div class="recent-goals-panel"><div class="row between wrap"><strong>⚽ Latest goals</strong><span class="muted smalltext">Up to 5 live matches</span></div><p class="muted smalltext" style="margin:7px 0 0">Recent goal events aren’t available from the feed for the current live matches.</p></div>`;return;}
  root.innerHTML=`<div class="recent-goals-panel"><div class="row between wrap" style="margin-bottom:5px"><strong>⚽ Latest goals</strong><span class="muted smalltext">Most recent first · max 5</span></div>${rows.map(({m,goal,age})=>{const cls=age!==null&&age<=1?'goal-now':age!==null&&age<=2?'goal-two':age!==null&&age<=5?'goal-five':'';const label=age===null?`${goal.minute}′`:age<=1?'JUST NOW':age<=2?'LAST 2 MIN':age<=5?'LAST 5 MIN':`${Math.round(age)} MIN AGO`;const side=goal.side==='home'?'home':goal.side==='away'?'away':null;const scorer=goal.scorer?` · ${esc(goal.scorer)}`:'';
- const backed=fpBetRecord(eventId(m));const badge=backed?`<span class="fp-backed-tag">✓ BACKED · ${esc(fpBetLabel(backed))}</span>`:'' ;return`<div class="recent-goal-row ${cls}"><span class="goal-age">${label}</span><div><strong>${esc(m.home)} ${m.homeScore}–${m.awayScore} ${esc(m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${goal.minute}′${scorer}</div></div><span class="row wrap" style="gap:5px">${badge}<span class="tag">${side==='home'?'HOME GOAL':side==='away'?'AWAY GOAL':'GOAL'}</span></span></div>`}).join('')}</div>`;
+ const backed=fpBetRecord(eventId(m));const badge=backed?`<span class="fp-backed-tag fp-alert-backed" title="Backed: ${esc(fpBetLabel(backed))}">✓ Bet</span>`:'' ;return`<div class="recent-goal-row ${cls}"><span class="goal-age">${label}</span><div><strong>${esc(m.home)} ${m.homeScore}–${m.awayScore} ${esc(m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${goal.minute}′${scorer}</div></div><span class="row wrap" style="gap:5px">${badge}<span class="tag">${side==='home'?'HOME GOAL':side==='away'?'AWAY GOAL':'GOAL'}</span></span></div>`}).join('')}</div>`;
 }
 function renderRecentRedCards(matches){
  const root=$('recentRedCards');if(!root)return;const rows=[];
@@ -2228,7 +2295,7 @@ function renderRecentRedCards(matches){
   }
  }
  if(!rows.length){root.innerHTML='';return}
- root.innerHTML=`<div class="recent-reds-panel fp-red-alert"><div class="row between wrap fp-red-heading"><strong>🟥 Red cards</strong></div>${rows.map(({m,side,count})=>`<div class="recent-red-row fp-red-item"><div class="fp-red-copy"><strong>${esc(side==='home'?m.home:m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${esc(m.home)} ${validScore(m)?m.homeScore+'–'+m.awayScore:'vs'} ${esc(m.away)}</div></div><span class="row wrap" style="gap:6px">${fpBetRecord(eventId(m))?`<span class="fp-backed-tag">✓ BACKED · ${esc(fpBetLabel(fpBetRecord(eventId(m))))}</span>`:''}<span class="fp-red-count">${count} red card${count===1?'':'s'}</span></span></div>`).join('')}</div>`;
+ root.innerHTML=`<div class="recent-reds-panel fp-red-alert"><div class="row between wrap fp-red-heading"><strong>🟥 Red cards</strong></div>${rows.map(({m,side,count})=>`<div class="recent-red-row fp-red-item"><div class="fp-red-copy"><strong>${esc(side==='home'?m.home:m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${esc(m.home)} ${validScore(m)?m.homeScore+'–'+m.awayScore:'vs'} ${esc(m.away)}</div></div><span class="row wrap" style="gap:6px">${fpBetRecord(eventId(m))?`<span class="fp-backed-tag fp-alert-backed" title="Backed: ${esc(fpBetLabel(fpBetRecord(eventId(m))))}">✓ Bet</span>`:''}<span class="fp-red-count">${count} red card${count===1?'':'s'}</span></span></div>`).join('')}</div>`;
 }
 
 function ukParts(date){
@@ -2546,7 +2613,7 @@ function fpBetMonitor(){
   return{m,b,current,projected,supported};
  });
  root.innerHTML=`<div class="row between wrap"><h3 style="margin:0">✓ My live bets</h3><span class="tag">${rows.length} live · ${counts.winning} winning · ${counts.drawing} drawing · ${counts.losing} losing</span></div>
- ${data.map(({m,b,current,projected,supported})=>`<div class="fp-bet-row"><div class="grow"><strong>${esc(m.home)} ${validScore(m)?`${m.homeScore}–${m.awayScore}`:"vs"} ${esc(m.away)}</strong><div class="fp-bet-mini">${esc(getLiveMinute(m))} · BACKED ${esc(fpBetLabel(b))}</div><div class="fp-bet-mini">Live prediction: ${projected?`${esc(outcomeName(projected.prediction))} · ${esc(projected.score||"—")}`:"Unavailable"}${supported===null?"":supported?" · ON TRACK":" · UNFAVOURABLE"}</div></div><span class="fp-bet-state ${current}">${current.toUpperCase()}</span></div>`).join("")}`;
+ ${data.map(({m,b,current,projected,supported})=>`<div class="fp-bet-row"><div class="grow"><strong>${esc(m.home)} ${validScore(m)?`${m.homeScore}–${m.awayScore}`:"vs"} ${esc(m.away)}</strong><div class="fp-bet-mini">${esc(getLiveMinute(m))} · Backed · ${esc(fpBetLabel(b))}</div><div class="fp-bet-mini">Live prediction: ${projected?`${esc(outcomeName(projected.prediction))} · ${esc(projected.score||"—")}`:"Unavailable"}${supported===null?"":supported?" · On track":" · Unfavourable"}</div></div><span class="fp-bet-state ${current}">${current.charAt(0).toUpperCase()+current.slice(1)}</span></div>`).join("")}`;
 }
 function fpBetHistory(){
  const root=$("myBetsHistory");if(!root)return;
