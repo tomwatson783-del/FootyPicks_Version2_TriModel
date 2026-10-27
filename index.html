@@ -422,6 +422,14 @@ main section details>summary{cursor:pointer}
 .model-cell{min-width:0;overflow-wrap:anywhere}
 @media(max-width:900px){.model-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:450px){.model-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px}.model-cell{padding:9px!important}.model-title{font-size:11px}}
+
+/* Consolidated Match Dynamics: same-height cards with a distinct confirmation accent. */
+.model-grid:not(.single)>.model-cell{min-width:0;display:flex;flex-direction:column;gap:5px}
+.model-grid:not(.single)>.model-cell .model-bottom{margin-top:auto}
+.fp-dynamics{background:linear-gradient(155deg,rgba(70,91,170,.18),rgba(16,117,112,.11))!important;box-shadow:inset 3px 0 0 rgba(119,150,229,.52)}
+.fp-dyn-support{box-shadow:inset 3px 0 0 #36d49c!important}
+.fp-dyn-caution{box-shadow:inset 3px 0 0 #f1b75c!important}
+@media(min-width:900px){.model-grid:not(.single)>.model-cell{padding:13px 12px}}
 </style>
 <style id="fp-three-model-refresh">
 main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{line-height:1.45;max-width:70ch}
@@ -1342,8 +1350,8 @@ function originalSettings(){return state.originalSettings||{modelIndex:1,windowI
 function originalPick(m){const o=originalSettings(),gap=m.xgDifference;return m.prediction==="D"&&Math.abs(gap)<=state.drawGap&&Number(m.probs?.D)>=state.drawProb?"D":m.prediction==="H"&&gap>=o.homeGap?"H":m.prediction==="A"&&-gap>=o.awayGap?"A":"N"}
 function calculateOriginalIndependent(m,previous){const o=originalSettings();const v=calculateOriginalPrediction(m,previous,{...MODELS[o.modelIndex],windows:WINDOW_SETS[o.windowIndex]});v.selection=originalPick(v);v.confidence=Math.min(v.confidence,hardGoalGapConfidenceCap(Math.abs(v.xgDifference),v.prediction,o.confidenceMultiplier,o.homeGap,o.awayGap));return v}
 function fpAverageConfidence(m){const a=m.originalPrediction||m.original,c=m.rankedPrediction||m.ranked;return a&&c?(Number(a.confidence)+Number(m.confidence)+Number(c.confidence))/3:Number(m.confidence)||0}
-function fpStatusTag(m){const f=fpModelFlags(m);if(!f.matching)return '';if(f.dynamicsConfirmed)return '<span class="fp-status fp-status-purple">Bet on Outcome · 3/3 · Dynamics confirmed</span>';if(f.dynamicsCaution)return '<span class="fp-status fp-status-amber">3/3 agreement · Dynamics caution</span>';const premium=f.consensus&&Math.round(fpAverageConfidence(m))>=8;return `<span class="fp-status ${f.consensus?(premium?'fp-status-purple':'fp-status-green'):'fp-status-amber'}">${f.consensus?'Bet on Outcome · '+f.count+'/'+f.count:'Matching Outcome · '+f.count+'/'+f.count}</span>`}
-function fpExplicitFlags(m){const f=fpModelFlags(m);if(!f.valid)return '<span class="tag">Three-model comparison unavailable</span>';return `<span class="fp-status ${f.matching?'fp-status-amber':'fp-status-neutral'}">${f.matching?'Same outcome · '+f.count+'/'+f.count:'Different outcomes'}</span><span class="fp-status ${f.consensus?'fp-status-green':'fp-status-neutral'}">${f.consensus?'Bet on outcome · '+f.count+'/'+f.count:'No unanimous SELECT'}${f.dynamicsConfirmed?' · Dynamics confirmed':f.dynamicsCaution?' · Dynamics caution':''}</span>`}
+function fpStatusTag(m){const f=fpModelFlags(m);if(f.dynamicsConfirmed)return '<span class="fp-status fp-status-purple">Dynamics Confirmed · Models 2+3</span>'+(f.consensus?' <span class="fp-status fp-status-green">Bet on Outcome · 3/3</span>':' <span class="fp-status fp-status-amber">Model 1 independent</span>');if(!f.matching)return '';if(f.dynamicsCaution)return '<span class="fp-status fp-status-amber">3/3 agreement · Dynamics caution</span>';const premium=f.consensus&&Math.round(fpAverageConfidence(m))>=8;return `<span class="fp-status ${f.consensus?(premium?'fp-status-purple':'fp-status-green'):'fp-status-amber'}">${f.consensus?'Bet on Outcome · '+f.count+'/'+f.count:'Matching Outcome · '+f.count+'/'+f.count}</span>`}
+function fpExplicitFlags(m){const f=fpModelFlags(m);if(!f.valid)return '<span class="tag">Three-model comparison unavailable</span>';return `<span class="fp-status ${f.matching?'fp-status-amber':'fp-status-neutral'}">${f.matching?'Same outcome · '+f.count+'/'+f.count:'Different outcomes'}</span><span class="fp-status ${f.consensus?'fp-status-green':'fp-status-neutral'}">${f.consensus?'Bet on outcome · '+f.count+'/'+f.count:'No unanimous SELECT'}${f.dynamicsConfirmed?' · Models 2+3 Dynamics confirmed':f.dynamicsCaution?' · Dynamics caution':''}</span>`}
 function comparisonTag(m){return fpStatusTag(m)}
 function fpIndependentProbs(v){
  if(!v)return null;
@@ -1580,7 +1588,7 @@ function fpModelFlags(m){
  const valid=!!(a&&['H','D','A'].includes(a.prediction)&&['H','D','A'].includes(b.prediction)&&c&&['H','D','A'].includes(c.prediction));
  const available=[a,b,c];const matching=valid&&available.every(v=>v.prediction===b.prediction);
  const aSelect=valid&&a.selection===a.prediction,bSelect=valid&&b.selection===b.prediction;
- return {valid,matching,count:3,selected:aSelect||bSelect,consensus:matching&&available.every(v=>v.selection===v.prediction),dynamicsConfirmed:matching&&available.every(v=>v.selection===v.prediction)&&m.model4Confirmation?.status==='SUPPORT',dynamicsCaution:m.model4Confirmation?.status==='CAUTION'};
+ return {valid,matching,count:3,selected:aSelect||bSelect,consensus:matching&&available.every(v=>v.selection===v.prediction),dynamicsConfirmed:!!(m.model4Confirmation?.pairSelected&&m.model4Confirmation?.status==='SUPPORT'),dynamicsCaution:m.model4Confirmation?.status==='CAUTION'};
 }
 let fpFixtureFilter='all',fpResultFilter='all',fpWeeklyFilter='all';
 function fpFilterButtons(id,attr,value,fn){document.querySelectorAll(`#${id} button`).forEach(b=>{b.classList.toggle('active',b.dataset[attr]===value);b.onclick=()=>{fn(b.dataset[attr]);};});}
@@ -1647,7 +1655,7 @@ function snapshotPredictions(matches){
   const ranked=m.rankedPrediction?{...m.rankedPrediction}:null;
   const model4=m.model4Confirmation?JSON.parse(JSON.stringify(m.model4Confirmation)):null;
   const flags=fpModelFlags(m);
-  const agreement={count:3,sameOutcome:flags.matching,betOnOutcome:flags.consensus,dynamicsConfirmed:flags.dynamicsConfirmed,dynamicsCaution:flags.dynamicsCaution};
+  const agreement={count:3,sameOutcome:flags.matching,betOnOutcome:flags.consensus,dynamicsConfirmed:flags.dynamicsConfirmed,dynamicsCaution:flags.dynamicsCaution,models23Selected:!!model4?.pairSelected,model1Agreed:!!model4?.model1Agree};
   if(existing){continue;} // First saved pre-kickoff forecast is immutable, including agreement and model availability.
 
   const snap={ranked,original,model4:null,model4Confirmation:model4,agreement,model4Config:model4?JSON.parse(JSON.stringify(fp4Validation[m.leagueId]?.config||{})):null,model3Config:JSON.parse(JSON.stringify(rankedSettings)),model2Settings:{windowIndex:state.activeWindow,modelIndex:state.activeIndex,homeGap:state.homeGap,awayGap:state.awayGap,drawGap:state.drawGap,drawProb:state.drawProb},id,leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,date:m.date,prediction:m.prediction,selection:m.selection??selectionWithDraw(m.xgDifference,m.prediction,m.probs),confidence:m.confidence,probs:{...m.probs},predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,expectedGoalBreakdown:m.expectedGoalBreakdown,supportFlags:(m.risk?.supportFlags||[]).map(f=>typeof f==='string'?f:f.text),riskLevel:m.risk?.level||'low',riskFlags:(m.risk?.flags||[]).map(f=>typeof f==='string'?f:f.text),modelIndex:state.activeIndex,windowIndex:state.activeWindow,teamRankSettings:{...winRankSettings.team},savedAt:new Date().toISOString()};
@@ -2357,7 +2365,7 @@ function fpRenderUnifiedDashboard(test,ranked){
  const team=metrics(chosen),rank=ranked||null;
  const card=(name,m,gap,extra='')=>`<div class="panel fp-scorecard"><span class="fp-scorecard-label">${name}</span><strong>${m?.n?fpRate(m.hits,m.n):'—'}</strong><span class="muted smalltext">${m?.n?m.hits+'/'+m.n:'Not independently evaluated'} · outcomes</span><span class="muted smalltext">DRAW ${m?.drawN?m.drawHits+'/'+m.drawN:'—'}</span>${gap==null?"":`<span class="muted smalltext">Draw gap ±${Number(gap).toFixed(2)}</span>`}${extra}</div>`;
  const original=fpDrawRecommendations?.league;
- el.innerHTML=card('01 · League-adjusted',original?.hold?{n:original.hold.n,hits:original.hold.hits,drawN:original.hold.drawPicks,drawHits:original.hold.drawHits}:null,original?.gap??originalSettings().drawBoundary)+card('02 · Team-form',team,fpDrawRecommendations?.team?.gap??state.teamDrawBoundary)+card('03 · Opposition-ranked goals',rank?{n:rank.holdN,hits:rank.holdHits,drawN:rank.holdDrawPicks,drawHits:rank.holdDrawHits}:null,rank?.boundary??rankedSettings.homeBoundary,rank?`<span class="muted smalltext">Training ${rank.trainHits}/${rank.trainN} · validation ${rank.holdHits}/${rank.holdN}</span>`:'')+`<div class="panel fp-scorecard"><span class="fp-scorecard-label">04 · Match Dynamics confirmation</span><strong>${Object.values(fp4Validation).filter(r=>r.version===3&&r.confirmationApproved).length} leagues</strong><span class="muted smalltext">Chronologically validated SUPPORT / CAUTION · never standalone SELECT</span></div>`+fpSelectionEvidencePanel(test);
+ el.innerHTML=card('01 · League-adjusted',original?.hold?{n:original.hold.n,hits:original.hold.hits,drawN:original.hold.drawPicks,drawHits:original.hold.drawHits}:null,original?.gap??originalSettings().drawBoundary)+card('02 · Team-form',team,fpDrawRecommendations?.team?.gap??state.teamDrawBoundary)+card('03 · Opposition-ranked goals',rank?{n:rank.holdN,hits:rank.holdHits,drawN:rank.holdDrawPicks,drawHits:rank.holdDrawHits}:null,rank?.boundary??rankedSettings.homeBoundary,rank?`<span class="muted smalltext">Training ${rank.trainHits}/${rank.trainN} · validation ${rank.holdHits}/${rank.holdN}</span>`:'')+`<div class="panel fp-scorecard"><span class="fp-scorecard-label">04 · Match Dynamics · Models 2+3</span><strong>${Object.values(fp4Validation).filter(r=>r.version===4&&r.confirmationApproved).length} leagues</strong><span class="muted smalltext">Models 2+3 conditional SUPPORT / CAUTION · Model 1 independent</span></div>`+fpSelectionEvidencePanel(test);
 }
 
 const fpTestStages=["League-adjusted","Team-form","Opposition-ranked goals","Match Dynamics confirmation"];
@@ -2394,7 +2402,7 @@ async function doTest(){
   fpRenderUnifiedDashboard(state.lastTest,window.fpRankedRecommendation);
   $("testStatus").textContent="Validating Model 4 historical match states; cached matches are reused…";
   fpStageUpdate(3,2,"Retrieving verified scoring timelines");fpPerfUpdate("Model 4: retrieving scoring sequences",68,"Starting match-summary retrieval",true);await fp4FetchHistory(r.matches,(done,total,valid,failed)=>{fpStageUpdate(3,Math.round(65*done/Math.max(1,total)),`${done}/${total} events checked · ${valid} verified`);fpPerfUpdate("Model 4: retrieving scoring sequences",68+Math.round(30*done/Math.max(1,total)),`${done}/${total} checked · ${valid} verified · ${failed} unavailable`);$("testStatus").textContent=`Model 4 event history ${done}/${total} · verified ${valid} · unavailable ${failed}`});
-  fpPerfUpdate("Model 4: chronological validation",85,"Testing 12 configurations per league",true);await fp4Backtest(r.matches);fpStageUpdate(3,100,"Confirmation thresholds and holdout evidence saved");
+  fpPerfUpdate("Model 4: chronological validation",85,"Testing 12 pooled configurations with league holdouts",true);await fp4Backtest(r.matches);fpStageUpdate(3,100,"Confirmation thresholds and holdout evidence saved");
   if(state.matches.length){updatePredictions(state.matches,state.activeIndex);snapshotPredictions(state.matches);renderFixtures()}
   $("testStatus").textContent=`Completed · ${window.fpHistorySaveStatus||"Prediction history unchanged"} · retrieval ${(fpFetchMs/1000).toFixed(1)}s · Models 1 & 2 ${((fpCoreMs-fpTestStart-fpFetchMs)/1000).toFixed(1)}s · Model 3 ${(fpRankMs/1000).toFixed(1)}s · total ${((performance.now()-fpTestStart)/1000).toFixed(1)}s. ${r.matches.length} retrieved matches (including warm-up).`+`${r.errors.length?" Unavailable: "+r.errors.join(", "):""}`;
   if(state.mode==="auto")$("activeModelNote")&&($("activeModelNote").textContent="Test recommendations are available below; copy to Settings and save to apply explicitly.");
@@ -2455,7 +2463,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 /* MODEL 4: independent match-state frequencies, never a goals/xG Poisson forecast. */
 const FP4_LEGACY_VALIDATION_KEY='fp4_predictive_validation_v1';
-let fp4Validation=readStore('fp4_dynamics_confirmation_v3',{});
+let fp4Validation=readStore('fp4_dynamics_confirmation_v4_m23',{});
 function fp4Timeline(m){
  const k='fp4_evt_'+m.leagueId+'_'+m.id;
  if(fp4MemoryEvents.has(k))return fp4MemoryEvents.get(k);try{const o=JSON.parse(localStorage.getItem(k)||'null');return o?.v===FP4_AUDIT_VERSION&&o.result?.complete&&Array.isArray(o.result.sequence)?o.result.sequence:null}catch{return null}
@@ -2492,7 +2500,7 @@ function fp4TeamForm(previous,key,windows,weights){
  return Object.fromEntries(['wins','first','protect','recover','late','draws'].map(k=>[k,rates.reduce((sum,r,i)=>sum+r[k]*weights[i],0)]));
 }
 /* MATCH DYNAMICS — a conditional confirmation layer, never an independent winner or SELECT. */
-const FP4_VALIDATION_KEY='fp4_dynamics_confirmation_v3';
+const FP4_VALIDATION_KEY='fp4_dynamics_confirmation_v4_m23';
 // The legacy prediction-validation key is deliberately not read: old approvals cannot authorize a new role.
 function fp4Dynamics(m,previous,config={windowIndex:0,weightIndex:1},outcome='N'){
  const windows=WINDOW_SETS[config.windowIndex],weights=MODELS[config.weightIndex].weights;
@@ -2509,75 +2517,108 @@ function fp4Dynamics(m,previous,config={windowIndex:0,weightIndex:1},outcome='N'
  const score=outcome==='H'?hBreak-aBreak:outcome==='A'?aBreak-hBreak:drawHold-(hBreak+aBreak)/2;
  return {score,proposedOutcome:outcome,matchState:{home,away},factors:{homeBreak:hBreak,awayBreak:aBreak,drawHold},explanation:'First-goal matchups, lead protection versus recovery, and late-goal vulnerability. Scoring-event proxies do not prove ability to break down a defensive formation.'};
 }
-function fp4ThreeAgreement(m){const a=m.originalPrediction||m.original,b=m,c=m.rankedPrediction||m.ranked;
- const valid=!!(a&&b&&c&&['H','D','A'].includes(a.prediction)&&a.prediction===b.prediction&&b.prediction===c.prediction);
- return {matching:valid,outcome:valid?b.prediction:'N',selected:valid&&[a,b,c].every(v=>v.selection===v.prediction)};
+function fp4PairAgreement(m){
+ const a=m.originalPrediction||m.original,b=m,c=m.rankedPrediction||m.ranked;
+ const valid=!!(b&&c&&['H','D','A'].includes(b.prediction)&&b.prediction===c.prediction);
+ const selected=valid&&b.selection===b.prediction&&c.selection===c.prediction;
+ const model1Agree=!!(a&&valid&&a.prediction===b.prediction);
+ const model1Select=!!(model1Agree&&a.selection===a.prediction);
+ return {matching:valid,selected,outcome:valid?b.prediction:'N',model1Agree,model1Select};
 }
+function fp4ThreeAgreement(m){const p=fp4PairAgreement(m);return {matching:p.model1Agree,outcome:p.model1Agree?p.outcome:'N',selected:p.selected&&p.model1Select}}
 function fp4Attach(m,previous){
- m.model4Prediction=null;const agreement=fp4ThreeAgreement(m),validation=fp4Validation[m.leagueId];
- const config=validation?.version===3?validation.config:{windowIndex:0,weightIndex:1};
- const evidence=agreement.matching?fp4Dynamics(m,previous,config,agreement.outcome):null;
- const validated=!!(validation?.version===3&&validation.confirmationApproved);
+ m.model4Prediction=null;const pair=fp4PairAgreement(m),validation=fp4Validation[m.leagueId];
+ const config=validation?.version===4?validation.config:{windowIndex:0,weightIndex:1};
+ const evidence=pair.selected?fp4Dynamics(m,previous,config,pair.outcome):null;
+ const validated=!!(validation?.version===4&&validation.confirmationApproved);
  const support=validated&&evidence&&evidence.score>=validation.supportThreshold;
  const caution=validated&&evidence&&evidence.score<=validation.cautionThreshold;
- m.model4Confirmation={model4:true,role:'confirmation',proposedOutcome:agreement.outcome,status:!agreement.matching?'NOT APPLICABLE':!evidence?'INSUFFICIENT DATA':!validated?'UNVALIDATED':support?'SUPPORT':caution?'CAUTION':'NEUTRAL',validated,score:evidence?.score??null,explanation:evidence?.explanation||'Requires three-model agreement and verified historical scoring sequences.',matchState:evidence?.matchState||null,factors:evidence?.factors||null,config};
+ m.model4Confirmation={model4:true,role:'m2-m3-confirmation',proposedOutcome:pair.outcome,pairSelected:pair.selected,model1Agree:pair.model1Agree,model1Select:pair.model1Select,status:!pair.selected?'NOT APPLICABLE':!evidence?'INSUFFICIENT DATA':!validated?'UNVALIDATED':support?'SUPPORT':caution?'CAUTION':'NEUTRAL',validated,score:evidence?.score??null,explanation:evidence?.explanation||'Requires Models 2 and 3 to agree and independently SELECT, plus verified scoring sequences.',matchState:evidence?.matchState||null,factors:evidence?.factors||null,config};
 }
 function fp4ConfirmationCard(v){const label='04 · Match Dynamics';if(!v)return `<div class="model-cell fp-dynamics"><div class="model-title">${label}</div><div class="model-sub">Confirmation unavailable</div></div>`;
  const status=v.status||'UNVALIDATED',color=status==='SUPPORT'?'fp-dyn-support':status==='CAUTION'?'fp-dyn-caution':'fp-dyn-neutral';
- return `<div class="model-cell fp-dynamics ${color}"><div class="model-title">${label} · Confirmation</div><div class="model-primary"><span class="model-outcome">${esc(status)}</span></div><div class="model-sub">${v.proposedOutcome&&v.proposedOutcome!=='N'?`Assessing ${outcomeName(v.proposedOutcome)} · `:''}${v.score==null?'No validated score':`Matchup score ${Number(v.score).toFixed(3)}`}</div><div class="model-bottom"><span class="${status==='SUPPORT'?'model-select':'model-no-select'}">${status==='SUPPORT'?'DYNAMICS CONFIRMED':status==='CAUTION'?'DYNAMICS WARNING':'NO CONFIRMATION'}</span></div></div>`;
+ return `<div class="model-cell fp-dynamics ${color}"><div class="model-title">${label} · Confirmation</div><div class="model-primary"><span class="model-outcome">${esc(status)}</span></div><div class="model-sub">${v.proposedOutcome&&v.proposedOutcome!=='N'?`Models 2 + 3: ${outcomeName(v.proposedOutcome)} · `:''}${v.score==null?'No validated score':`Matchup score ${Number(v.score).toFixed(3)}`}</div><div class="model-bottom"><span class="${status==='SUPPORT'?'model-select':'model-no-select'}">${status==='SUPPORT'?'DYNAMICS CONFIRMED':status==='CAUTION'?'DYNAMICS WARNING':'NO CONFIRMATION'}</span></div></div>`;
 }
 function fp4ReportRender(report){const target=document.getElementById('fp4PredictiveResults');if(!target)return;
  const pct=(a,b)=>b?`${(100*a/b).toFixed(1)}%`:'—';
- const rows=Object.entries(report||{}).filter(([,r])=>r.version===3).map(([id,r])=>`<tr><td>${esc(LEAGUES[id]||id)}</td><td>${r.historyN||0}</td><td>${r.holdoutN||0}</td><td>${r.baselineHits||0}/${r.baselineN||0} · ${pct(r.baselineHits,r.baselineN)}</td><td>${r.supportHits||0}/${r.supportN||0} · ${pct(r.supportHits,r.supportN)}</td><td>${r.cautionHits||0}/${r.cautionN||0} · ${pct(r.cautionHits,r.cautionN)}</td><td>${r.supportN&&r.baselineN?((100*(r.supportHits/r.supportN-r.baselineHits/r.baselineN)).toFixed(1)+' pp'):'—'}</td><td>${r.baselineN?pct(r.supportN,r.baselineN):'—'}</td><td>${r.confirmationApproved?'VALIDATED':'NEUTRAL ONLY'}</td><td>${esc(r.reason||'')}</td></tr>`).join('');
- target.innerHTML=`<p class="muted smalltext">Model 4 tests whether scoring-sequence evidence improves existing unanimous three-model SELECTs. SUPPORT precision and CAUTION accuracy use the same later chronological holdout. A confirmation is never an independent bet.</p><div class="tablewrap"><table><thead><tr><th>League</th><th>Verified</th><th>Holdout</th><th>3-model SELECT correct</th><th>SUPPORT correct</th><th>CAUTION correct</th><th>Precision lift</th><th>Retained coverage</th><th>Confirmation</th><th>Reason</th></tr></thead><tbody>${rows||'<tr><td colspan="10">Run Model Test to validate confirmation</td></tr>'}</tbody></table></div>`;
- const output=document.getElementById('fp4PredictiveReport');if(output)output.value=JSON.stringify({generated:new Date().toISOString(),role:'conditional-confirmation',leagues:report},null,2);
+ const rows=Object.entries(report||{}).filter(([id,r])=>r.version===4&&id!=='_pooled').map(([id,r])=>`<tr><td>${esc(LEAGUES[id]||id)}</td><td>${r.historyN||0}</td><td>${r.holdoutN||0}</td><td>${r.baselineHits||0}/${r.baselineN||0} · ${pct(r.baselineHits,r.baselineN)}</td><td>${r.supportHits||0}/${r.supportN||0} · ${pct(r.supportHits,r.supportN)}</td><td>${r.cautionHits||0}/${r.cautionN||0} · ${pct(r.cautionHits,r.cautionN)}</td><td>${r.supportN&&r.baselineN?((100*(r.supportHits/r.supportN-r.baselineHits/r.baselineN)).toFixed(1)+' pp'):'—'}</td><td>${r.baselineN?pct(r.supportN,r.baselineN):'—'}</td><td>${r.confirmationApproved?'VALIDATED':'NEUTRAL ONLY'}</td><td>${esc(r.reason||'')}</td></tr>`).join('');
+ target.innerHTML=`<p class="muted smalltext">Model 4 tests whether scoring-sequence evidence improves selections where Models 2 and 3 independently agree and SELECT. Model 1 remains an independent reference. SUPPORT precision and CAUTION accuracy use the same later chronological holdout. A confirmation is never an independent bet.</p><div class="tablewrap"><table><thead><tr><th>League</th><th>Verified</th><th>Holdout</th><th>Models 2+3 SELECT correct</th><th>SUPPORT correct</th><th>CAUTION correct</th><th>Precision lift</th><th>Retained coverage</th><th>Confirmation</th><th>Reason</th></tr></thead><tbody>${rows||'<tr><td colspan="10">Run Model Test to validate confirmation</td></tr>'}</tbody></table></div>`;
+ const pooled=report?._pooled; if(pooled){const note=document.createElement('div');note.className='panel';note.style.marginBottom='12px';note.innerHTML=`<strong>Pooled chronological confirmation · ${pooled.confirmationApproved?'VALIDATED':'INFORMATIONAL ONLY'}</strong><p class="muted smalltext">Models 2+3: ${pooled.baselineHits}/${pooled.baselineN} (${pct(pooled.baselineHits,pooled.baselineN)}); SUPPORT ${pooled.supportHits}/${pooled.supportN} (${pct(pooled.supportHits,pooled.supportN)}); CAUTION ${pooled.cautionHits}/${pooled.cautionN} (${pct(pooled.cautionHits,pooled.cautionN)}). Confidence-only benchmark: ${pooled.confidenceHits}/${pooled.confidenceN} (${pct(pooled.confidenceHits,pooled.confidenceN)}). Retained ${pct(pooled.supportN,pooled.baselineN)} of eligible 2+3 picks. ${esc(pooled.reason||'')}</p><p class="muted smalltext">Model 1 agreement: ${pooled.model1AgreeHits}/${pooled.model1AgreeN} (${pct(pooled.model1AgreeHits,pooled.model1AgreeN)}); Model 1 disagreement: ${pooled.model1DisagreeHits}/${pooled.model1DisagreeN} (${pct(pooled.model1DisagreeHits,pooled.model1DisagreeN)}). Historical testing is diagnostic; no new bet is created by Dynamics.</p>`;target.prepend(note)}
+ const output=document.getElementById('fp4PredictiveReport');if(output)output.value=JSON.stringify({generated:new Date().toISOString(),role:'models-2-and-3-conditional-confirmation',leagues:report},null,2);
 }
 async function fp4FetchHistory(matches,progress){const finished=matches.filter(isFinished);let i=0,done=0,failed=0;
  async function worker(){while(i<finished.length&&!testCancelRequested){const m=finished[i++];try{const r=await fp4FetchSummary(m);if(r.complete&&r.sequence)done++;else failed++}catch{failed++}if((done+failed)%25===0){progress?.(done+failed,finished.length,done,failed);await new Promise(r=>setTimeout(r,0))}}}
  await Promise.all(Array.from({length:4},worker));progress?.(done+failed,finished.length,done,failed);return {done,failed,total:finished.length};}
 async function fp4Backtest(matches){
- const result={},by={};for(const m of matches)(by[m.leagueId]??=[]).push(m);
- const entries=Object.entries(by);let completed=0;
+ // Each league is split chronologically BEFORE pooling; configurations and thresholds are fitted only on training fixtures.
+ const by={};for(const m of matches)(by[m.leagueId]??=[]).push(m);
+ const entries=Object.entries(by),prepared=[],trainAll=[];let completed=0;
  for(const [id,group] of entries){testCheckpoint();
   const rows=group.filter(isFinished).sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const prior=[];let history=[],cursor=0;
+  const prior=[],history=[];let cursor=0;
   for(let j=0;j<rows.length;j++){while(cursor<j&&new Date(rows[cursor].date)<new Date(rows[j].date)){history.push(rows[cursor]);cursor++}prior.push(history.slice())}
-  const base=[];for(let j=0;j<rows.length;j++){
-   const m=rows[j],previous=prior[j];let entry=null;
-   try{const team=calculatePrediction(m,previous,{...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]});
+  const cutoff=Math.floor(rows.length*.75),base=[];
+  for(let j=0;j<rows.length;j++){
+   const m=rows[j],previous=prior[j];try{
+    const team=calculatePrediction(m,previous,{...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]});
     const original=calculateOriginalIndependent(m,previous),ranked=rankedGoalModel(m,previous);
-    const agreement=fp4ThreeAgreement({...team,originalPrediction:original,rankedPrediction:ranked});
-    if(agreement.selected)entry={j,actual:getOutcome(m.homeScore,m.awayScore),outcome:agreement.outcome,correct:agreement.outcome===getOutcome(m.homeScore,m.awayScore)};
-   }catch(e){/* Missing warm-up history does not become a fabricated prediction. */}
-   if(entry)base.push(entry);if(j%40===0){testCheckpoint();await new Promise(r=>setTimeout(r,0))}
+    const pair=fp4PairAgreement({...team,originalPrediction:original,rankedPrediction:ranked});
+    if(pair.selected){const actual=getOutcome(m.homeScore,m.awayScore);base.push({id,j,m,previous,outcome:pair.outcome,correct:pair.outcome===actual,model1Agree:pair.model1Agree,model1Select:pair.model1Select,confidence:(Number(team.confidence||0)+Number(ranked.confidence||0))/2,train:j<cutoff})}
+   }catch(e){/* Warm-up fixtures are not fabricated. */}
+   if(j%35===0){testCheckpoint();await new Promise(r=>setTimeout(r,0))}
   }
-  const cutoff=Math.floor(rows.length*.75),train=base.filter(x=>x.j<cutoff),hold=base.filter(x=>x.j>=cutoff);
-  let winner=null;
-  for(let wi=0;wi<3;wi++)for(let weightIndex=0;weightIndex<4;weightIndex++){
-   const config={windowIndex:wi,weightIndex};const scored=train.map(x=>({...x,d:fp4Dynamics(rows[x.j],prior[x.j],config,x.outcome)})).filter(x=>x.d);
-   if(scored.length<8)continue;
-   const sorted=scored.map(x=>x.d.score).sort((a,b)=>a-b);
-   const cautionThreshold=sorted[Math.floor((sorted.length-1)*.25)],supportThreshold=sorted[Math.floor((sorted.length-1)*.55)];
-   const support=scored.filter(x=>x.d.score>=supportThreshold),caution=scored.filter(x=>x.d.score<=cautionThreshold);
-   const baseline=scored.filter(x=>x.correct).length/scored.length,precision=support.filter(x=>x.correct).length/Math.max(1,support.length);
-   const rejectedWrong=caution.filter(x=>!x.correct).length/Math.max(1,caution.length);
-   const objective=(precision-baseline)+.2*(rejectedWrong-(1-baseline));
-   if(!winner||objective>winner.objective)winner={config,cautionThreshold,supportThreshold,objective,trainN:scored.length};
+  prepared.push({id,rows,cutoff,base});trainAll.push(...base.filter(x=>x.train));
+  completed++;fpStageUpdate(3,10+Math.round(35*completed/entries.length),`Preparing Models 2+3 selections · ${completed}/${entries.length} leagues`);
+ }
+ let winner=null;
+ for(let wi=0;wi<3;wi++)for(let weightIndex=0;weightIndex<4;weightIndex++){
+  testCheckpoint();const config={windowIndex:wi,weightIndex};
+  const scored=trainAll.map(x=>({...x,d:fp4Dynamics(x.m,x.previous,config,x.outcome)})).filter(x=>x.d);
+  if(scored.length<20)continue;
+  const sorted=scored.map(x=>x.d.score).sort((a,b)=>a-b);
+  for(const supportQ of [.50,.60,.70])for(const cautionQ of [.20,.30]){
+   const supportThreshold=sorted[Math.floor((sorted.length-1)*supportQ)],cautionThreshold=sorted[Math.floor((sorted.length-1)*cautionQ)];
+   const supported=scored.filter(x=>x.d.score>=supportThreshold),cautioned=scored.filter(x=>x.d.score<=cautionThreshold);
+   if(supported.length<10||cautioned.length<5)continue;
+   const baseline=scored.filter(x=>x.correct).length/scored.length,precision=supported.filter(x=>x.correct).length/supported.length;
+   const cautionPrecision=cautioned.filter(x=>x.correct).length/cautioned.length;
+   const retained=supported.length/scored.length;
+   if(retained<state.minSelectCoverage)continue;
+   const objective=(precision-baseline)+.25*(baseline-cautionPrecision)+.02*retained;
+   if(!winner||objective>winner.objective)winner={config,supportThreshold,cautionThreshold,objective,trainN:scored.length};
   }
-  const scored=winner?hold.map(x=>({...x,d:fp4Dynamics(rows[x.j],prior[x.j],winner.config,x.outcome)})).filter(x=>x.d):[];
-  const supported=scored.filter(x=>x.d.score>=winner.supportThreshold),cautioned=scored.filter(x=>x.d.score<=winner.cautionThreshold);
-  const baselineHits=scored.filter(x=>x.correct).length,supportHits=supported.filter(x=>x.correct).length,cautionHits=cautioned.filter(x=>x.correct).length;
-  const lift=scored.length&&supported.length?supportHits/supported.length-baselineHits/scored.length:null;
-  // No auto-approval on a handful of selections. Insufficient evidence => NEUTRAL, not an invented benefit.
-  const confirmationApproved=!!(winner&&scored.length>=20&&supported.length>=8&&supported.length/scored.length>=state.minSelectCoverage&&lift>0&&cautioned.length>=4&&cautionHits/cautioned.length<baselineHits/scored.length);
-  const n=rows.filter(m=>fp4MatchStates(m)).length;
-  result[id]={version:3,historyN:n,holdoutN:rows.length-cutoff,baselineN:scored.length,baselineHits,supportN:supported.length,supportHits,cautionN:cautioned.length,cautionHits,confirmationApproved,config:winner?.config||{windowIndex:0,weightIndex:1},supportThreshold:winner?.supportThreshold??Infinity,cautionThreshold:winner?.cautionThreshold??-Infinity,reason:!winner?'Insufficient training examples':scored.length<20?'Insufficient three-model SELECT holdout':supported.length<8?'Insufficient SUPPORT evidence':lift<=0?'No proven precision improvement':cautioned.length<4?'Insufficient CAUTION evidence':!confirmationApproved?'CAUTION does not identify weaker selections':'Chronological confirmation lift passed'};
-  fp4Validation[id]=result[id];store(FP4_VALIDATION_KEY,fp4Validation);fp4ReportRender(result);completed++;
-  fpStageUpdate(3,65+Math.round(35*completed/entries.length),`${completed}/${entries.length} leagues checked`);
-  fpPerfUpdate('Model 4: conditional confirmation validation',85+Math.round(13*completed/entries.length),`${completed}/${entries.length} leagues · ${id}`,true);
+  fpStageUpdate(3,45+Math.round(15*(wi*4+weightIndex+1)/12),`Training confirmation · ${wi*4+weightIndex+1}/12 configurations`);
   await new Promise(r=>setTimeout(r,0));
  }
- fp4Validation={...fp4Validation,...result};store(FP4_VALIDATION_KEY,fp4Validation);fp4ReportRender(result);fpRenderUnifiedDashboard(state.lastTest,window.fpRankedRecommendation);return result;
+ const result={},all=[];completed=0;
+ for(const {id,rows,cutoff,base} of prepared){testCheckpoint();
+  const hold=base.filter(x=>!x.train),scored=winner?hold.map(x=>({...x,d:fp4Dynamics(x.m,x.previous,winner.config,x.outcome)})).filter(x=>x.d):[];
+  all.push(...scored);
+  const supported=winner?scored.filter(x=>x.d.score>=winner.supportThreshold):[],cautioned=winner?scored.filter(x=>x.d.score<=winner.cautionThreshold):[];
+  const baselineHits=scored.filter(x=>x.correct).length,supportHits=supported.filter(x=>x.correct).length,cautionHits=cautioned.filter(x=>x.correct).length;
+  const lift=scored.length&&supported.length?supportHits/supported.length-baselineHits/scored.length:null;
+  const n=rows.filter(m=>fp4MatchStates(m)).length;
+  result[id]={version:4,historyN:n,holdoutN:rows.length-cutoff,baselineN:scored.length,baselineHits,supportN:supported.length,supportHits,cautionN:cautioned.length,cautionHits,confirmationApproved:false,config:winner?.config||{windowIndex:0,weightIndex:1},supportThreshold:winner?.supportThreshold??Infinity,cautionThreshold:winner?.cautionThreshold??-Infinity,reason:!winner?'Insufficient pooled training evidence':!scored.length?'No eligible Models 2+3 holdout selections':'Awaiting pooled validation',lift};
+  completed++;fpStageUpdate(3,60+Math.round(30*completed/prepared.length),`Independent league holdout · ${completed}/${prepared.length}`);
+  await new Promise(r=>setTimeout(r,0));
+ }
+ const supported=winner?all.filter(x=>x.d.score>=winner.supportThreshold):[],cautioned=winner?all.filter(x=>x.d.score<=winner.cautionThreshold):[];
+ const baselineHits=all.filter(x=>x.correct).length,supportHits=supported.filter(x=>x.correct).length,cautionHits=cautioned.filter(x=>x.correct).length;
+ const baseRate=all.length?baselineHits/all.length:0,supportRate=supported.length?supportHits/supported.length:0,cautionRate=cautioned.length?cautionHits/cautioned.length:0;
+ const sortedConfidence=all.slice().sort((a,b)=>b.confidence-a.confidence),confidenceOnly=sortedConfidence.slice(0,supported.length),confidenceHits=confidenceOnly.filter(x=>x.correct).length;
+ const model1Agree=all.filter(x=>x.model1Agree),model1Disagree=all.filter(x=>!x.model1Agree);
+ const confirmationApproved=!!(winner&&all.length>=60&&supported.length>=20&&cautioned.length>=10&&supported.length/all.length>=state.minSelectCoverage&&supportRate>baseRate&&supportRate>confidenceHits/Math.max(1,confidenceOnly.length)&&cautionRate<baseRate);
+ const reason=!winner?'Insufficient pooled training selections':all.length<60?'Insufficient pooled chronological holdout':supported.length<20?'Insufficient SUPPORT sample':cautioned.length<10?'Insufficient CAUTION sample':supportRate<=baseRate?'SUPPORT does not improve Models 2+3 precision':supportRate<=confidenceHits/Math.max(1,confidenceOnly.length)?'Confidence-only filter performs as well or better':cautionRate>=baseRate?'CAUTION does not identify weaker selections':'Pooled chronological validation passed';
+ result._pooled={version:4,confirmationApproved,reason,baselineN:all.length,baselineHits,supportN:supported.length,supportHits,cautionN:cautioned.length,cautionHits,confidenceN:confidenceOnly.length,confidenceHits,model1AgreeN:model1Agree.length,model1AgreeHits:model1Agree.filter(x=>x.correct).length,model1DisagreeN:model1Disagree.length,model1DisagreeHits:model1Disagree.filter(x=>x.correct).length,config:winner?.config||null};
+ for(const [id,r] of Object.entries(result)){if(id==='_pooled')continue;
+  // Pooled approval cannot overrule strong negative league-specific evidence; small samples remain informational.
+  const localRate=r.supportN?r.supportHits/r.supportN:0,localBaseline=r.baselineN?r.baselineHits/r.baselineN:0;
+  const localHarm=r.supportN>=8&&localRate+0.08<localBaseline;
+  r.confirmationApproved=confirmationApproved&&r.baselineN>=3&&!localHarm;
+  r.reason=!confirmationApproved?reason:r.baselineN<3?'Insufficient local evidence':localHarm?'Local SUPPORT underperforms':'Pooled validated · local safeguard passed';
+ }
+ fp4Validation={...result};store(FP4_VALIDATION_KEY,fp4Validation);fp4ReportRender(result);fpRenderUnifiedDashboard(state.lastTest,window.fpRankedRecommendation);
+ fpStageUpdate(3,100,'Pooled and league-specific chronological checks complete');return result;
 }
 
 /* Unified test UI: preserve historical predictions for draw-gap evaluation. */
