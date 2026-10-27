@@ -1761,7 +1761,7 @@ function renderHistoricalXgTest(test){const r=test.historicalXgTest;if(!r)return
 function copyHistoricalXgRecommendation(){const r=state.lastTest?.historicalXgTest;if(!r?.approved)return;$("historicalXgChoice").value=String(r.best.x);$("finishingChoice").value=String(r.best.f);$("settingsStatus").textContent="Historical xG weights copied. Click Save settings to activate."}
 function bestTestModel(test){if(!test)return null;return test.results.filter(r=>r.total>=state.minSample).sort((a,b)=>(b.trainAccuracy||0)-(a.trainAccuracy||0))[0]||null}
 function outcomeMetrics(rows,homeGap,awayGap){
- const out={total:rows.length,correct:0,by:{H:{n:0,hits:0},D:{n:0,hits:0},A:{n:0,hits:0}},actual:{H:0,D:0,A:0},recall:{H:0,D:0,A:0},selection:{H:{n:0,hits:0},A:{n:0,hits:0},N:{n:0,hits:0}}};
+ const out={total:rows.length,correct:0,by:{H:{n:0,hits:0},D:{n:0,hits:0},A:{n:0,hits:0}},actual:{H:0,D:0,A:0},recall:{H:0,D:0,A:0},selection:{H:{n:0,hits:0},D:{n:0,hits:0},A:{n:0,hits:0},N:{n:0,hits:0}}};
  for(const r of rows){
   const pick=r.prediction,bucket=out.by[pick];bucket.n++;out.actual[r.actualOutcome]++;
   if(pick===r.actualOutcome){bucket.hits++;out.correct++;out.recall[pick]++}
