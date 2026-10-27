@@ -856,7 +856,11 @@ async function enrichHistoricalXg(matches,maximum=240){
  return {checked,found,total:Object.keys(state.xgRecords).length};
 }
 
+// Cache only immutable historical snapshots created by Model Test.
+const fpTestHistoryCache=new WeakMap();
 function historyForTeam(previous,key){
+ const cache=fpTestHistoryCache.get(previous);
+ if(cache&&cache.has(key))return cache.get(key);
  const out=[];
  for(const m of previous){
   if(!isFinished(m))continue;
@@ -864,7 +868,9 @@ function historyForTeam(previous,key){
   const home=key===hk,gf=home?m.homeScore:m.awayScore,ga=home?m.awayScore:m.homeScore;
   out.push({date:m.date,gf,ga,points:gf>ga?3:gf===ga?1:0,result:gf>ga?"W":gf===ga?"D":"L",opponent:home?m.away:m.home,opponentKey:home?ak:hk,venue:home?"home":"away"});
  }
- return out.sort((a,b)=>new Date(a.date)-new Date(b.date));
+ out.sort((a,b)=>new Date(a.date)-new Date(b.date));
+ if(cache)cache.set(key,out);
+ return out;
 }
 function avg(arr,fn,fallback){return arr.length?arr.reduce((s,x)=>s+fn(x),0)/arr.length:fallback}
 function leagueAverages(previous){
@@ -1212,7 +1218,11 @@ async function rankedBacktest(matches){
   for(let i=0;i<league.length;i++){
    const m=league[i],cutoff=new Date(m.date).getTime();
    // Preserve original index eligibility (i >= 10) and strict earlier-date history.
-   if(i>=10&&cutoff>=evaluationCutoff)fixtures.push({m,previous:previous.filter(x=>new Date(x.date).getTime()<cutoff),actual:getOutcome(m.homeScore,m.awayScore)});
+   if(i>=10&&cutoff>=evaluationCutoff){
+    const snapshot=previous.filter(x=>new Date(x.date).getTime()<cutoff);
+    fpTestHistoryCache.set(snapshot,new Map());
+    fixtures.push({m,previous:snapshot,actual:getOutcome(m.homeScore,m.awayScore)});
+   }
    // Only earlier-date matches may be used for same-kickoff fixtures.
    // Build history using the original strict-date predicate when needed below.
    previous.push(m);
@@ -1599,7 +1609,11 @@ async function runBacktest(all){
    const prior=history[m.leagueId]||[];
    if(kickoff<evaluationCutoff)continue;
    const h=historyForTeam(prior,teamKey(m,"H")),a=historyForTeam(prior,teamKey(m,"A"));
-   if(h.length>=8&&a.length>=8)eligible.push({m,prior:prior.slice(),minimum:Math.min(h.length,a.length)});
+   if(h.length>=8&&a.length>=8){
+    const snapshot=prior.slice();
+    fpTestHistoryCache.set(snapshot,new Map([[teamKey(m,"H"),h],[teamKey(m,"A"),a]]));
+    eligible.push({m,prior:snapshot,minimum:Math.min(h.length,a.length)});
+   }
   }
   for(let j=cursor;j<end;j++){const m=chron[j];(history[m.leagueId]??=[]).push(m)}
   cursor=end;
@@ -1807,7 +1821,8 @@ async function optimiseOutcome(test){
   for(const hg of gaps){for(const ag of gaps){const m=outcomeMetrics(train,hg,ag),selection=selectionMetrics(m);
    candidates.push({modelIndex:model.modelIndex,windowIndex:model.windowIndex,leagueInfluence,homeGap:hg,awayGap:ag,
     quality:selection.lower,selection,train:m,holdRows:hold.length});done++}
-   testCheckpoint();testProgress("Optimising selection quality",done,total,84,92);await testYield();
+   testCheckpoint();
+   if(Math.round(hg*100)%25===0){testProgress("Optimising selection quality",done,total,84,92);await testYield();}
   }
  }}
  const chosen=chooseIntelligentOutcome(candidates,groups);
