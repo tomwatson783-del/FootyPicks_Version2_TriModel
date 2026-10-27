@@ -1638,40 +1638,12 @@ async function runBacktest(all){
   if(Number.isFinite(p.xgDifference))originalRows.push({date:m.date,xgDifference:p.xgDifference,actualOutcome:getOutcome(m.homeScore,m.awayScore),split:i<start?'train':'holdout'});
  }
  const test={results:models,records,training,originalRows,archive:all.length,completed:chron.length,eligible:eligible.length,testCount:eligible.length-start,trainCount:start};
- // Train prediction boundaries without seeing the holdout outcomes.
- const boundaryCandidates=[0,.05,.10,.15,.20,.25,.30,.35,.40,.50,.60,.75];
- const boundaryMap=new Map();
- for(const model of models){
-  const key=`${model.key}-0`,train=training.filter(r=>r.key===key);
-  if(train.length<state.minSample)continue;
-  const actual={H:0,D:0,A:0};for(const r of train)actual[r.actualOutcome]++;
-  let best={hits:-1,balanced:-1,home:.20,away:.20};
-  for(const gap of boundaryCandidates){
-   let hits=0;const correct={H:0,D:0,A:0};
-   for(const r of train){const pred=goalDifferenceOutcome(r.xgDifference,gap,gap);if(pred===r.actualOutcome){hits++;correct[pred]++}}
-   const balanced=['H','D','A'].reduce((n,k)=>n+(actual[k]?correct[k]/actual[k]:0),0)/3;
-   // Overall accuracy is primary. For ties, prefer class-balanced accuracy;
-   // then the least disruptive boundary. SELECT never influences this choice.
-   if(hits>best.hits||(hits===best.hits&&(balanced>best.balanced+1e-9||(Math.abs(balanced-best.balanced)<1e-9&&Math.abs(gap-.20)<Math.abs(best.home-.20)))))best={hits,balanced,home:gap,away:gap};
-  }
-  boundaryMap.set(key,best);
-  model.trainAccuracy=best.hits/train.length;
- }
- for(const row of [...training,...records]){
-  const boundary=boundaryMap.get(row.key);
-  if(!boundary)continue;
-  row.prediction=goalDifferenceOutcome(row.xgDifference,boundary.home,boundary.away);
-  row.predictedScore=scoreFromPredictedGoals(row.homeLambda,row.awayLambda,row.prediction);
-  row.predictionHomeBoundary=boundary.home;row.predictionAwayBoundary=boundary.away;
- }
- // Recalculate the visible holdout accuracy with the training-chosen boundaries.
- for(const model of models){const rows=records.filter(r=>r.key===`${model.key}-0`);
-  model.total=rows.length;model.correct=rows.filter(r=>r.prediction===r.actualOutcome).length;
-  model.predicted={H:0,D:0,A:0};model.classCorrect={H:0,D:0,A:0};model.actual={H:0,D:0,A:0};
-  for(const r of rows){model.predicted[r.prediction]++;model.actual[r.actualOutcome]++;if(r.prediction===r.actualOutcome)model.classCorrect[r.prediction]++}
- }
- test.boundaryMap=boundaryMap;
- test.recommendation=await optimiseOutcome(test);validateOutcomeRecommendation(test);test.drawSelectionTest=optimiseDrawSelection(test);test.strategyTest=optimiseSelectionStrategy(test);test.confidenceRecommendation=await optimiseConfidence(test);test.historicalXgTest=null;return test;
+ // V3 evaluation deliberately leaves all three model prediction functions and
+ // their historical outputs untouched. Test-only candidates are scored on copies.
+ test.boundaryMap=new Map();
+ test.v3=await fpModelTestV3(test);
+ test.recommendation=null;test.drawSelectionTest=null;test.strategyTest=null;
+ test.confidenceRecommendation=null;test.historicalXgTest=null;return test;
 }
 function drawSelectionMetrics(rows,homeGap,awayGap,drawGap,drawProb,allowDraw){
  const by={H:{n:0,hits:0},D:{n:0,hits:0},A:{n:0,hits:0},N:{n:0,hits:0}};
@@ -1952,9 +1924,108 @@ function renderRecommendations(test){const rec=test.recommendation,conf=test.con
  $("settingsDrawRecommendation").textContent=test.drawSelectionTest?.supported?`Supported draw-selection candidate: xG gap ≤ ${test.drawSelectionTest.best.gap.toFixed(2)}, draw probability ≥ ${(test.drawSelectionTest.best.probability*100).toFixed(0)}%. Copy the validated outcome recommendation to include this change.`:`Draw selections: ${test.drawSelectionTest?.reason||"Not evaluated"}`;
  $("settingsConfidenceRecommendation").innerHTML=conf?`Latest confidence recommendation: ${conf.config.points.join(" / ")} points; risk deductions ${conf.config.mediumPenalty} / ${conf.config.highPenalty}; confidence 10 ${conf.multiplierTest?.recommended??state.confidenceMultiplier}×. <button class="btn small secondary" onclick="copyConfidenceRecommendation()">Copy into fields</button>`:"No validated confidence recommendation yet.";
 }
-function copyOutcomeRecommendation(){const r=state.lastTest?.recommendation;if(!r)return;$("modeManual").checked=true;if(r.approved){$("modelChoice").value=r.modelIndex;$("windowChoice").value=r.windowIndex;$("predictionHomeBoundaryChoice").value=(r.predictionHomeBoundary??.25).toFixed(2);$("predictionAwayBoundaryChoice").value=(r.predictionAwayBoundary??.25).toFixed(2);$("homeGapChoice").value=r.homeGap.toFixed(2);$("awayGapChoice").value=r.awayGap.toFixed(2);}$("leagueInfluenceChoice").value=String(r.leagueInfluence);const xr=state.lastTest?.historicalXgTest;if(xr?.approved){$("historicalXgChoice").value=String(xr.best.x);$("finishingChoice").value=String(xr.best.f)}const st=state.lastTest?.strategyTest;if(st?.supported){$("selectionMethodChoice").value=st.best.method;$("winProbChoice").value=st.best.winProb.toFixed(2);$("minimumStabilityChoice").value=String(st.best.minimumStability||0)}const dr=state.lastTest?.drawSelectionTest;if(dr?.supported){$("allowDrawChoice").checked=true;$("drawGapChoice").value=dr.best.gap.toFixed(2);$("drawProbChoice").value=dr.best.probability.toFixed(2)}const cr=state.lastTest?.confidenceRecommendation;if(cr?.config){for(const [id,v] of [["confProb",cr.config.points[0]],["confGoal",cr.config.points[1]],["confHist",cr.config.points[2]],["confSupport",cr.config.points[3]],["confMedium",cr.config.mediumPenalty],["confHigh",cr.config.highPenalty]])$(id).value=v;$("confidenceMultiplierChoice").value=String(cr.multiplierTest?.recommended??state.confidenceMultiplier)}$("settingsStatus").textContent="Recommended prediction, selection and confidence settings copied. Click Save settings to activate."}
+function copyOutcomeRecommendation(){return;const r=state.lastTest?.recommendation;if(!r)return;$("modeManual").checked=true;if(r.approved){$("modelChoice").value=r.modelIndex;$("windowChoice").value=r.windowIndex;$("predictionHomeBoundaryChoice").value=(r.predictionHomeBoundary??.25).toFixed(2);$("predictionAwayBoundaryChoice").value=(r.predictionAwayBoundary??.25).toFixed(2);$("homeGapChoice").value=r.homeGap.toFixed(2);$("awayGapChoice").value=r.awayGap.toFixed(2);}$("leagueInfluenceChoice").value=String(r.leagueInfluence);const xr=state.lastTest?.historicalXgTest;if(xr?.approved){$("historicalXgChoice").value=String(xr.best.x);$("finishingChoice").value=String(xr.best.f)}const st=state.lastTest?.strategyTest;if(st?.supported){$("selectionMethodChoice").value=st.best.method;$("winProbChoice").value=st.best.winProb.toFixed(2);$("minimumStabilityChoice").value=String(st.best.minimumStability||0)}const dr=state.lastTest?.drawSelectionTest;if(dr?.supported){$("allowDrawChoice").checked=true;$("drawGapChoice").value=dr.best.gap.toFixed(2);$("drawProbChoice").value=dr.best.probability.toFixed(2)}const cr=state.lastTest?.confidenceRecommendation;if(cr?.config){for(const [id,v] of [["confProb",cr.config.points[0]],["confGoal",cr.config.points[1]],["confHist",cr.config.points[2]],["confSupport",cr.config.points[3]],["confMedium",cr.config.mediumPenalty],["confHigh",cr.config.highPenalty]])$(id).value=v;$("confidenceMultiplierChoice").value=String(cr.multiplierTest?.recommended??state.confidenceMultiplier)}$("settingsStatus").textContent="Recommended prediction, selection and confidence settings copied. Click Save settings to activate."}
 function copyConfidenceRecommendation(){const r=state.lastTest?.confidenceRecommendation;if(!r)return;for(const [id,v] of [["confProb",r.config.points[0]],["confGoal",r.config.points[1]],["confHist",r.config.points[2]],["confSupport",r.config.points[3]],["confMedium",r.config.mediumPenalty],["confHigh",r.config.highPenalty]])$(id).value=v;$("confidenceMultiplierChoice").value=String(r.multiplierTest?.recommended??state.confidenceMultiplier);$("settingsStatus").textContent="Recommended confidence settings copied. Click Save settings to activate."}
-function renderTest(test){renderHistoricalXgTest(test);renderDrawTest(test);renderIntegratedTest(test);if(!test||!test.records.length){$("testResults").innerHTML=`<div class="notice error">Insufficient same-league historical matches for an eligible holdout sample.</div>`;return}renderRecommendations(test);const ranked=test.results.filter(r=>r.total).sort((a,b)=>(b.trainAccuracy||0)-(a.trainAccuracy||0)),best=bestTestModel(test);$("testResults").innerHTML=`<div class="panel"><h3>Outcome accuracy by configuration</h3><p class="muted smalltext">Ranked by percentage of correct home/draw/away results. ${best?`Highest eligible accuracy: ${esc(best.name)} (${testRate(best.correct,best.total)}).`:"No eligible accuracy winner."}</p></div><div class="tablewrap panel"><table><thead><tr><th>Window / weights</th><th>Holdout matches</th><th>Accuracy</th><th>H/D/A correct</th></tr></thead><tbody>${ranked.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.total}</td><td>${testRate(r.correct,r.total)}</td><td>${r.classCorrect.H}/${r.actual.H} · ${r.classCorrect.D}/${r.actual.D} · ${r.classCorrect.A}/${r.actual.A}</td></tr>`).join("")}</tbody></table></div>`;renderAnalysis()}
+
+/* MODEL TEST V3: no prediction-engine changes. Pure historical evaluation. */
+function fpV3Metrics(rows){
+ const m={n:rows.length,hits:0,pred:{H:0,D:0,A:0},actual:{H:0,D:0,A:0},right:{H:0,D:0,A:0}};
+ for(const r of rows){if(!m.pred.hasOwnProperty(r.prediction)||!m.actual.hasOwnProperty(r.actualOutcome))continue;
+  m.pred[r.prediction]++;m.actual[r.actualOutcome]++;
+  if(r.prediction===r.actualOutcome){m.hits++;m.right[r.prediction]++}}
+ m.accuracy=m.n?m.hits/m.n:0;
+ m.balanced=['H','D','A'].reduce((sum,k)=>sum+(m.actual[k]?m.right[k]/m.actual[k]:0),0)/3;
+ return m;
+}
+function fpV3Selections(rows,hg,ag,dg,dp){
+ const out={n:rows.length,by:{H:{n:0,hits:0},D:{n:0,hits:0},A:{n:0,hits:0}},hits:0,picks:0};
+ for(const r of rows){const k=selectionWithDraw(r.xgDifference,r.prediction,r.probs,hg,ag,dg,dp,true);
+  if(!out.by[k])continue;out.by[k].n++;out.picks++;
+  if(k===r.actualOutcome){out.by[k].hits++;out.hits++}}
+ out.precision=out.picks?out.hits/out.picks:0;out.coverage=out.n?out.picks/out.n:0;
+ out.lower=wilsonLower(out.hits,out.picks);return out;
+}
+async function fpModelTestV3(test){
+ const key=`${state.activeWindow}-${state.activeIndex}-0`;
+ const train=test.training.filter(r=>r.key===key),hold=test.records.filter(r=>r.key===key);
+ const currentGapH=state.predictionHomeBoundary,currentGapA=state.predictionAwayBoundary;
+ const project=(rows,h,a)=>rows.map(r=>({...r,prediction:goalDifferenceOutcome(r.xgDifference,h,a)}));
+ const baselineTrain=fpV3Metrics(project(train,currentGapH,currentGapA));
+ const baselineHold=fpV3Metrics(project(hold,currentGapH,currentGapA));
+ const gaps=[0,.05,.10,.15,.20,.25,.30,.35,.40,.50,.60,.75];
+ // Choose only on earlier matches. Balanced accuracy is the first criterion;
+ // a 1 percentage-point raw-accuracy guard prevents disproportionate sacrifices.
+ const candidates=[];
+ for(const gap of gaps){testCheckpoint();const m=fpV3Metrics(project(train,gap,gap));
+  candidates.push({gap,train:m});}
+ const maxAccuracy=Math.max(...candidates.map(x=>x.train.accuracy));
+ const eligible=candidates.filter(x=>x.train.accuracy>=maxAccuracy-.01);
+ eligible.sort((a,b)=>b.train.balanced-a.train.balanced||b.train.accuracy-a.train.accuracy||Math.abs(a.gap-currentGapH)-Math.abs(b.gap-currentGapH));
+ const candidate=eligible[0],candidateHold=fpV3Metrics(project(hold,candidate.gap,candidate.gap));
+ const sufficient=train.length>=Math.max(150,state.minSample)&&hold.length>=60;
+ const predictionApproved=sufficient&&candidate.gap!==currentGapH&&
+  candidateHold.balanced>=baselineHold.balanced-.005&&
+  candidateHold.accuracy>=baselineHold.accuracy-.01&&
+  candidateHold.pred.D>0;
+ // Selection optimisation uses *fixed current predictions*; it cannot change outcomes.
+ const selectedTrain=project(train,currentGapH,currentGapA),selectedHold=project(hold,currentGapH,currentGapA);
+ const base=fpV3Selections(selectedHold,state.homeGap,state.awayGap,state.drawGap,state.drawProb);
+ const options=[];
+ const gapsSelect=[.15,.25,.35,.45,.55,.65,.75];
+ for(const hg of gapsSelect){for(const ag of gapsSelect){
+  const m=fpV3Selections(selectedTrain,hg,ag,state.drawGap,state.drawProb);
+  if(m.picks>=Math.max(60,Math.floor(train.length*.12))&&m.coverage>=.12&&m.by.H.n>=20&&m.by.A.n>=15)
+   options.push({hg,ag,train:m});
+ }testCheckpoint();await testYield();}
+ options.sort((a,b)=>b.train.lower-a.train.lower||b.train.coverage-a.train.coverage);
+ const selection=options[0]||null;
+ const selectionHold=selection?fpV3Selections(selectedHold,selection.hg,selection.ag,state.drawGap,state.drawProb):null;
+ const selectionApproved=!!(selectionHold&&selectionHold.picks>=30&&selectionHold.by.H.n>=8&&selectionHold.by.A.n>=8&&
+  selectionHold.precision>=base.precision+.005&&selectionHold.coverage>=base.coverage*.5);
+ return {key,trainN:train.length,holdN:hold.length,baselineTrain,baselineHold,candidate,candidateHold,
+  predictionApproved,selection,selectionHold,selectionApproved,base,sufficient};
+}
+function fpRenderModelTestV3(test){
+ const v=test.v3,box=document.getElementById('outcomeCompare');if(!box||!v)return;
+ const pct=x=>(100*x).toFixed(1)+'%';
+ const count=m=>`${m.right.D}/${m.pred.D} predicted draws · ${m.actual.D? pct(m.right.D/m.actual.D):'—'} draw recall`;
+ const predictionStatus=v.predictionApproved?'Candidate passed holdout safeguards':'Keep existing prediction boundaries';
+ const selectionStatus=v.selectionApproved?'Selection candidate passed holdout safeguards':'Keep existing SELECT thresholds';
+ box.innerHTML=`<div class="panel"><h3>Model Test V3 · Independent prediction and SELECT validation</h3>
+ <p class="muted smalltext">Models 1, 2 and 3 remain unchanged. This V3 evaluation uses copies of existing historical xG calculations. Earlier training data chooses candidates; later holdout data only accepts or rejects them. No settings are applied automatically.</p>
+ <p>Team-form configuration: ${WINDOW_SETS[state.activeWindow].join('/')} · ${MODELS[state.activeIndex].short} · training ${v.trainN} / holdout ${v.holdN} fixtures.</p>
+ <h4>1 · Prediction quality (HOME / DRAW / AWAY)</h4>
+ <div class="tablewrap"><table><thead><tr><th>Measure</th><th>Current</th><th>Training-selected challenger</th></tr></thead><tbody>
+ <tr><td>Prediction draw boundary</td><td>+${state.predictionHomeBoundary.toFixed(2)} / −${state.predictionAwayBoundary.toFixed(2)}</td><td>±${v.candidate.gap.toFixed(2)}</td></tr>
+ <tr><td>Holdout outcome accuracy</td><td>${pct(v.baselineHold.accuracy)} (${v.baselineHold.hits}/${v.baselineHold.n})</td><td>${pct(v.candidateHold.accuracy)} (${v.candidateHold.hits}/${v.candidateHold.n})</td></tr>
+ <tr><td>Holdout balanced accuracy</td><td>${pct(v.baselineHold.balanced)}</td><td>${pct(v.candidateHold.balanced)}</td></tr>
+ <tr><td>DRAW accuracy evidence</td><td>${count(v.baselineHold)}</td><td>${count(v.candidateHold)}</td></tr>
+ <tr><td>HOME / DRAW / AWAY predicted</td><td>${v.baselineHold.pred.H} / ${v.baselineHold.pred.D} / ${v.baselineHold.pred.A}</td><td>${v.candidateHold.pred.H} / ${v.candidateHold.pred.D} / ${v.candidateHold.pred.A}</td></tr>
+ </tbody></table></div><p><strong>${predictionStatus}</strong>${!v.sufficient?' · Insufficient chronological sample.':''}</p>
+ <h4>2 · SELECT quality (predictions frozen at current settings)</h4>
+ <div class="tablewrap"><table><thead><tr><th>Measure</th><th>Current</th><th>Training-selected challenger</th></tr></thead><tbody>
+ <tr><td>HOME / AWAY xG SELECT gap</td><td>${state.homeGap.toFixed(2)} / ${state.awayGap.toFixed(2)}</td><td>${v.selection?v.selection.hg.toFixed(2)+' / '+v.selection.ag.toFixed(2):'—'}</td></tr>
+ <tr><td>Holdout SELECT precision (all outcomes)</td><td>${pct(v.base.precision)} (${v.base.hits}/${v.base.picks})</td><td>${v.selectionHold?pct(v.selectionHold.precision)+' ('+v.selectionHold.hits+'/'+v.selectionHold.picks+')':'—'}</td></tr>
+ <tr><td>Holdout SELECT coverage</td><td>${pct(v.base.coverage)}</td><td>${v.selectionHold?pct(v.selectionHold.coverage):'—'}</td></tr>
+ <tr><td>DRAW SELECT correct / selected</td><td>${v.base.by.D.hits}/${v.base.by.D.n}</td><td>${v.selectionHold?v.selectionHold.by.D.hits+'/'+v.selectionHold.by.D.n:'—'}</td></tr>
+ </tbody></table></div><p><strong>${selectionStatus}</strong></p>
+ <p class="muted smalltext">V3 is conservative: candidate boundaries must retain DRAW predictions, avoid material balanced-accuracy regression and remain within 1 percentage point of current holdout outcome accuracy. SELECT thresholds cannot change any prediction. Holdout results are not used to choose an alternative candidate. The independent League-adjusted and Opposition-ranked goals model evaluations remain available in the three-model dashboard.</p>
+ ${v.predictionApproved?'<button class="btn secondary" onclick="fpCopyV3Prediction()">Copy validated prediction boundary (not saved)</button>':''}
+ ${v.selectionApproved?'<button class="btn secondary" onclick="fpCopyV3Selection()">Copy validated SELECT gaps (not saved)</button>':''}
+ </div>`;
+ const settings=document.getElementById('settingsOutcomeRecommendation');if(settings)settings.textContent=`Model Test V3: ${predictionStatus}; ${selectionStatus}. No automatic settings changes.`;
+}
+function fpCopyV3Prediction(){const v=state.lastTest?.v3;if(!v?.predictionApproved)return;
+ document.getElementById('predictionHomeBoundaryChoice').value=v.candidate.gap.toFixed(2);
+ document.getElementById('predictionAwayBoundaryChoice').value=v.candidate.gap.toFixed(2);
+ document.getElementById('settingsStatus').textContent='V3 prediction boundary copied. Save settings to apply.';}
+function fpCopyV3Selection(){const v=state.lastTest?.v3;if(!v?.selectionApproved)return;
+ document.getElementById('homeGapChoice').value=v.selection.hg.toFixed(2);
+ document.getElementById('awayGapChoice').value=v.selection.ag.toFixed(2);
+ document.getElementById('settingsStatus').textContent='V3 SELECT gaps copied. Save settings to apply.';}
+function renderTest(test){
+ for(const id of ['outcomeCompare','confidenceCompare','integratedTest','drawTestResult','xgTestResult','fpDrawRecommendations']){const e=document.getElementById(id);if(e)e.innerHTML='';}
+renderHistoricalXgTest(test);renderDrawTest(test);renderIntegratedTest(test);if(!test||!test.records.length){$("testResults").innerHTML=`<div class="notice error">Insufficient same-league historical matches for an eligible holdout sample.</div>`;return}fpRenderModelTestV3(test);const ranked=test.results.filter(r=>r.total).sort((a,b)=>(b.trainAccuracy||0)-(a.trainAccuracy||0)),best=bestTestModel(test);$("testResults").innerHTML=`<div class="panel"><h3>Outcome accuracy by configuration</h3><p class="muted smalltext">Ranked by percentage of correct home/draw/away results. ${best?`Highest eligible accuracy: ${esc(best.name)} (${testRate(best.correct,best.total)}).`:"No eligible accuracy winner."}</p></div><div class="tablewrap panel"><table><thead><tr><th>Window / weights</th><th>Holdout matches</th><th>Accuracy</th><th>H/D/A correct</th></tr></thead><tbody>${ranked.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.total}</td><td>${testRate(r.correct,r.total)}</td><td>${r.classCorrect.H}/${r.actual.H} · ${r.classCorrect.D}/${r.actual.D} · ${r.classCorrect.A}/${r.actual.A}</td></tr>`).join("")}</tbody></table></div>`;renderAnalysis()}
 function scoreParts(value){const m=String(value||"").match(/(\d+)\D+(\d+)/);return m?[+m[1],+m[2]]:null}
 function filteredAnalysisRows(){const t=state.lastTest;if(!t)return[];const val=id=>$(id).value;return t.records.filter(r=>r.leagueInfluence===state.leagueInfluence&&(val("analysisConfidence")==="all"||r.confidence===+val("analysisConfidence"))&&(val("analysisRisk")==="all"||r.riskLevel===val("analysisRisk"))&&(val("analysisOutcome")==="all"||r.prediction===val("analysisOutcome"))&&(val("analysisWindow")==="all"||r.windowIndex===+val("analysisWindow"))&&(val("analysisWeight")==="all"||r.modelIndex===+val("analysisWeight"))&&(val("analysisLeague")==="all"||r.leagueId===val("analysisLeague"))&&(!+val("analysisDays")||Date.now()-new Date(r.date).getTime()<=+val("analysisDays")*86400000));}
 function renderAnalysis(){if(!state.lastTest)return;const conf=$("analysisConfidence"),league=$("analysisLeague");if(conf.options.length===1)for(let i=1;i<=10;i++)conf.add(new Option(`${i}/10`,String(i)));if(league.options.length===1)for(const [id,name] of Object.entries(LEAGUES))league.add(new Option(name,id));const rows=filteredAnalysisRows(),groups=Array.from({length:10},(_,i)=>{const group=rows.filter(r=>r.confidence===i+1);return{score:i+1,total:group.length,hits:group.filter(r=>r.prediction===r.actualOutcome).length}});
@@ -2051,7 +2122,7 @@ async function doTest(){
   const r=await fetchAllLeagues(14,(i,n,name)=>{setBusy("Loading test data: "+name,Math.round(5+i/n*65));$("testStatus").textContent=`Fetching historical results: ${i}/${n} — ${name}`},testIds);testCheckpoint();
   if(!r.matches.length)throw Error("No historical matches were returned.");
   
-  const fpFetchMs=performance.now()-fpTestStart;setBusy("Running chronological model test…",78);await new Promise(r=>setTimeout(r,20));state.lastTest=await runBacktest(r.matches);renderTest(state.lastTest);fpRenderDrawRecommendations(state.lastTest);fpRenderUnifiedDashboard(state.lastTest,null);const fpCoreMs=performance.now();await rankedBacktest(r.matches);const fpRankMs=performance.now()-fpCoreMs;fpRenderUnifiedDashboard(state.lastTest,window.fpRankedRecommendation);
+  const fpFetchMs=performance.now()-fpTestStart;setBusy("Running chronological model test…",78);await new Promise(r=>setTimeout(r,20));state.lastTest=await runBacktest(r.matches);renderTest(state.lastTest);fpRenderUnifiedDashboard(state.lastTest,null);const fpCoreMs=performance.now();await rankedBacktest(r.matches);const fpRankMs=performance.now()-fpCoreMs;fpRenderUnifiedDashboard(state.lastTest,window.fpRankedRecommendation);
   $("testStatus").textContent=`Completed · retrieval ${(fpFetchMs/1000).toFixed(1)}s · Models 1 & 2 ${((fpCoreMs-fpTestStart-fpFetchMs)/1000).toFixed(1)}s · Model 3 ${(fpRankMs/1000).toFixed(1)}s · total ${((performance.now()-fpTestStart)/1000).toFixed(1)}s. ${r.matches.length} retrieved matches (including warm-up).`+`${r.errors.length?" Unavailable: "+r.errors.join(", "):""}`;
   if(state.mode==="auto")$("activeModelNote")&&($("activeModelNote").textContent="Test recommendations are available below; copy to Settings and save to apply explicitly.");
   setBusy("Test complete",100);await new Promise(r=>setTimeout(r,250));hideBusy();
@@ -2061,7 +2132,7 @@ async function doTest(){
 
 
 /* Three-model UI: reuse historical predictions for draw-gap evaluation. */
-const FP_PREDICTION_ENGINE_VERSION="2.2-outcome-first";
+const FP_PREDICTION_ENGINE_VERSION="3.0-test-only";
 const FP_DRAW_CANDIDATES=[.10,.15,.20,.25,.30,.35,.40,.45,.50];
 let fpDrawRecommendations=null;
 function fpDrawGapEvaluate(rows){
