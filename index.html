@@ -438,7 +438,7 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 @media(max-width:560px){.recent-goal-row,.recent-red-row{grid-template-columns:auto 1fr}.recent-goal-row>.tag,.recent-red-row>.tag{grid-column:2;justify-self:start}.fp-prob-triplet span{display:block}.fp-prob-triplet b{display:block;margin-top:3px}}
 @media(prefers-reduced-motion:reduce){.recent-goal-row,.recent-red-row{animation:none!important}}
 </style>
-</head>
+<style>.fp4-audit-scroll{overflow-x:auto;margin-top:12px}.fp4-audit-table{width:100%;border-collapse:collapse;font-size:12px}.fp4-audit-table th,.fp4-audit-table td{padding:10px;text-align:left;border-bottom:1px solid rgba(128,148,172,.2)}.fp4-audit-table th{white-space:nowrap}.fp4-ok{color:#57cfa0}.fp4-no{color:#ef9b8e}.fp4-audit-output{margin:10px 0}.fp4-audit-table td:last-child{min-width:190px}</style></head>
 <body>
 <header>
  <div class="row between">
@@ -541,9 +541,9 @@ main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{lin
 </section>
 
 <section id="test" hidden>
- <h2>Model Test</h2><p class="muted smalltext">One 12-month evaluation · three independent models · recommended draw gaps, confidence and SELECT.</p>
+ <h2>Model Test</h2><p class="muted smalltext">Historical prediction validation for the existing three models, plus an independent Model 4 event-data eligibility audit.</p>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><p class="muted smalltext">Validated recommendations are saved automatically after the complete three-model test. Existing settings are retained if safeguards fail.</p><details class="panel fp-advanced"><summary><strong>Model 3 · optimisation detail</strong></summary><div id="rankedTestResults" class="panel notice">Model 3 optimisation results will appear here.</div></details><div id="outcomeCompare"></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view the three-model scorecard.</div></div><details class="panel fp-advanced"><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><p class="muted smalltext">Validated recommendations are saved automatically after the complete three-model test. Existing settings are retained if safeguards fail.</p><details class="panel fp-advanced"><summary><strong>Model 3 · optimisation detail</strong></summary><div id="rankedTestResults" class="panel notice">Model 3 optimisation results will appear here.</div></details><details class="panel fp-advanced" id="fp4AuditPanel" open><summary><strong>Model 4 · Historical match-event eligibility (all leagues)</strong></summary><p class="muted smalltext">Checks actual ESPN historical goal timelines, final-score reconciliation and sample coverage. This is a data eligibility audit, NOT proof of predictive accuracy. Model 4 remains inactive until a separate chronological prediction/SELECT validation passes. The existing three models continue unchanged.</p><div class="row wrap" style="gap:8px"><button class="btn secondary" type="button" id="fp4AuditRun">Audit all leagues</button><button class="btn secondary" type="button" id="fp4AuditCopy">Copy diagnostic report</button><button class="btn secondary" type="button" id="fp4AuditCancel" disabled>Stop audit</button></div><p id="fp4AuditStatus" class="muted smalltext">Not tested yet. Run the audit and paste the copied report into ChatGPT.</p><div id="fp4AuditOutput" class="fp4-audit-output"></div><textarea id="fp4AuditReport" readonly aria-label="Copyable Model 4 diagnostic report" style="width:100%;min-height:140px;margin-top:10px;font-size:11px" placeholder="Diagnostic JSON will appear here after the audit."></textarea></details><div id="outcomeCompare"></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view the three-model scorecard.</div></div><details class="panel fp-advanced"><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced"><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -2336,6 +2336,91 @@ async function doTest(){
  finally{state.loading=false;$("runTest").disabled=false;$("cancelTest").style.display="none"}
 }
 
+
+
+/* Model 4 historical event audit: read-only, independent of prediction and settings. */
+const fp4AuditState={cancel:false,report:null};
+const FP4_AUDIT_VERSION=1,FP4_SAMPLE_PER_LEAGUE=16,FP4_MIN_VALID=12,FP4_MIN_COVERAGE=.85;
+function fp4GoalEvent(play){
+ const t=String(play?.type?.text||play?.type?.displayName||play?.type?.name||play?.text||play?.shortText||'').toLowerCase();
+ return play?.scoringPlay===true||play?.scoring_play===true||play?.type?.scoringPlay===true||play?.type?.scoring_play===true||/\bgoal\b/.test(t)&&!/disallowed|cancelled|overturned|no goal|goal kick|goalkeeper|goalkeeper save|goal line clearance|goal attempt|own goal disallowed/.test(t);
+}
+function fp4SummaryEvents(summary){
+ const arrays=[summary?.keyEvents,summary?.plays,summary?.plays?.items,summary?.scoringPlays,summary?.commentary,summary?.header?.competitions?.[0]?.details];
+ // Prefer one event feed to avoid counting the same goal twice across representations.
+ return arrays.find(a=>Array.isArray(a)&&a.some(fp4GoalEvent))||[];
+}
+function fp4TeamOf(play,match){
+ const id=String(play?.team?.id||play?.teamId||play?.team?.uid?.split?.(':')?.at(-1)||'');
+ if(id&&id===String(match.homeId))return'H';if(id&&id===String(match.awayId))return'A';
+ return null;
+}
+function fp4Minute(play){
+ const str=String(play?.clock?.displayValue||play?.clock?.displayClock||play?.displayClock||play?.clock||play?.minute||play?.period?.clock?.displayValue||'');
+ const m=str.match(/(\d{1,3})(?:\s*\+\s*(\d{1,2}))?/);return m?Number(m[1])+Number(m[2]||0)/100:null;
+}
+function fp4CheckSummary(summary,match){
+ const events=fp4SummaryEvents(summary).filter(fp4GoalEvent);
+ const goals=events.map(p=>({side:fp4TeamOf(p,match),minute:fp4Minute(p),own:/own goal/i.test(String(p?.type?.text||p?.text||''))}));
+ const expected=(match.homeScore||0)+(match.awayScore||0);
+ const h=goals.filter(g=>g.side==='H').length,a=goals.filter(g=>g.side==='A').length;
+ // ESPN goal events usually attribute own goals to the scoring side, but this must be checked.
+ const countsMatch=h===match.homeScore&&a===match.awayScore;
+ const complete=goals.length===expected&&countsMatch&&goals.every(g=>g.minute!==null)&&goals.every(g=>g.side);
+ return {complete,reason:complete?'complete':!events.length&&expected===0?'zero-zero-without-event-proof':!events.length?'no-goal-events':goals.some(g=>!g.side)?'unknown-scoring-team':goals.some(g=>g.minute===null)?'missing-minute':goals.length!==expected?'goal-count-mismatch':'team-score-mismatch',goals:goals.length,expected,ownGoals:goals.filter(g=>g.own).length};
+}
+async function fp4FetchSummary(match){
+ const key='fp4_evt_'+match.leagueId+'_'+match.id;
+ try{const old=JSON.parse(localStorage.getItem(key)||'null');if(old?.v===FP4_AUDIT_VERSION&&Date.now()-old.ts<30*86400000)return {...old.result,cache:true}}catch{}
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
+ try{const url=`https://site.api.espn.com/apis/site/v2/sports/soccer/${encodeURIComponent(match.leagueId)}/summary?event=${encodeURIComponent(match.id)}`;
+ const response=await fetch(url,{signal:controller.signal});if(!response.ok)throw Error('HTTP '+response.status);
+ const result=fp4CheckSummary(await response.json(),match);
+ try{localStorage.setItem(key,JSON.stringify({v:FP4_AUDIT_VERSION,ts:Date.now(),result}))}catch{}
+ return result;
+ }finally{clearTimeout(timer)}
+}
+function fp4AuditRender(report){
+ const out=document.getElementById('fp4AuditOutput'),ta=document.getElementById('fp4AuditReport');if(!out||!ta)return;
+ const rows=report.leagues||[];
+ out.innerHTML=`<div class="fp4-audit-scroll"><table class="fp4-audit-table"><thead><tr><th>Competition</th><th>Sampled</th><th>Complete</th><th>Coverage</th><th>Event eligibility</th><th>Reason</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.sampled}</td><td>${r.complete}</td><td>${r.sampled?(r.complete/r.sampled*100).toFixed(0)+'%':'—'}</td><td><strong class="${r.eligible?'fp4-ok':'fp4-no'}">${r.eligible?'DATA ELIGIBLE':'3-MODEL FALLBACK'}</strong></td><td>${esc(r.reason)}</td></tr>`).join('')}</tbody></table></div>`;
+ ta.value=JSON.stringify(report,null,2);
+}
+async function fp4RunAudit(){
+ const run=document.getElementById('fp4AuditRun'),stop=document.getElementById('fp4AuditCancel'),status=document.getElementById('fp4AuditStatus');
+ if(!run||run.disabled)return;run.disabled=true;stop.disabled=false;fp4AuditState.cancel=false;
+ const report={version:FP4_AUDIT_VERSION,generated:new Date().toISOString(),samplePerLeague:FP4_SAMPLE_PER_LEAGUE,minimumValid:FP4_MIN_VALID,minimumCoverage:FP4_MIN_COVERAGE,notes:['Eligibility is provisional: only a historical sample was checked.','Model 4 is NOT enabled by this audit. Historical prediction validation is separately required.','A genuine 0-0 without explicit evidence of event-feed completeness is conservatively not counted as complete.'],leagues:[]};
+ try{
+ const ids=Object.keys(LEAGUES);for(let index=0;index<ids.length;index++){
+  if(fp4AuditState.cancel)break;
+  const id=ids[index],name=LEAGUES[id];status.textContent=`Auditing ${index+1}/${ids.length}: ${name}…`;
+  const row={id,name,sampled:0,complete:0,failed:0,errors:0,ownGoals:0,reasons:{},eligible:false,reason:''};
+  try{
+   const all=await fetchLeague(id,14);
+   const finished=all.filter(m=>Number.isFinite(m.homeScore)&&Number.isFinite(m.awayScore)&&m.state==='post'&&new Date(m.date)<new Date());
+   const nonzero=finished.filter(m=>m.homeScore+m.awayScore>0);
+   // Spread samples over time, not only the most recent matches; include scoreless fixtures separately.
+   const samplePool=nonzero.length?nonzero:finished;
+   const samples=[];for(let j=0;j<Math.min(FP4_SAMPLE_PER_LEAGUE,samplePool.length);j++){const at=Math.min(samplePool.length-1,Math.floor((j+.5)*samplePool.length/Math.min(FP4_SAMPLE_PER_LEAGUE,samplePool.length)));samples.push(samplePool[at]);}
+   row.finished=finished.length;row.sampled=samples.length;
+   let next=0;async function worker(){while(next<samples.length&&!fp4AuditState.cancel){const m=samples[next++];try{const r=await fp4FetchSummary(m);row.reasons[r.reason]=(row.reasons[r.reason]||0)+1;if(r.complete)row.complete++;else row.failed++;row.ownGoals+=r.ownGoals||0;}catch(e){row.errors++;const reason='request-'+String(e.message||e).slice(0,60);row.reasons[reason]=(row.reasons[reason]||0)+1;}}}
+   await Promise.all(Array.from({length:Math.min(4,samples.length)},()=>worker()));
+   row.eligible=row.sampled>=FP4_MIN_VALID&&row.complete>=FP4_MIN_VALID&&row.complete/row.sampled>=FP4_MIN_COVERAGE&&!row.errors;
+   row.reason=row.eligible?'Sample passes event-data checks; predictive validation still required':row.sampled<FP4_MIN_VALID?'Insufficient completed fixtures in sample':row.errors?'Summary fetch errors or inaccessible API':'Incomplete or inconsistent scoring events';
+  }catch(e){row.reason='League retrieval failed: '+String(e.message||e).slice(0,100)}
+  report.leagues.push(row);fp4AuditState.report=report;fp4AuditRender(report);
+ }
+ report.cancelled=fp4AuditState.cancel;report.finishedAt=new Date().toISOString();fp4AuditState.report=report;fp4AuditRender(report);
+ const eligible=report.leagues.filter(r=>r.eligible).length;
+ status.textContent=`Audit ${report.cancelled?'stopped':'finished'}: ${eligible}/${report.leagues.length} leagues passed sample data checks. Model 4 remains disabled pending predictive validation. Copy the report and paste it into ChatGPT.`;
+ }catch(e){status.textContent='Audit failed: '+String(e.message||e)}finally{run.disabled=false;stop.disabled=true}
+}
+function fp4InitAudit(){
+ document.getElementById('fp4AuditRun')?.addEventListener('click',fp4RunAudit);
+ document.getElementById('fp4AuditCancel')?.addEventListener('click',()=>{fp4AuditState.cancel=true});
+ document.getElementById('fp4AuditCopy')?.addEventListener('click',async()=>{const ta=document.getElementById('fp4AuditReport');if(!ta?.value)return;try{await navigator.clipboard.writeText(ta.value);document.getElementById('fp4AuditStatus').textContent='Diagnostic report copied. Paste it into ChatGPT.'}catch{ta.focus();ta.select();document.execCommand('copy')}});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fp4InitAudit);else fp4InitAudit();
 
 /* Three-model UI: reuse historical predictions for draw-gap evaluation. */
 const FP_PREDICTION_ENGINE_VERSION="3.0-test-only";
