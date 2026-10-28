@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101827">
-<title>V11 · Footy Picks · Consolidated</title>
+<title>V12 · Footy Picks · Reliable Test Export</title>
 <style>
 :root{
  color-scheme:dark;
@@ -811,7 +811,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 <section id="test" hidden>
  <h2>Prediction Test</h2>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><button class="btn secondary" type="button" id="fpCopyPointsReport" onclick="fpCopyPointsReport()">Copy Model 2 report</button><span id="fpCopyPointsStatus" class="muted smalltext" aria-live="polite"></span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><section class="panel" id="fpPossessionResearch"><h3>V11 · Model 2 Betting Improvement Feasibility</h3><p class="muted smalltext">Focused chronological comparison: unchanged Model 2 vs experimental weighted-form probability adjustments, Match Management agreement/disagreement filters, and combined variants. No legacy possession-goal-scale or V8/V9 grid searches. Train / validation / final test are separate within each sampled league. Original Model 2 and live Bet on Outcome rules are unchanged.</p><div class="row wrap"><label>Competition <select id="fpPossLeague"><option value="all">Auto-select data-rich leagues</option></select></label><label>Event summaries <select id="fpPossLimit"><option value="360">360 · quicker</option><option value="600" selected>600 · recommended</option><option value="900">900 · deeper</option></select></label><button class="btn" type="button" id="fpRunPossession" onclick="fpRunV10Research()">Run V11 comparison</button><button class="btn secondary" type="button" onclick="fpCopyPossessionReport()">Copy test outputs</button></div><p id="fpPossStatus" class="muted smalltext" aria-live="polite">Run the comparison, then copy the compact JSON. Historical odds are not supplied; selection win rate is not profitability.</p><div id="fpPossResults"></div><details class="fp-advanced"><summary>JSON diagnostic report</summary><textarea id="fpPossReport" readonly style="width:100%;min-height:160px;font-size:11px"></textarea></details></section><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><button class="btn secondary" type="button" id="fpCopyPointsReport" onclick="fpCopyPointsReport()">Copy Model 2 report</button><span id="fpCopyPointsStatus" class="muted smalltext" aria-live="polite"></span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><section class="panel" id="fpPossessionResearch"><h3>V11 · Model 2 Betting Improvement Feasibility</h3><p class="muted smalltext">Focused chronological comparison: unchanged Model 2 vs experimental weighted-form probability adjustments, Match Management agreement/disagreement filters, and combined variants. No legacy possession-goal-scale or V8/V9 grid searches. Train / validation / final test are separate within each sampled league. Original Model 2 and live Bet on Outcome rules are unchanged.</p><div class="row wrap"><label>Competition <select id="fpPossLeague"><option value="all">Auto-select data-rich leagues</option></select></label><label>Event summaries <select id="fpPossLimit"><option value="360">360 · quicker</option><option value="600" selected>600 · recommended</option><option value="900">900 · deeper</option></select></label><button class="btn" type="button" id="fpRunPossession" onclick="fpRunV10Research()">Run V11 comparison</button><button class="btn secondary" type="button" onclick="fpCopyPossessionReport()">Copy test outputs</button><button class="btn secondary" type="button" onclick="fpDownloadV12Report()">Download test JSON</button></div><p id="fpPossStatus" class="muted smalltext" aria-live="polite">Run the comparison, then copy the compact JSON. Historical odds are not supplied; selection win rate is not profitability.</p><div id="fpPossResults"></div><details class="fp-advanced"><summary>JSON diagnostic report</summary><textarea id="fpPossReport" readonly style="width:100%;min-height:160px;font-size:11px"></textarea></details></section><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced" hidden><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -2109,7 +2109,7 @@ function fpV11BaselineHealth(rows,validation,test,baseVolume,minBets){
  return {ok:failures.length===0,failures,bySplit,minimumValidationBets:minBets};
 }
 async function fpRunV10Research(){
- if(fpV10Busy)return;fpV10Busy=true;const button=document.getElementById('fpRunPossession'),status=document.getElementById('fpPossStatus');button.disabled=true;
+ if(fpV10Busy)return;document.getElementById('fpPossReport').value='';fpV10Busy=true;const button=document.getElementById('fpRunPossession'),status=document.getElementById('fpPossStatus');button.disabled=true;
  try{
  const limit=Number(document.getElementById('fpPossLimit').value),scope=document.getElementById('fpPossLeague').value;
  status.textContent='Fetching historical fixture list…';
@@ -2682,7 +2682,37 @@ async function fpRunPossessionResearch(){
   status.textContent=`Completed · ${picked.length} summaries · ${eligible.length}/${hold.length} eligible holdout matches. Use Copy test outputs to paste the full report here.`;
  }catch(e){status.textContent='Research failed: '+String(e.message||e);console.error(e)}finally{fpPossBusy=false;btn.disabled=false}
 }
-async function fpCopyPossessionReport(){const el=document.getElementById('fpPossReport'),st=document.getElementById('fpPossStatus');if(!el.value){st.textContent='Run possession test first.';return}try{await navigator.clipboard.writeText(el.value);st.textContent='Full test outputs copied. Paste into chat.'}catch(e){el.focus();el.select();try{document.execCommand('copy');st.textContent='Test outputs copied / selected; paste into chat.'}catch(_){st.textContent='Select and copy the report manually.'}}}
+function fpV12ReportText(){
+ const el=document.getElementById('fpPossReport');
+ if(!el||!el.value.trim())throw Error('No results yet. Run the V11 comparison first.');
+ let data;try{data=JSON.parse(el.value)}catch(_){throw Error('The report is not valid JSON. Please rerun the comparison.');}
+ if(data.version!=='FOOTYPICKS-V11-MODEL2-BET-FEASIBILITY'||!data.test||!data.coverage)throw Error('The report is not the V11 Model 2 feasibility output. Run the V11 comparison first.');
+ return el.value;
+}
+function fpDownloadV12Report(){
+ const st=document.getElementById('fpPossStatus');
+ try{
+  const payload=fpV12ReportText();
+  const blob=new Blob([payload],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='FootyPicks_V12_Model2_Test_Outputs_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  st.textContent='JSON download requested ('+Math.round(blob.size/1024)+' KB). Attach the downloaded .json file here.';
+ }catch(e){st.textContent='Export unavailable: '+String(e.message||e)}
+}
+async function fpCopyPossessionReport(){
+ const st=document.getElementById('fpPossStatus');let payload;
+ try{payload=fpV12ReportText()}catch(e){st.textContent='Copy unavailable: '+String(e.message||e);return}
+ try{
+  if(!navigator.clipboard?.writeText)throw Error('Clipboard API unavailable');
+  await navigator.clipboard.writeText(payload);
+  st.textContent='Test JSON copied ('+Math.round(payload.length/1024)+' KB). Paste into chat. If HTML appears, use Download test JSON instead.';
+ }catch(e){
+  const el=document.getElementById('fpPossReport');el.closest('details')?.setAttribute('open','');el.focus();el.select();
+  let ok=false;try{ok=!!document.execCommand('copy')}catch(_){}
+  st.textContent=ok?'JSON selected and browser reports it copied. If pasting gives HTML, use Download test JSON.':'Clipboard copy blocked. JSON is selected; use Download test JSON instead.';
+ }
+}
 
 
 (function(){const sel=document.getElementById('fpPossLeague'),source=document.getElementById('fpTestLeague');if(!sel||!source)return;const fill=()=>{const selected=sel.value;for(const opt of source.options){if(opt.value==='all'||Array.from(sel.options).some(o=>o.value===opt.value))continue;sel.add(new Option(opt.textContent,opt.value))}if(Array.from(sel.options).some(o=>o.value===selected))sel.value=selected};fill();setTimeout(fill,1500);setTimeout(fill,4500)})();
