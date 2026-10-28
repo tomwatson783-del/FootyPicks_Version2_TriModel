@@ -938,7 +938,9 @@ function normaliseEvent(e,leagueId){
   venue:c.venue?.fullName||"",competitors:cs};
 }
 const fpMonthRequests=new Map();
-async function fetchMonth(id,month){
+let fpTestDownloadController=null;
+async function fetchMonth(id,month,signal=null){
+ if(signal)return fpFetchMonthUncached(id,month,signal);
  const key=id+":"+month,prior=fpMonthRequests.get(key),now=Date.now();
  if(prior&&prior.expires>now)return prior.promise;
  const promise=fpFetchMonthUncached(id,month);
@@ -947,70 +949,73 @@ async function fetchMonth(id,month){
  promise.catch(()=>{if(fpMonthRequests.get(key)?.promise===promise)fpMonthRequests.delete(key)});
  return promise;
 }
-async function fpFetchMonthUncached(id,month){
+async function fpFetchMonthUncached(id,month,externalSignal=null){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000);
+ const onAbort=()=>controller.abort();
+ if(externalSignal){if(externalSignal.aborted)controller.abort();else externalSignal.addEventListener("abort",onAbort,{once:true});}
  try{
   const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${id}/scoreboard?dates=${month}&limit=300`,{signal:controller.signal,cache:"no-store"});
   if(!r.ok)throw Error("ESPN HTTP "+r.status);
   const d=await r.json();return(d.events||[]).map(e=>normaliseEvent(e,id)).filter(Boolean);
- }finally{clearTimeout(timer)}
+ }finally{clearTimeout(timer);if(externalSignal)externalSignal.removeEventListener("abort",onAbort)}
 }
 function monthsBack(n){const out=[],now=new Date();for(let i=n-1;i>=0;i--){const d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-i,1));out.push(`${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,"0")}`)}return out}
-async function fetchLeague(id,n=6,progress=()=>{}){
- const months=monthsBack(n),all=[];let next=0,done=0;
+async function fetchLeague(id,n=6,progress=()=>{},options={}){
+ const months=monthsBack(n),all=[],failed=[];let next=0,done=0;
+ const signal=options.signal;
  async function getMonthWithRetry(month){
   let lastError;
-  for(let attempt=0;attempt<2;attempt++){
-   try{return await fetchMonth(id,month)}
+  for(let attempt=0;attempt<3;attempt++){
+   if(signal?.aborted)throw Error("Test cancelled by user.");
+   try{return await fetchMonth(id,month,signal)}
    catch(e){
+    if(signal?.aborted)throw Error("Test cancelled by user.");
     lastError=e;
-    if(attempt===0)await new Promise(resolve=>setTimeout(resolve,900));
+    progress({league:id,month,attempt:attempt+1,state:attempt<2?'retry':'failed',error:String(e?.message||e)});
+    if(attempt<2)await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)));
    }
   }
   throw lastError||new Error("ESPN request failed");
  }
  async function worker(){
   while(next<months.length){
-   const month=months[next++];progress(done,months.length,id);
+   if(signal?.aborted)throw Error("Test cancelled by user.");
+   const month=months[next++];progress({league:id,month,state:'start'});
    try{all.push(...await getMonthWithRetry(month))}
-   catch(e){console.warn("ESPN month request failed",id,month,e?.message||e)}
-   finally{done++;progress(done,months.length,id)}
+   catch(e){if(signal?.aborted)throw Error("Test cancelled by user.");failed.push({league:id,month,error:String(e?.message||e)});console.warn("ESPN month request failed",id,month,e?.message||e)}
+   finally{done++;progress({league:id,month,state:'done',failed:failed.some(f=>f.month===month)})}
   }
  }
- // Limit per-league concurrency to reduce transient ESPN throttling/timeouts.
  await Promise.all(Array.from({length:Math.min(2,months.length)},()=>worker()));
  const unique=new Map();all.forEach(m=>unique.set(eventId(m),m));
- return [...unique.values()].sort((a,b)=>new Date(a.date)-new Date(b.date));
+ return {matches:[...unique.values()].sort((a,b)=>new Date(a.date)-new Date(b.date)),failed};
 }
 
-async function fetchAllLeagues(n=6,progress=()=>{},requestedIds=null){
- const all=[],errors=[],ids=(requestedIds?.length?requestedIds:Object.keys(LEAGUES)).filter(id=>Object.hasOwn(LEAGUES,id));
- let nextIndex=0,completed=0;
+async function fetchAllLeagues(n=6,progress=()=>{},requestedIds=null,options={}){
+ const all=[],errors=[],failedMonths=[],ids=(requestedIds?.length?requestedIds:Object.keys(LEAGUES)).filter(id=>Object.hasOwn(LEAGUES,id));
+ let nextIndex=0,completed=0,monthsDone=0;const totalMonths=ids.length*n;
+ const emit=(event)=>progress(completed,ids.length,event?.league?LEAGUES[event.league]:null,{...event,monthsDone,totalMonths,failedCount:failedMonths.length});
  async function worker(){
   while(nextIndex<ids.length){
+   if(options.signal?.aborted)throw Error("Test cancelled by user.");
    const index=nextIndex++,id=ids[index],name=LEAGUES[id];
-   progress(completed,ids.length,name);
    try{
-    const rows=await fetchLeague(id,n);
-    if(rows.length)all.push(...rows);
+    const result=await fetchLeague(id,n,event=>{
+     if(event.state==='done')monthsDone++;
+     if(event.state==='done'&&event.failed)failedMonths.push({league:id,month:event.month});
+     emit(event);
+    },options);
+    if(result.matches.length)all.push(...result.matches);
     else errors.push(name);
    }catch(error){
-    errors.push(name);
-    console.warn("Could not load "+name+":",error?.message||error);
-   }finally{
-    completed++;
-    progress(completed,ids.length,name);
-   }
+    if(options.signal?.aborted)throw Error("Test cancelled by user.");
+    errors.push(name);console.warn("Could not load "+name+":",error?.message||error);
+   }finally{completed++;emit({league:id,state:'leagueDone'})}
   }
  }
- // Two competitions at a time; each league now makes at most two requests at once.
  await Promise.all(Array.from({length:Math.min(3,ids.length)},()=>worker()));
- const unique=new Map();
- for(const match of all)unique.set(eventId(match),match);
- return{
-  matches:[...unique.values()].sort((a,b)=>new Date(a.date)-new Date(b.date)),
-  errors
- };
+ const unique=new Map();for(const match of all)unique.set(eventId(match),match);
+ return{matches:[...unique.values()].sort((a,b)=>new Date(a.date)-new Date(b.date)),errors,failedMonths,monthsDone,totalMonths};
 }
 function attachHistoricalXg(matches){for(const m of matches){const r=state.xgRecords[eventId(m)];if(r){m.homeHistoricalXg=r.home;m.awayHistoricalXg=r.away}}return matches}
 // Diagnostic only: records actual summary requests and usable xG responses, without changing predictions.
@@ -1780,15 +1785,23 @@ async function doTest(){
  try{
   fpPerfUpdate("Loading historical fixtures",3,"Fetching selected league histories",true);
   const ids=fpTestLeagueIds();
-  const result=await fetchAllLeagues(14,(i,n,name)=>{
-   testCheckpoint();fpStageUpdate(0,Math.round(i/n*100),`${i}/${n} leagues · ${name}`);
-   fpPerfUpdate("Fetching historical fixtures",5+Math.round(i/n*30),`${i}/${n} leagues`);
-   $("testStatus").textContent=`Loading ${i}/${n} leagues · ${name}`;
-  },ids);
+  fpTestDownloadController=new AbortController();
+  const result=await fetchAllLeagues(14,(i,n,name,event)=>{
+   const done=event?.monthsDone||0,total=event?.totalMonths||ids.length*14;
+   const pct=total?Math.round(done/total*100):0;
+   const activity=event?.state==='retry'?`Retry ${event.attempt}/3 · ${name} ${event.month}`:event?.state==='start'?`Requesting ${name} ${event.month}`:event?.state==='failed'?`Failed ${name} ${event.month}: ${event.error}`:`${done}/${total} months · ${i}/${n} leagues`;
+   fpStageUpdate(0,pct,`${done}/${total} months · ${event?.failedCount||0} failed · ${activity}`,event?.state==='retry'?'Retrying':'Running');
+   fpPerfUpdate("Fetching historical fixtures",5+Math.round(pct*.30),activity,event?.state==='failed');
+   $("testStatus").textContent=`Loading ${done}/${total} months (${i}/${n} leagues). ${event?.failedCount||0} failed. ${activity}`;
+  },ids,{signal:fpTestDownloadController.signal});
   downloadMs=performance.now()-started;
   testCheckpoint();
   if(!result.matches.length)throw Error("No historical matches were returned.");
-  fpStageUpdate(0,100,`${result.matches.length} fixtures loaded`);
+  fpStageUpdate(0,100,`${result.matches.length} fixtures loaded · ${result.failedMonths.length} failed months`);
+  if(result.failedMonths.length){
+   const missing=result.failedMonths.map(x=>`${LEAGUES[x.league]||x.league} ${x.month}`);
+   fpPerfUpdate("Incomplete ESPN history",39,`${missing.length} failed months; results may be biased`,true);
+  }
   fpStageUpdate(1,0,"Sorting completed matches by league");
   fpPerfUpdate("Validating historical predictions",40,`${result.matches.length} fixtures`,true);
   // The single pass below produces predictions and all downstream DC statistics.
@@ -1797,16 +1810,17 @@ async function doTest(){
   analysisMs=performance.now()-started-downloadMs;
   const timing={downloadSeconds:+(downloadMs/1000).toFixed(2),analysisSeconds:+(analysisMs/1000).toFixed(2),totalSeconds:+((performance.now()-started)/1000).toFixed(2)};
   report.timings=timing;
+  report.downloadIntegrity={complete:result.failedMonths.length===0&&!result.errors.length,failedMonths:result.failedMonths,unavailableLeagues:result.errors,monthsCompleted:result.monthsDone,monthsRequested:result.totalMonths};
   const reportBox=document.getElementById('fpAdaptiveReport');
-  if(reportBox){try{const json=JSON.parse(reportBox.value);json.timings=timing;reportBox.value=JSON.stringify(json,null,2)}catch(_){}}
+  if(reportBox){try{const json=JSON.parse(reportBox.value);json.timings=timing;json.downloadIntegrity=report.downloadIntegrity;reportBox.value=JSON.stringify(json,null,2)}catch(_){}}
   fpPerfUpdate("Validation complete",95,`Download ${timing.downloadSeconds}s · analysis ${timing.analysisSeconds}s`,true);
 
   const secs=((performance.now()-started)/1000).toFixed(1);
-  $("testStatus").textContent=`Completed · ${report.summary.leagues} leagues · ${report.summary.holdout.n} holdout selections · ${secs}s total (download ${(downloadMs/1000).toFixed(1)}s, analysis ${(analysisMs/1000).toFixed(1)}s).${result.errors.length?' Unavailable: '+result.errors.join(', '):''}`;
+  $("testStatus").textContent=`Completed · ${report.summary.leagues} leagues · ${report.summary.holdout.n} holdout selections · ${secs}s total (download ${(downloadMs/1000).toFixed(1)}s, analysis ${(analysisMs/1000).toFixed(1)}s).${result.errors.length?' Unavailable: '+result.errors.join(', '):''}${result.failedMonths.length?' WARNING: '+result.failedMonths.length+' monthly downloads failed; historical accuracy may be incomplete. See report JSON for missing months.':''}`;
   fpPerfUpdate("Complete",100,`${report.summary.leagues} leagues · ${secs}s`,true);
   setBusy("Test complete",100);await new Promise(r=>setTimeout(r,180));hideBusy();
  }catch(e){hideBusy();$("testStatus").innerHTML=`<span class="error">Test failed: ${esc(e.message)}</span>`;fpPerfUpdate("Test interrupted",90,String(e.message),true)}
- finally{fpPerfEnd();const progress=document.getElementById('fpTestProgressRows');if(progress)progress.style.display='none';$("busy").classList.remove("fp-test-busy");state.loading=false;$("runTest").disabled=false;$("cancelTest").style.display="none"}
+ finally{fpTestDownloadController=null;fpPerfEnd();const progress=document.getElementById('fpTestProgressRows');if(progress)progress.style.display='none';$("busy").classList.remove("fp-test-busy");state.loading=false;$("runTest").disabled=false;$("cancelTest").style.display="none"}
 }
 
 
@@ -2837,7 +2851,7 @@ for(let i=0;i<=100;i+=10)$("historicalXgChoice").add(new Option(`${i}%`,String(i
 for(let i=0;i<=30;i+=5)$("finishingChoice").add(new Option(`${i}%`,String(i)));
 historicalXgStatus();
 
-$("cancelTest").addEventListener("click",()=>{testCancelRequested=true;$("testStatus").textContent="Cancelling test after the current calculation…"});$("analysisRefresh").addEventListener("click",renderAnalysis);$("saveSettings").addEventListener("click",saveSettings);$("runTest").addEventListener("click",doTest);
+$("cancelTest").addEventListener("click",()=>{testCancelRequested=true;fpTestDownloadController?.abort();$("testStatus").textContent="Cancelling test and outstanding downloads…"});$("analysisRefresh").addEventListener("click",renderAnalysis);$("saveSettings").addEventListener("click",saveSettings);$("runTest").addEventListener("click",doTest);
 
 $("liveRefresh").addEventListener("click",()=>{fetchLive();if(state.liveScheduleFilter!=="live")fetchLiveSchedule()});
  $("live").addEventListener("click",event=>{const btn=event.target.closest("[data-live-toggle]");if(btn)toggleHideLiveGame(btn.dataset.liveToggle)});
