@@ -811,7 +811,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 <section id="test" hidden>
  <h2>Prediction Test</h2>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><button class="btn secondary" type="button" id="fpCopyPointsReport" onclick="fpCopyPointsReport()">Copy Model 2 report</button><span id="fpCopyPointsStatus" class="muted smalltext" aria-live="polite"></span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><section class="panel" id="fpPossessionResearch"><h3>Possession Matchup Model · independent research</h3><p class="muted smalltext">Experimental model using only rolling results, historical possession and goals scored. No league position, xG, shots or Model 2 inputs. Historical ESPN match summaries are downloaded separately; availability varies by league. Predictions use only matches before kickoff. Model 2 remains unchanged.</p><div class="row wrap"><label>Window <select id="fpPossWindow"><option value="10">10 matches</option><option value="15" selected>15 matches</option><option value="20">20 matches</option></select></label><label>Research sample <select id="fpPossLimit"><option value="180">180 match summaries</option><option value="360" selected>360 match summaries</option><option value="600">600 match summaries</option></select></label><button class="btn" id="fpRunPossession" onclick="fpRunPossessionResearch()">Run possession research</button><button class="btn secondary" onclick="fpCopyPossessionReport()">Copy possession diagnostic report</button></div><p id="fpPossStatus" class="muted smalltext" aria-live="polite">Run research to check possession coverage and historical performance. For a meaningful holdout, larger samples are preferable.</p><div id="fpPossResults"></div><textarea id="fpPossReport" readonly aria-label="Possession model full JSON diagnostics" style="width:100%;min-height:110px;font-size:11px;margin-top:12px" placeholder="Full fixture-level report appears here after testing."></textarea></section><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><button class="btn secondary" type="button" id="fpCopyPointsReport" onclick="fpCopyPointsReport()">Copy Model 2 report</button><span id="fpCopyPointsStatus" class="muted smalltext" aria-live="polite"></span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><section class="panel" id="fpPossessionResearch"><h3>Possession → Goals Scale · V3 independent model test</h3><p class="muted smalltext">Builds a separate 1–100% possession-to-goals scale for each team using earlier matches, predicts possession against the upcoming opponent, then reads expected goals from each team's scale. A fixed internal 20-match lookback avoids redundant window controls. Model 2 and all other app features remain unchanged.</p><div class="row wrap"><label>Competition <select id="fpPossLeague"><option value="all">Auto-select data-rich leagues</option></select></label><label>Research depth <select id="fpPossLimit"><option value="360">360 summaries · quick</option><option value="600" selected>600 summaries · recommended</option><option value="900">900 summaries · deeper</option></select></label><button class="btn" type="button" id="fpRunPossession" onclick="fpRunPossessionResearch()">Run test</button><button class="btn secondary" type="button" onclick="fpCopyPossessionReport()">Copy test outputs</button></div><p id="fpPossStatus" class="muted smalltext" aria-live="polite">Run the test, then select Copy test outputs and paste the complete JSON into chat. Larger samples take longer but produce more usable team histories.</p><div id="fpPossResults"></div><details class="fp-advanced"><summary>Full JSON test outputs (also available via Copy test outputs)</summary><textarea id="fpPossReport" readonly aria-label="Possession scale full JSON test outputs" style="width:100%;min-height:150px;font-size:11px;margin-top:12px" placeholder="Full fixture-level report appears here after running the test."></textarea></details></section><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced" hidden><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -2001,70 +2001,86 @@ function fpInitThreeModelUI(){
  document.getElementById('fpApplyDrawRecommendations')?.addEventListener('click',()=>{if(fpDrawRecommendations?.league)a.value=fpDrawRecommendations.league.gap.toFixed(2);if(fpDrawRecommendations?.team)b.value=fpDrawRecommendations.team.gap.toFixed(2);if(window.fpRankedRecommendation)c.value=window.fpRankedRecommendation.boundary.toFixed(2);document.getElementById('settingsStatus').textContent='Recommended gaps copied. Save settings to apply.'});
 }
 
-/* Possession Matchup Research: strictly separate from Model 2 and parked Points Form. */
+/* Possession-to-goals scale V3: standalone research; Model 2 is untouched. */
 let fpPossBusy=false;
 function fpPossPct(x){return x==null?'—':(100*x).toFixed(1)+'%'}
 function fpPossMean(a){return a.length?a.reduce((s,x)=>s+x,0)/a.length:null}
+function fpPossClamp(x,lo,hi){return Math.max(lo,Math.min(hi,x))}
 function fpPossProb(home,away){
- // Independent goal-count Poisson model; no Model 2 quantities.
- const clamp=x=>Math.max(.05,Math.min(4.5,x));home=clamp(home);away=clamp(away);
- const fact=[1,1,2,6,24,120,720,5040,40320];let h=0,d=0,a=0;
- for(let i=0;i<=8;i++)for(let j=0;j<=8;j++){
-  const pr=Math.exp(-home-away)*Math.pow(home,i)*Math.pow(away,j)/(fact[i]*fact[j]);
-  if(i>j)h+=pr;else if(i===j)d+=pr;else a+=pr;
- }
- const sum=h+d+a;return {H:h/sum,D:d/sum,A:a/sum};
+ const fact=[1,1,2,6,24,120,720,5040,40320],h=fpPossClamp(home,.05,4.5),a=fpPossClamp(away,.05,4.5);let H=0,D=0,A=0;
+ for(let i=0;i<=8;i++)for(let j=0;j<=8;j++){const v=Math.exp(-h-a)*Math.pow(h,i)*Math.pow(a,j)/(fact[i]*fact[j]);if(i>j)H+=v;else if(i===j)D+=v;else A+=v}
+ const total=H+D+A;return {H:H/total,D:D/total,A:A/total};
+}
+function fpPossPick(p){return Object.keys(p).sort((a,b)=>p[b]-p[a])[0]}
+/* Ridge-shrunk team-specific 1–100 possession-to-goals scale. Extrapolation is bounded and flagged. */
+function fpPossGoalScale(rows){
+ const n=rows.length,meanPoss=fpPossMean(rows.map(x=>x.poss)),meanGoals=fpPossMean(rows.map(x=>x.goals));
+ const spread=rows.reduce((s,r)=>s+(r.poss-meanPoss)**2,0);
+ const covariance=rows.reduce((s,r)=>s+(r.poss-meanPoss)*(r.goals-meanGoals),0);
+ // 400 possession-points-squared per sample regularises small or narrow possession histories.
+ const rawSlope=spread>0?covariance/spread:0;
+ const slope=fpPossClamp(covariance/(spread+400*n),-.055,.055);
+ const observedMin=Math.min(...rows.map(x=>x.poss)),observedMax=Math.max(...rows.map(x=>x.poss));
+ const at=(p)=>fpPossClamp(meanGoals+slope*(fpPossClamp(p,1,100)-meanPoss),.05,4.5);
+ const points=Array.from({length:100},(_,i)=>at(i+1));
+ return {n,meanPoss,meanGoals,rawSlope,slope,observedMin,observedMax,points,
+  sample:{'1':points[0],'10':points[9],'20':points[19],'30':points[29],'40':points[39],'50':points[49],'60':points[59],'70':points[69],'80':points[79],'90':points[89],'100':points[99]}};
 }
 function fpPossForecast(past,m,n){
  const h=m.hk||teamKey(m,'H'),a=m.ak||teamKey(m,'A');
- const teamRows=(key)=>past.filter(x=>x.hasPoss&&(x.hk===key||x.ak===key)).map(x=>{
-  const home=x.hk===key;return {poss:home?x.hp:x.ap,goals:home?x.hg:x.ag,opp:home?x.ak:x.hk,date:x.date};
+ const teamRows=(key)=>past.filter(x=>x.hasPoss&&(x.hk===key||x.ak===key)).slice(-n).map(x=>{
+  const isH=x.hk===key;return {poss:isH?x.hp:x.ap,goals:isH?x.hg:x.ag,venue:isH?'H':'A',opponentPoss:isH?x.ap:x.hp,date:x.date};
  });
- const rh=teamRows(h).slice(-n),ra=teamRows(a).slice(-n);
- const resultRows=(key)=>past.filter(x=>x.hk===key||x.ak===key).slice(-n);
- const pts=(key)=>resultRows(key).reduce((sum,x)=>{const home=x.hk===key,g=home?x.hg:x.ag,against=home?x.ag:x.hg;return sum+(g>against?3:g===against?1:0)},0);
- const ph=pts(h),pa=pts(a),nh=resultRows(h).length,na=resultRows(a).length;
- if(rh.length<5||ra.length<5||nh<5||na<5)return {eligible:false,reason:[rh.length<5?'home possession '+rh.length+'/5':null,ra.length<5?'away possession '+ra.length+'/5':null,nh<5?'home results '+nh+'/5':null,na<5?'away results '+na+'/5':null].filter(Boolean).join('; '),homePossSamples:rh.length,awayPossSamples:ra.length,homeResults:nh,awayResults:na};
- const strengthGap=ph/nh-pa/na;
- const historyFor=(rows,teamKeyValue)=>rows.map(r=>{
-  const before=past.filter(x=>Date.parse(x.date)<Date.parse(r.date));
-  const own=before.filter(x=>x.hk===teamKeyValue||x.ak===teamKeyValue).slice(-n);
-  const other=before.filter(x=>x.hk===r.opp||x.ak===r.opp).slice(-n);
-  const pointRate=(matches,key)=>matches.length?matches.reduce((sum,x)=>{const isH=x.hk===key,g=isH?x.hg:x.ag,against=isH?x.ag:x.hg;return sum+(g>against?3:g===against?1:0)},0)/matches.length:null;
-  const ownRate=pointRate(own,teamKeyValue),oppRate=pointRate(other,r.opp);
-  return {...r,strengthGap:ownRate===null||oppRate===null?null:ownRate-oppRate};
- });
- const hh=historyFor(rh,h),aa=historyFor(ra,a);
- const weighted=(rows,gap)=>{const withGap=rows.filter(x=>x.strengthGap!==null);
-  if(withGap.length<3)return {possession:fpPossMean(rows.map(x=>x.poss)),nearby:rows.length,method:'unadjusted'};
-  const ranked=withGap.map(x=>({...x,diff:Math.abs(x.strengthGap-gap)})).sort((x,y)=>x.diff-y.diff).slice(0,Math.max(3,Math.ceil(withGap.length*.6)));
-  const w=ranked.map(x=>1/(.25+x.diff)),den=w.reduce((s,x)=>s+x,0);
-  return {possession:ranked.reduce((s,x,i)=>s+x.poss*w[i],0)/den,nearby:ranked.length,method:'opponent-strength-neighbours'};
+ const rh=teamRows(h),ra=teamRows(a);
+ const results=(key)=>past.filter(x=>x.hk===key||x.ak===key).slice(-n);
+ const hh=results(h),aa=results(a);
+ const issues=[];for(const [name,rows,res] of [['home',rh,hh],['away',ra,aa]]){
+  if(rows.length<5)issues.push(name+' possession '+rows.length+'/5');
+  if(res.length<5)issues.push(name+' results '+res.length+'/5');
+ }
+ if(issues.length)return {eligible:false,reason:issues.join('; '),homePossSamples:rh.length,awayPossSamples:ra.length,homeResults:hh.length,awayResults:aa.length};
+ const pointRate=(rows,key)=>rows.reduce((sum,x)=>{const home=x.hk===key,g=home?x.hg:x.ag,against=home?x.ag:x.hg;return sum+(g>against?3:g===against?1:0)},0)/rows.length;
+ const strengthGap=pointRate(hh,h)-pointRate(aa,a);
+ const homeVenue=rh.filter(x=>x.venue==='H'),awayVenue=ra.filter(x=>x.venue==='A');
+ const homeNormal=fpPossMean(rh.map(x=>x.poss)),awayNormal=fpPossMean(ra.map(x=>x.poss));
+ // Venue estimates shrink towards all-venue means when venue-specific evidence is scarce.
+ const venueEstimate=(venue,all)=>venue.length?(venue.length*fpPossMean(venue.map(x=>x.poss))+4*fpPossMean(all.map(x=>x.poss)))/(venue.length+4):fpPossMean(all.map(x=>x.poss));
+ const hVenue=venueEstimate(homeVenue,rh),aVenue=venueEstimate(awayVenue,ra);
+ // Opponent possession allowed gives a distinct measure of ability to disrupt ball control.
+ const hAllowed=fpPossMean(rh.map(x=>x.opponentPoss)),aAllowed=fpPossMean(ra.map(x=>x.opponentPoss));
+ const venueHome=fpPossClamp(50+(hVenue-aVenue)/2,5,95);
+ const matchupHome=fpPossClamp(50+(hVenue-aVenue)/2+.12*(aAllowed-hAllowed)+2.5*strengthGap,5,95);
+ const homePoss=matchupHome,awayPoss=100-homePoss;
+ const homeScale=fpPossGoalScale(rh),awayScale=fpPossGoalScale(ra);
+ const homeExpectedGoals=homeScale.points[Math.round(homePoss)-1],awayExpectedGoals=awayScale.points[Math.round(awayPoss)-1];
+ const homeGoalBaseline=homeScale.meanGoals,awayGoalBaseline=awayScale.meanGoals;
+ const venueHomeGoals=homeScale.points[Math.round(venueHome)-1],venueAwayGoals=awayScale.points[Math.round(100-venueHome)-1];
+ const prob=fpPossProb(homeExpectedGoals,awayExpectedGoals),baselineProb=fpPossProb(homeGoalBaseline,awayGoalBaseline),venueProb=fpPossProb(venueHomeGoals,venueAwayGoals);
+ return {eligible:true,homePoss,awayPoss,venueOnlyHomePoss:venueHome,venueOnlyAwayPoss:100-venueHome,
+  homeNormalPoss:hVenue,awayNormalPoss:aVenue,homeSuppression:hVenue-homePoss,awaySuppression:aVenue-awayPoss,
+  homeExpectedGoals,awayExpectedGoals,homeGoalBaseline,awayGoalBaseline,venueHomeGoals,venueAwayGoals,
+  homeNormalGoals:homeScale.points[Math.round(fpPossClamp(hVenue,1,100))-1],awayNormalGoals:awayScale.points[Math.round(fpPossClamp(aVenue,1,100))-1],
+  homeGoalImpact:homeExpectedGoals-homeScale.points[Math.round(fpPossClamp(hVenue,1,100))-1],
+  awayGoalImpact:awayExpectedGoals-awayScale.points[Math.round(fpPossClamp(aVenue,1,100))-1],
+  prob,baselineProb,venueProb,prediction:fpPossPick(prob),homeStrengthPoints:pointRate(hh,h)*hh.length,awayStrengthPoints:pointRate(aa,a)*aa.length,
+  homeStrengthMatches:hh.length,awayStrengthMatches:aa.length,strengthGap,
+  homePossSamples:rh.length,awayPossSamples:ra.length,homeVenueSamples:homeVenue.length,awayVenueSamples:awayVenue.length,
+  homeScale:{...homeScale,points:undefined},awayScale:{...awayScale,points:undefined},
+  homePossExtrapolated:homePoss<homeScale.observedMin||homePoss>homeScale.observedMax,
+  awayPossExtrapolated:awayPoss<awayScale.observedMin||awayPoss>awayScale.observedMax
  };
- const hp=weighted(hh,strengthGap),ap=weighted(aa,-strengthGap);
- const homePoss=Math.max(5,Math.min(95,(hp.possession+100-ap.possession)/2)),awayPoss=100-homePoss;
- const goalsAt=(rows,poss)=>{const nearby=rows.map(x=>({...x,diff:Math.abs(x.poss-poss)})).sort((x,y)=>x.diff-y.diff).slice(0,Math.max(3,Math.ceil(rows.length*.6)));
-  const weight=nearby.map(x=>1/(5+x.diff)),den=weight.reduce((s,x)=>s+x,0);
-  const raw=nearby.reduce((s,x,i)=>s+x.goals*weight[i],0)/den;
-  const avg=fpPossMean(rows.map(x=>x.goals));
-  return {estimate:.65*raw+.35*avg,raw,average:avg,nearby:nearby.length};
- };
- const gh=goalsAt(rh,homePoss),ga=goalsAt(ra,awayPoss);
- const prob=fpPossProb(gh.estimate,ga.estimate),base=fpPossProb(gh.average,ga.average);
- const best=Object.keys(prob).sort((x,y)=>prob[y]-prob[x])[0];
- return {eligible:true,homePoss,awayPoss,homeExpectedGoals:gh.estimate,awayExpectedGoals:ga.estimate,homeGoalBaseline:gh.average,awayGoalBaseline:ga.average,prob,baselineProb:base,prediction:best,homeStrengthPoints:ph,awayStrengthPoints:pa,homeStrengthMatches:nh,awayStrengthMatches:na,strengthGap,homePossSamples:rh.length,awayPossSamples:ra.length,homeNeighbourSamples:hp.nearby,awayNeighbourSamples:ap.nearby,homeGoalSamples:gh.nearby,awayGoalSamples:ga.nearby,homePossMethod:hp.method,awayPossMethod:ap.method};
 }
 async function fpRunPossessionResearch(){
  if(fpPossBusy)return;fpPossBusy=true;const btn=document.getElementById('fpRunPossession'),status=document.getElementById('fpPossStatus');btn.disabled=true;
  try{
-  const n=Number(document.getElementById('fpPossWindow').value),limit=Number(document.getElementById('fpPossLimit').value);
-  const scope=document.getElementById('fpTestLeague')?.value||'all';const ids=scope==='all'?Object.keys(LEAGUES):[scope];
+  const n=20,limit=Number(document.getElementById('fpPossLimit').value);
+  const scope=document.getElementById('fpPossLeague')?.value||'all',ids=scope==='all'?Object.keys(LEAGUES):[scope];
   status.textContent='Downloading historical fixtures…';
   const data=await fetchAllLeagues(6,()=>{},ids);
   const all=data.matches.filter(isFinished).sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
   const byLeague={};for(const m of all)(byLeague[m.leagueId]??=[]).push(m);
-  // Concentrate the limited historical summary budget on a few data-rich leagues to allow enough pre-match history; selected leagues reported explicitly.
-  const groups=Object.values(byLeague).sort((a,b)=>b.length-a.length).slice(0,Math.max(1,Math.min(3,Math.floor(limit/110)))),picked=[];let index=0;
+  const count=scope==='all'?Math.max(1,Math.min(3,Math.floor(limit/260))):1;
+  const groups=Object.values(byLeague).sort((a,b)=>b.length-a.length).slice(0,count),picked=[];let index=0;
   while(picked.length<limit){let advanced=false;for(const g of groups){if(index<g.length&&picked.length<limit){picked.push(g[index]);advanced=true}}if(!advanced)break;index++}
   const events=[];let next=0,complete=0;const failure={http:0,network:0,noPossession:0,invalidPossession:0};
   await Promise.all(Array.from({length:Math.min(4,picked.length)},async()=>{
@@ -2082,41 +2098,75 @@ async function fpRunPossessionResearch(){
   }));
   events.sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
   const leagueGroups={};for(const e of events)(leagueGroups[e.league]??=[]).push(e);
-  const rows=[];const coverage=[];
+  const rows=[],coverage=[];
   for(const [id,group] of Object.entries(leagueGroups)){
    const cut=Math.floor(group.length*.75),prior=[];let cursor=0;
    for(let i=0;i<group.length;i++){
     const e=group[i],kick=Date.parse(e.date);
     while(cursor<group.length&&Date.parse(group[cursor].date)<kick)prior.push(group[cursor++]);
     const f=fpPossForecast(prior,e,n),actual=e.hg>e.ag?'H':e.hg<e.ag?'A':'D';
-    const predictedPoss=e.hasPoss&&f.eligible?Math.abs(f.homePoss-e.hp):null;
-    rows.push({league:id,leagueName:e.leagueName,date:e.date,fixture:e.fixture,train:i<cut,actual,actualHomeGoals:e.hg,actualAwayGoals:e.ag,actualHomePoss:e.hp,actualAwayPoss:e.ap,possAvailable:e.hasPoss,possReason:e.reason,possError:predictedPoss,...f});
+    const extra=f.eligible&&e.hasPoss?{
+     possError:Math.abs(f.homePoss-e.hp),venuePossError:Math.abs(f.venueOnlyHomePoss-e.hp),
+     oracleHomeGoals:fpPossClamp(f.homeScale.meanGoals+f.homeScale.slope*(e.hp-f.homeScale.meanPoss),.05,4.5),
+     oracleAwayGoals:fpPossClamp(f.awayScale.meanGoals+f.awayScale.slope*(e.ap-f.awayScale.meanPoss),.05,4.5),
+     homeActualPossExtrapolated:e.hp<f.homeScale.observedMin||e.hp>f.homeScale.observedMax,
+     awayActualPossExtrapolated:e.ap<f.awayScale.observedMin||e.ap>f.awayScale.observedMax
+    }:{possError:null,venuePossError:null,oracleHomeGoals:null,oracleAwayGoals:null};
+    rows.push({league:id,leagueName:e.leagueName,date:e.date,fixture:e.fixture,train:i<cut,actual,actualHomeGoals:e.hg,actualAwayGoals:e.ag,actualHomePoss:e.hp,actualAwayPoss:e.ap,possAvailable:e.hasPoss,possReason:e.reason,...f,...extra});
    }
    coverage.push({league:id,name:group[0].leagueName,fixtures:group.length,possAvailable:group.filter(x=>x.hasPoss).length,holdout:rows.filter(x=>x.league===id&&!x.train).length,eligible:rows.filter(x=>x.league===id&&!x.train&&x.eligible).length});
   }
-  const train=rows.filter(x=>x.train),hold=rows.filter(x=>!x.train),eligible=hold.filter(x=>x.eligible),possEval=eligible.filter(x=>x.possError!==null);const missingReasons={};for(const r of hold.filter(x=>!x.eligible))missingReasons[r.reason||'unknown']=(missingReasons[r.reason||'unknown']||0)+1;
-  const summary=(items)=>{const n=items.length,correct=items.filter(x=>x.prediction===x.actual).length,baselineCorrect=items.filter(x=>Object.keys(x.baselineProb).sort((a,b)=>x.baselineProb[b]-x.baselineProb[a])[0]===x.actual).length;
+  const train=rows.filter(x=>x.train),hold=rows.filter(x=>!x.train),eligible=hold.filter(x=>x.eligible),missingReasons={};
+  for(const r of hold.filter(x=>!x.eligible))missingReasons[r.reason||'unknown']=(missingReasons[r.reason||'unknown']||0)+1;
+  const mae=(items,h,a)=>fpPossMean(items.filter(x=>Number.isFinite(x[h])&&Number.isFinite(x[a])).map(x=>(Math.abs(x[h]-x.actualHomeGoals)+Math.abs(x[a]-x.actualAwayGoals))/2));
+  const summary=(items)=>{
+   const n=items.length,correct=items.filter(x=>x.prediction===x.actual).length,baselineCorrect=items.filter(x=>fpPossPick(x.baselineProb)===x.actual).length,venueCorrect=items.filter(x=>fpPossPick(x.venueProb)===x.actual).length;
    const brier=(field)=>fpPossMean(items.map(x=>['H','D','A'].reduce((s,k)=>s+(x[field][k]-(x.actual===k?1:0))**2,0)));
-   const goalMae=fpPossMean(items.map(x=>(Math.abs(x.homeExpectedGoals-x.actualHomeGoals)+Math.abs(x.awayExpectedGoals-x.actualAwayGoals))/2));
-   const baselineMae=fpPossMean(items.map(x=>(Math.abs(x.homeGoalBaseline-x.actualHomeGoals)+Math.abs(x.awayGoalBaseline-x.actualAwayGoals))/2));
-   return {n,correct,accuracy:n?correct/n:null,baselineCorrect,baselineAccuracy:n?baselineCorrect/n:null,brier:brier('prob'),baselineBrier:brier('baselineProb'),goalMAE:goalMae,baselineGoalMAE:baselineMae,possMAE:fpPossMean(items.map(x=>x.possError).filter(Number.isFinite))};
+   return {n,correct,accuracy:n?correct/n:null,baselineCorrect,baselineAccuracy:n?baselineCorrect/n:null,venueCorrect,venueAccuracy:n?venueCorrect/n:null,
+    brier:brier('prob'),baselineBrier:brier('baselineProb'),venueBrier:brier('venueProb'),
+    goalMAE:mae(items,'homeExpectedGoals','awayExpectedGoals'),baselineGoalMAE:mae(items,'homeGoalBaseline','awayGoalBaseline'),
+    venueGoalMAE:mae(items,'venueHomeGoals','venueAwayGoals'),oracleGoalMAE:mae(items,'oracleHomeGoals','oracleAwayGoals'),
+    possMAE:fpPossMean(items.map(x=>x.possError).filter(Number.isFinite)),venuePossMAE:fpPossMean(items.map(x=>x.venuePossError).filter(Number.isFinite)),
+    homeSuppressionMean:fpPossMean(items.map(x=>x.homeSuppression)),homeGoalImpactMean:fpPossMean(items.map(x=>x.homeGoalImpact)),
+    extrapolatedMatches:items.filter(x=>x.homePossExtrapolated||x.awayPossExtrapolated).length,
+    slopePositiveHome:items.filter(x=>x.homeScale.slope>.005).length,slopeNegativeHome:items.filter(x=>x.homeScale.slope<-.005).length};
   };
-  const bins=[['Home <40%',x=>x.homePoss<40],['Home 40–50%',x=>x.homePoss>=40&&x.homePoss<50],['Home 50–60%',x=>x.homePoss>=50&&x.homePoss<60],['Home ≥60%',x=>x.homePoss>=60]];
-  const byPoss=bins.map(([label,fn])=>({label,...summary(eligible.filter(fn))}));
-  const byStrength=[['Home weaker',x=>x.strengthGap<-.4],['Similar strength',x=>Math.abs(x.strengthGap)<=.4],['Home stronger',x=>x.strengthGap>.4]].map(([label,fn])=>({label,...summary(eligible.filter(fn))}));
-  const bySample=[['5–9 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)<10],['10–14 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)>=10&&Math.min(x.homePossSamples,x.awayPossSamples)<15],['15+ matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)>=15]].map(([label,fn])=>({label,...summary(eligible.filter(fn))}));
+  const segments=(spec)=>spec.map(([label,fn])=>({label,...summary(eligible.filter(fn))}));
+  const byPoss=segments([['Home <40%',x=>x.homePoss<40],['Home 40–50%',x=>x.homePoss>=40&&x.homePoss<50],['Home 50–60%',x=>x.homePoss>=50&&x.homePoss<60],['Home ≥60%',x=>x.homePoss>=60]]);
+  const byStrength=segments([['Home weaker',x=>x.strengthGap<-.4],['Similar strength',x=>Math.abs(x.strengthGap)<=.4],['Home stronger',x=>x.strengthGap>.4]]);
+  const bySample=segments([['5–9 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)<10],['10–14 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)>=10&&Math.min(x.homePossSamples,x.awayPossSamples)<15],['15–19 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)>=15&&Math.min(x.homePossSamples,x.awayPossSamples)<20],['20 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)>=20]]);
+  const bySuppression=segments([['Home suppressed ≥10 pts',x=>x.homeSuppression>=10],['Home suppressed 3–10 pts',x=>x.homeSuppression>=3&&x.homeSuppression<10],['Home roughly normal',x=>Math.abs(x.homeSuppression)<3],['Home boosted ≥3 pts',x=>x.homeSuppression<=-3]]);
+  const bySlope=segments([['Home positive goal slope',x=>x.homeScale.slope>.005],['Home flat goal slope',x=>Math.abs(x.homeScale.slope)<=.005],['Home negative goal slope',x=>x.homeScale.slope<-.005]]);
+  const byExtrapolation=segments([['Inside both observed ranges',x=>!x.homePossExtrapolated&&!x.awayPossExtrapolated],['At least one extrapolated',x=>x.homePossExtrapolated||x.awayPossExtrapolated]]);
   const leagueMetrics=coverage.map(c=>({...c,metrics:summary(eligible.filter(x=>x.league===c.league))}));
-  const byOutcome=['H','D','A'].map(label=>({label,...summary(eligible.filter(x=>x.actual===label))}));
-  const byPred=['H','D','A'].map(label=>({label,...summary(eligible.filter(x=>x.prediction===label))}));
-  const test={version:'POSSESSION-MATCHUP-V2',created:new Date().toISOString(),settings:{window:n,requestedSummaries:limit,actualSummaries:picked.length,scope,months:6,holdout:'Last 25% of each league sample, chronological; no holdout tuning'},coverage:{historicalFixtures:all.length,sampled:picked.length,withPossession:events.filter(x=>x.hasPoss).length,withoutPossession:events.filter(x=>!x.hasPoss).length,failures:failure,training:train.length,holdout:hold.length,holdoutEligible:eligible.length,holdoutMissing:hold.length-eligible.length,holdoutWithActualPossession:possEval.length,holdoutMissingReasons:missingReasons},overall:summary(eligible),byPoss,byStrength,bySample,byLeague:leagueMetrics,byOutcome,byPrediction:byPred,rawFixtures:rows,notes:['Historical summaries concentrated in up to three data-rich leagues for deeper per-team histories. Only pre-kickoff sampled matches are used.','Missing possession never inferred from scoreline.','Predicted possession uses team history and opponent rolling points differences; goals use only possession-conditioned goals scored.','The baseline uses the same team histories but mean goals without possession conditioning.','A small holdout or zero eligible fixtures cannot validate the model.','Actual final possession can be affected by game state, so observed associations do not establish playing style causally.']};
-  const fmt=x=>x==null?'—':Number(x).toFixed(2),table=(items)=>`<div class="tablewrap"><table><thead><tr><th>Segment</th><th>Eligible</th><th>Model W / %</th><th>Baseline W / %</th><th>Goals MAE</th><th>Baseline goals MAE</th><th>Poss MAE</th></tr></thead><tbody>${items.map(x=>`<tr><td>${esc(x.label||x.name||x.league)}</td><td>${x.n??x.metrics?.n??0}</td><td>${x.correct??x.metrics?.correct??0} · ${fpPossPct(x.accuracy??x.metrics?.accuracy)}</td><td>${x.baselineCorrect??x.metrics?.baselineCorrect??0} · ${fpPossPct(x.baselineAccuracy??x.metrics?.baselineAccuracy)}</td><td>${fmt(x.goalMAE??x.metrics?.goalMAE)}</td><td>${fmt(x.baselineGoalMAE??x.metrics?.baselineGoalMAE)}</td><td>${fmt(x.possMAE??x.metrics?.possMAE)}</td></tr>`).join('')}</tbody></table></div>`;
-  document.getElementById('fpPossResults').innerHTML=`<div class="fp-draw-summary"><div><small>Possession coverage</small><strong>${test.coverage.withPossession}/${test.coverage.sampled}</strong></div><div><small>Holdout eligible</small><strong>${eligible.length}/${hold.length}</strong></div><div><small>Model winner accuracy</small><strong>${fpPossPct(test.overall.accuracy)}</strong></div><div><small>Simple goals baseline</small><strong>${fpPossPct(test.overall.baselineAccuracy)}</strong></div></div><p class="muted smalltext">Goals MAE: model ${fmt(test.overall.goalMAE)} vs baseline ${fmt(test.overall.baselineGoalMAE)} · Brier (lower is better): ${fmt(test.overall.brier)} vs ${fmt(test.overall.baselineBrier)} · Predicted possession MAE ${fmt(test.overall.possMAE)} percentage points. All results are holdout only.</p><details open><summary>1 · League coverage and reliability</summary>${table(leagueMetrics)}<p class="muted smalltext">Ineligible holdout reasons: ${esc(JSON.stringify(missingReasons))}.</p><p class="muted smalltext">Unavailable possession: ${failure.noPossession} · invalid: ${failure.invalidPossession} · HTTP errors: ${failure.http} · network/timeouts: ${failure.network}.</p></details><details><summary>2 · Predicted possession bands</summary>${table(byPoss)}</details><details><summary>3 · Own rolling-strength difference</summary>${table(byStrength)}</details><details><summary>4 · Historical sample sizes</summary>${table(bySample)}</details><details><summary>5 · Actual result H / D / A</summary>${table(byOutcome)}</details><details><summary>6 · Model prediction H / D / A</summary>${table(byPred)}</details><p class="muted smalltext">The complete JSON includes every sampled fixture: both teams' rolling points, predicted and actual possession, goal estimates, baseline, outcome probabilities, eligibility and missing-data reasons. If coverage is too small, the test is inconclusive—not a pass or fail. The original Model 2 and its test remain unchanged.</p>`;
+  const byOutcome=segments(['H','D','A'].map(k=>[k,x=>x.actual===k]));
+  const byPrediction=segments(['H','D','A'].map(k=>[k,x=>x.prediction===k]));
+  const test={version:'POSSESSION-GOAL-SCALE-V3',created:new Date().toISOString(),settings:{internalWindow:n,requestedSummaries:limit,actualSummaries:picked.length,scope,months:6,holdout:'Last 25% per league, chronological; predictions use only strictly earlier sampled matches',ridgePerMatch:400,maxAbsoluteSlope:.055},
+   coverage:{historicalFixtures:all.length,sampled:picked.length,withPossession:events.filter(x=>x.hasPoss).length,withoutPossession:events.filter(x=>!x.hasPoss).length,failures:failure,training:train.length,holdout:hold.length,holdoutEligible:eligible.length,holdoutMissing:hold.length-eligible.length,holdoutMissingReasons:missingReasons},
+   overall:summary(eligible),byPoss,byStrength,bySample,bySuppression,bySlope,byExtrapolation,byLeague:leagueMetrics,byOutcome,byPrediction,rawFixtures:rows,
+   notes:['Independent research: Model 2 unchanged. Fixed internal 20-match lookback; no window selection to optimise on holdout.','Each team has a ridge-shrunk 1–100% possession-to-goals scale; sample points and slope in every eligible fixture.','Goal scale is a descriptive association, not a causal estimate; full-time possession is affected by game state.','Prematch predictions use predicted possession only. Oracle goals using actual possession are diagnostic after match and NEVER enter forecast probabilities.','Baseline uses mean goals; venue variant uses venue-based possession without strength/suppression adjustment.','Only earlier sampled matches are used. Sampling incomplete leagues can limit effective team histories.','Holdout must not be used to tune slope, possession coefficients or window.','Extrapolated possession is flagged; small holdout is inconclusive.']};
+  const fmt=x=>x==null?'—':Number(x).toFixed(2);
+  const table=(items)=>`<div class="tablewrap"><table><thead><tr><th>Segment</th><th>N</th><th>V3 accuracy</th><th>Baseline</th><th>V3 goal MAE</th><th>Baseline MAE</th><th>Oracle goal MAE</th><th>Poss MAE</th></tr></thead><tbody>${items.map(x=>{const y=x.metrics||x;return `<tr><td>${esc(x.label||x.name||x.league)}</td><td>${y.n}</td><td>${fpPossPct(y.accuracy)}</td><td>${fpPossPct(y.baselineAccuracy)}</td><td>${fmt(y.goalMAE)}</td><td>${fmt(y.baselineGoalMAE)}</td><td>${fmt(y.oracleGoalMAE)}</td><td>${fmt(y.possMAE)}</td></tr>`}).join('')}</tbody></table></div>`;
+  document.getElementById('fpPossResults').innerHTML=`<div class="fp-draw-summary"><div><small>Possession coverage</small><strong>${test.coverage.withPossession}/${test.coverage.sampled}</strong></div><div><small>Holdout eligible</small><strong>${eligible.length}/${hold.length}</strong></div><div><small>V3 result accuracy</small><strong>${fpPossPct(test.overall.accuracy)}</strong></div><div><small>Mean-goals baseline</small><strong>${fpPossPct(test.overall.baselineAccuracy)}</strong></div></div>
+   <p class="muted smalltext"><strong>Holdout-only:</strong> V3 goals MAE ${fmt(test.overall.goalMAE)} vs baseline ${fmt(test.overall.baselineGoalMAE)} vs actual-possession diagnostic ${fmt(test.overall.oracleGoalMAE)}. Predicted possession MAE ${fmt(test.overall.possMAE)} vs venue-only ${fmt(test.overall.venuePossMAE)}. Brier ${fmt(test.overall.brier)} vs baseline ${fmt(test.overall.baselineBrier)}. Extrapolated fixtures ${test.overall.extrapolatedMatches}/${eligible.length}.</p>
+   <details open><summary>1 · League coverage and missing histories</summary>${table(leagueMetrics)}<p class="muted smalltext">Ineligible reasons: ${esc(JSON.stringify(missingReasons))}. Data errors: ${esc(JSON.stringify(failure))}.</p></details>
+   <details><summary>2 · Possession suppression impact</summary>${table(bySuppression)}</details>
+   <details><summary>3 · Goal-scale slope direction</summary>${table(bySlope)}</details>
+   <details><summary>4 · Scale extrapolation</summary>${table(byExtrapolation)}</details>
+   <details><summary>5 · Historical sample sizes</summary>${table(bySample)}</details>
+   <details><summary>6 · Predicted possession bands</summary>${table(byPoss)}</details>
+   <details><summary>7 · Rolling points strength</summary>${table(byStrength)}</details>
+   <details><summary>8 · Actual H / D / A</summary>${table(byOutcome)}</details>
+   <details><summary>9 · Predicted H / D / A</summary>${table(byPrediction)}</details>
+   <p class="muted smalltext">Copy the full JSON for fixture-level predictions, 1–100 scale samples, observed possession ranges, fitted slopes, suppression, extrapolation, oracle-vs-predicted goals and all benchmark comparisons. The oracle uses final possession only to diagnose the goal scale, not to predict matches.</p>`;
   document.getElementById('fpPossReport').value=JSON.stringify(test,null,2);
-  status.textContent=`Completed · ${picked.length} summaries checked · ${eligible.length} eligible holdout fixtures. Copy the possession diagnostic report to share the full evidence.`;
+  status.textContent=`Completed · ${picked.length} summaries · ${eligible.length}/${hold.length} eligible holdout matches. Use Copy test outputs to paste the full report here.`;
  }catch(e){status.textContent='Research failed: '+String(e.message||e);console.error(e)}finally{fpPossBusy=false;btn.disabled=false}
 }
-async function fpCopyPossessionReport(){const el=document.getElementById('fpPossReport'),st=document.getElementById('fpPossStatus');if(!el.value){st.textContent='Run possession research first.';return}try{await navigator.clipboard.writeText(el.value);st.textContent='Full possession diagnostics copied. Paste into chat.'}catch(e){el.focus();el.select();try{document.execCommand('copy');st.textContent='Report copied / selected; paste into chat.'}catch(_){st.textContent='Select and copy the report manually.'}}}
+async function fpCopyPossessionReport(){const el=document.getElementById('fpPossReport'),st=document.getElementById('fpPossStatus');if(!el.value){st.textContent='Run possession test first.';return}try{await navigator.clipboard.writeText(el.value);st.textContent='Full test outputs copied. Paste into chat.'}catch(e){el.focus();el.select();try{document.execCommand('copy');st.textContent='Test outputs copied / selected; paste into chat.'}catch(_){st.textContent='Select and copy the report manually.'}}}
 
+
+(function(){const sel=document.getElementById('fpPossLeague'),source=document.getElementById('fpTestLeague');if(!sel||!source)return;const fill=()=>{const selected=sel.value;for(const opt of source.options){if(opt.value==='all'||Array.from(sel.options).some(o=>o.value===opt.value))continue;sel.add(new Option(opt.textContent,opt.value))}if(Array.from(sel.options).some(o=>o.value===selected))sel.value=selected};fill();setTimeout(fill,1500);setTimeout(fill,4500)})();
 /* LIVE CENTRE */
 function isLive(m){return m.state==="in"||/live|in progress|half/i.test(m.statusName||"")||((m.state==="in")&&validScore(m))}
 function extractStats(summary,m){
