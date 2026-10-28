@@ -811,7 +811,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 <section id="test" hidden>
  <h2>Prediction Test</h2>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><button class="btn secondary" type="button" id="fpCopyPointsReport" onclick="fpCopyPointsReport()">Copy Model 2 report</button><span id="fpCopyPointsStatus" class="muted smalltext" aria-live="polite"></span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><section class="panel" id="fpPossessionResearch"><h3>Possession → Goals Scale · V3 independent model test</h3><p class="muted smalltext">Builds a separate 1–100% possession-to-goals scale for each team using earlier matches, predicts possession against the upcoming opponent, then reads expected goals from each team's scale. A fixed internal 20-match lookback avoids redundant window controls. Model 2 and all other app features remain unchanged.</p><div class="row wrap"><label>Competition <select id="fpPossLeague"><option value="all">Auto-select data-rich leagues</option></select></label><label>Research depth <select id="fpPossLimit"><option value="360">360 summaries · quick</option><option value="600" selected>600 summaries · recommended</option><option value="900">900 summaries · deeper</option></select></label><button class="btn" type="button" id="fpRunPossession" onclick="fpRunPossessionResearch()">Run test</button><button class="btn secondary" type="button" onclick="fpCopyPossessionReport()">Copy test outputs</button></div><p id="fpPossStatus" class="muted smalltext" aria-live="polite">Run the test, then select Copy test outputs and paste the complete JSON into chat. Larger samples take longer but produce more usable team histories.</p><div id="fpPossResults"></div><details class="fp-advanced"><summary>Full JSON test outputs (also available via Copy test outputs)</summary><textarea id="fpPossReport" readonly aria-label="Possession scale full JSON test outputs" style="width:100%;min-height:150px;font-size:11px;margin-top:12px" placeholder="Full fixture-level report appears here after running the test."></textarea></details></section><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><button class="btn secondary" type="button" id="fpCopyPointsReport" onclick="fpCopyPointsReport()">Copy Model 2 report</button><span id="fpCopyPointsStatus" class="muted smalltext" aria-live="polite"></span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><section class="panel" id="fpPossessionResearch"><h3>Possession → Goals Scale · V4 independent model test</h3><p class="muted smalltext">Builds a separate 1–100% possession-to-goals scale for each team using earlier matches, predicts possession against the upcoming opponent, then reads expected goals from each team's scale. A fixed internal 20-match lookback avoids redundant window controls. Tests separate home-win and away-win minimum goal gaps, selected on training fixtures only; includes full draw diagnostics and threshold grid in copied JSON. Model 2 and all other app features remain unchanged.</p><div class="row wrap"><label>Competition <select id="fpPossLeague"><option value="all">Auto-select data-rich leagues</option></select></label><label>Research depth <select id="fpPossLimit"><option value="360">360 summaries · quick</option><option value="600" selected>600 summaries · recommended</option><option value="900">900 summaries · deeper</option></select></label><button class="btn" type="button" id="fpRunPossession" onclick="fpRunPossessionResearch()">Run test</button><button class="btn secondary" type="button" onclick="fpCopyPossessionReport()">Copy test outputs</button></div><p id="fpPossStatus" class="muted smalltext" aria-live="polite">Run the test, then select Copy test outputs and paste the complete JSON into chat. Larger samples take longer but produce more usable team histories.</p><div id="fpPossResults"></div><details class="fp-advanced"><summary>Full JSON test outputs (also available via Copy test outputs)</summary><textarea id="fpPossReport" readonly aria-label="Possession scale full JSON test outputs" style="width:100%;min-height:150px;font-size:11px;margin-top:12px" placeholder="Full fixture-level report appears here after running the test."></textarea></details></section><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced" hidden><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -2070,6 +2070,70 @@ function fpPossForecast(past,m,n){
   awayPossExtrapolated:awayPoss<awayScale.observedMin||awayPoss>awayScale.observedMax
  };
 }
+/* V4 draw-zone research: distinct home/away goal advantages, trained without holdout leakage. */
+const fpPossGapGrid=[0,.1,.15,.2,.25,.3,.35,.4,.5,.6,.75];
+function fpPossGapPick(r,homeGap,awayGap){
+ const gap=r.homeExpectedGoals-r.awayExpectedGoals;
+ return gap>=homeGap?'H':gap<=-awayGap?'A':'D';
+}
+function fpPossGapStats(rows,homeGap,awayGap){
+ const confusion={H:{H:0,D:0,A:0},D:{H:0,D:0,A:0},A:{H:0,D:0,A:0}};
+ let correct=0,drawPredicted=0,drawCorrect=0,drawActual=0,changed=0,gained=0,lost=0;
+ for(const r of rows){
+  const p=fpPossGapPick(r,homeGap,awayGap);confusion[r.actual][p]++;
+  if(p===r.actual)correct++;
+  if(p==='D'){drawPredicted++;if(r.actual==='D')drawCorrect++}
+  if(r.actual==='D')drawActual++;
+  if(p!==r.prediction){changed++;if(p===r.actual)gained++;if(r.prediction===r.actual)lost++}
+ }
+ return {n:rows.length,homeGap,awayGap,correct,accuracy:rows.length?correct/rows.length:null,drawPredicted,drawActual,drawCorrect,
+  drawPrecision:drawPredicted?drawCorrect/drawPredicted:null,drawRecall:drawActual?drawCorrect/drawActual:null,
+  changedFromProbabilityPick:changed,correctedPredictions:gained,spoiledPredictions:lost,confusion};
+}
+function fpPossGapAnalysis(training,holdout){
+ const grid=[];
+ for(const homeGap of fpPossGapGrid)for(const awayGap of fpPossGapGrid){
+  const train=fpPossGapStats(training,homeGap,awayGap);
+  grid.push({homeGap,awayGap,training:train});
+ }
+ // Optimise training accuracy only; tie-break towards simpler symmetric and smaller thresholds.
+ const ordered=[...grid].sort((a,b)=>b.training.accuracy-a.training.accuracy||
+  Math.abs(a.homeGap-a.awayGap)-Math.abs(b.homeGap-b.awayGap)||
+  a.homeGap+a.awayGap-b.homeGap-b.awayGap);
+ const best=ordered[0];
+ const symmetric=grid.filter(x=>x.homeGap===x.awayGap).sort((a,b)=>b.training.accuracy-a.training.accuracy||a.homeGap-b.homeGap)[0];
+ const holdoutGrid=grid.map(x=>({homeGap:x.homeGap,awayGap:x.awayGap,...fpPossGapStats(holdout,x.homeGap,x.awayGap)}));
+ const byActualOutcome=['H','D','A'].map(k=>({outcome:k,...fpPossGapStats(holdout.filter(r=>r.actual===k),best.homeGap,best.awayGap)}));
+ const bands=[['Away gap ≥0.75',r=>r.homeExpectedGoals-r.awayExpectedGoals<=-.75],
+ ['Away gap 0.35–0.75',r=>{const d=r.homeExpectedGoals-r.awayExpectedGoals;return d>-.75&&d<=-.35}],
+ ['Away gap 0–0.35',r=>{const d=r.homeExpectedGoals-r.awayExpectedGoals;return d>-.35&&d<0}],
+ ['Even expected goals',r=>Math.abs(r.homeExpectedGoals-r.awayExpectedGoals)<.00001],
+ ['Home gap 0–0.35',r=>{const d=r.homeExpectedGoals-r.awayExpectedGoals;return d>=0&&d<.35}],
+ ['Home gap 0.35–0.75',r=>{const d=r.homeExpectedGoals-r.awayExpectedGoals;return d>=.35&&d<.75}],
+ ['Home gap ≥0.75',r=>r.homeExpectedGoals-r.awayExpectedGoals>=.75]]
+ .map(([label,fn])=>({label,...fpPossGapStats(holdout.filter(fn),best.homeGap,best.awayGap)}));
+ const totals=[['Under 2.0 goals',r=>r.homeExpectedGoals+r.awayExpectedGoals<2],
+ ['2.0–3.0 goals',r=>r.homeExpectedGoals+r.awayExpectedGoals>=2&&r.homeExpectedGoals+r.awayExpectedGoals<3],
+ ['3.0+ goals',r=>r.homeExpectedGoals+r.awayExpectedGoals>=3]]
+ .map(([label,fn])=>({label,...fpPossGapStats(holdout.filter(fn),best.homeGap,best.awayGap)}));
+ const drawProbabilityBands=[[0,.15],[.15,.2],[.2,.25],[.25,.3],[.3,.35],[.35,1]].map(([lo,hi])=>{
+  const subset=holdout.filter(r=>r.prob.D>=lo&&r.prob.D<hi);
+  return {range:`${Math.round(lo*100)}–${Math.round(hi*100)}%`,n:subset.length,
+   meanPredictedDrawProbability:fpPossMean(subset.map(r=>r.prob.D)),
+   observedDrawRate:subset.length?subset.filter(r=>r.actual==='D').length/subset.length:null};
+ });
+ return {method:'Separate home/away minimum expected-goals advantage; training accuracy selection, symmetric/smaller tie-break; no holdout optimisation',
+  thresholds:fpPossGapGrid,trainingEligible:training.length,holdoutEligible:holdout.length,
+  selected:{homeGap:best.homeGap,awayGap:best.awayGap,training:best.training,holdout:fpPossGapStats(holdout,best.homeGap,best.awayGap)},
+  symmetricComparator:{homeGap:symmetric.homeGap,awayGap:symmetric.awayGap,training:symmetric.training,holdout:fpPossGapStats(holdout,symmetric.homeGap,symmetric.awayGap)},
+  zeroGapComparator:{training:fpPossGapStats(training,0,0),holdout:fpPossGapStats(holdout,0,0)},
+  probabilityPick:{n:holdout.length,correct:holdout.filter(r=>r.prediction===r.actual).length,
+   accuracy:holdout.length?holdout.filter(r=>r.prediction===r.actual).length/holdout.length:null,
+   drawPredicted:holdout.filter(r=>r.prediction==='D').length},
+  byActualOutcome,byGoalGap:bands,byExpectedGoalTotal:totals,drawProbabilityCalibration:drawProbabilityBands,
+  trainingThresholdGrid:grid,holdoutThresholdGrid:holdoutGrid,
+  caution:'Holdout grid is diagnostic ONLY; selected gaps were chosen using eligible training fixtures, never holdout.'};
+}
 async function fpRunPossessionResearch(){
  if(fpPossBusy)return;fpPossBusy=true;const btn=document.getElementById('fpRunPossession'),status=document.getElementById('fpPossStatus');btn.disabled=true;
  try{
@@ -2132,6 +2196,12 @@ async function fpRunPossessionResearch(){
     slopePositiveHome:items.filter(x=>x.homeScale.slope>.005).length,slopeNegativeHome:items.filter(x=>x.homeScale.slope<-.005).length};
   };
   const segments=(spec)=>spec.map(([label,fn])=>({label,...summary(eligible.filter(fn))}));
+  const gapTraining=train.filter(x=>x.eligible),gapAnalysis=fpPossGapAnalysis(gapTraining,eligible);
+  for(const r of rows)if(r.eligible){r.expectedGoalGap=r.homeExpectedGoals-r.awayExpectedGoals;
+   r.gapPrediction=fpPossGapPick(r,gapAnalysis.selected.homeGap,gapAnalysis.selected.awayGap);
+   r.equalGapPrediction=fpPossGapPick(r,gapAnalysis.symmetricComparator.homeGap,gapAnalysis.symmetricComparator.awayGap);
+   r.gapPredictionChanged=r.gapPrediction!==r.prediction;
+  }
   const byPoss=segments([['Home <40%',x=>x.homePoss<40],['Home 40–50%',x=>x.homePoss>=40&&x.homePoss<50],['Home 50–60%',x=>x.homePoss>=50&&x.homePoss<60],['Home ≥60%',x=>x.homePoss>=60]]);
   const byStrength=segments([['Home weaker',x=>x.strengthGap<-.4],['Similar strength',x=>Math.abs(x.strengthGap)<=.4],['Home stronger',x=>x.strengthGap>.4]]);
   const bySample=segments([['5–9 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)<10],['10–14 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)>=10&&Math.min(x.homePossSamples,x.awayPossSamples)<15],['15–19 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)>=15&&Math.min(x.homePossSamples,x.awayPossSamples)<20],['20 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)>=20]]);
@@ -2141,14 +2211,20 @@ async function fpRunPossessionResearch(){
   const leagueMetrics=coverage.map(c=>({...c,metrics:summary(eligible.filter(x=>x.league===c.league))}));
   const byOutcome=segments(['H','D','A'].map(k=>[k,x=>x.actual===k]));
   const byPrediction=segments(['H','D','A'].map(k=>[k,x=>x.prediction===k]));
-  const test={version:'POSSESSION-GOAL-SCALE-V3',created:new Date().toISOString(),settings:{internalWindow:n,requestedSummaries:limit,actualSummaries:picked.length,scope,months:6,holdout:'Last 25% per league, chronological; predictions use only strictly earlier sampled matches',ridgePerMatch:400,maxAbsoluteSlope:.055},
+  const test={version:'POSSESSION-GOAL-SCALE-V4',created:new Date().toISOString(),settings:{internalWindow:n,requestedSummaries:limit,actualSummaries:picked.length,scope,months:6,holdout:'Last 25% per league, chronological; predictions use only strictly earlier sampled matches',ridgePerMatch:400,maxAbsoluteSlope:.055},
    coverage:{historicalFixtures:all.length,sampled:picked.length,withPossession:events.filter(x=>x.hasPoss).length,withoutPossession:events.filter(x=>!x.hasPoss).length,failures:failure,training:train.length,holdout:hold.length,holdoutEligible:eligible.length,holdoutMissing:hold.length-eligible.length,holdoutMissingReasons:missingReasons},
-   overall:summary(eligible),byPoss,byStrength,bySample,bySuppression,bySlope,byExtrapolation,byLeague:leagueMetrics,byOutcome,byPrediction,rawFixtures:rows,
-   notes:['Independent research: Model 2 unchanged. Fixed internal 20-match lookback; no window selection to optimise on holdout.','Each team has a ridge-shrunk 1–100% possession-to-goals scale; sample points and slope in every eligible fixture.','Goal scale is a descriptive association, not a causal estimate; full-time possession is affected by game state.','Prematch predictions use predicted possession only. Oracle goals using actual possession are diagnostic after match and NEVER enter forecast probabilities.','Baseline uses mean goals; venue variant uses venue-based possession without strength/suppression adjustment.','Only earlier sampled matches are used. Sampling incomplete leagues can limit effective team histories.','Holdout must not be used to tune slope, possession coefficients or window.','Extrapolated possession is flagged; small holdout is inconclusive.']};
+   overall:summary(eligible),drawGapAnalysis:gapAnalysis,byPoss,byStrength,bySample,bySuppression,bySlope,byExtrapolation,byLeague:leagueMetrics,byOutcome,byPrediction,rawFixtures:rows,
+   notes:['Independent research: Model 2 unchanged. Fixed internal 20-match lookback; no window selection to optimise on holdout.','Each team has a ridge-shrunk 1–100% possession-to-goals scale; sample points and slope in every eligible fixture.','Goal scale is a descriptive association, not a causal estimate; full-time possession is affected by game state.','Prematch predictions use predicted possession only. Oracle goals using actual possession are diagnostic after match and NEVER enter forecast probabilities.','Baseline uses mean goals; venue variant uses venue-based possession without strength/suppression adjustment.','Only earlier sampled matches are used. Sampling incomplete leagues can limit effective team histories.','Holdout must not be used to tune slope, possession coefficients or window.','Extrapolated possession is flagged; small holdout is inconclusive.','V4 selects distinct home/away win gaps on eligible training fixtures only. All grid and draw calibration results are included in copied JSON; holdout grid is for diagnosis, not tuning.']};
   const fmt=x=>x==null?'—':Number(x).toFixed(2);
-  const table=(items)=>`<div class="tablewrap"><table><thead><tr><th>Segment</th><th>N</th><th>V3 accuracy</th><th>Baseline</th><th>V3 goal MAE</th><th>Baseline MAE</th><th>Oracle goal MAE</th><th>Poss MAE</th></tr></thead><tbody>${items.map(x=>{const y=x.metrics||x;return `<tr><td>${esc(x.label||x.name||x.league)}</td><td>${y.n}</td><td>${fpPossPct(y.accuracy)}</td><td>${fpPossPct(y.baselineAccuracy)}</td><td>${fmt(y.goalMAE)}</td><td>${fmt(y.baselineGoalMAE)}</td><td>${fmt(y.oracleGoalMAE)}</td><td>${fmt(y.possMAE)}</td></tr>`}).join('')}</tbody></table></div>`;
-  document.getElementById('fpPossResults').innerHTML=`<div class="fp-draw-summary"><div><small>Possession coverage</small><strong>${test.coverage.withPossession}/${test.coverage.sampled}</strong></div><div><small>Holdout eligible</small><strong>${eligible.length}/${hold.length}</strong></div><div><small>V3 result accuracy</small><strong>${fpPossPct(test.overall.accuracy)}</strong></div><div><small>Mean-goals baseline</small><strong>${fpPossPct(test.overall.baselineAccuracy)}</strong></div></div>
+  const table=(items)=>`<div class="tablewrap"><table><thead><tr><th>Segment</th><th>N</th><th>V4 scale accuracy</th><th>Baseline</th><th>V4 scale goal MAE</th><th>Baseline MAE</th><th>Oracle goal MAE</th><th>Poss MAE</th></tr></thead><tbody>${items.map(x=>{const y=x.metrics||x;return `<tr><td>${esc(x.label||x.name||x.league)}</td><td>${y.n}</td><td>${fpPossPct(y.accuracy)}</td><td>${fpPossPct(y.baselineAccuracy)}</td><td>${fmt(y.goalMAE)}</td><td>${fmt(y.baselineGoalMAE)}</td><td>${fmt(y.oracleGoalMAE)}</td><td>${fmt(y.possMAE)}</td></tr>`}).join('')}</tbody></table></div>`;
+  document.getElementById('fpPossResults').innerHTML=`<div class="fp-draw-summary"><div><small>Possession coverage</small><strong>${test.coverage.withPossession}/${test.coverage.sampled}</strong></div><div><small>Holdout eligible</small><strong>${eligible.length}/${hold.length}</strong></div><div><small>V4 scale result accuracy</small><strong>${fpPossPct(test.overall.accuracy)}</strong></div><div><small>Mean-goals baseline</small><strong>${fpPossPct(test.overall.baselineAccuracy)}</strong></div></div>
    <p class="muted smalltext"><strong>Holdout-only:</strong> V3 goals MAE ${fmt(test.overall.goalMAE)} vs baseline ${fmt(test.overall.baselineGoalMAE)} vs actual-possession diagnostic ${fmt(test.overall.oracleGoalMAE)}. Predicted possession MAE ${fmt(test.overall.possMAE)} vs venue-only ${fmt(test.overall.venuePossMAE)}. Brier ${fmt(test.overall.brier)} vs baseline ${fmt(test.overall.baselineBrier)}. Extrapolated fixtures ${test.overall.extrapolatedMatches}/${eligible.length}.</p>
+   <details open><summary>0 · Home / Draw / Away minimum goal-gap test</summary>
+    <p><strong>Training-selected thresholds:</strong> Home advantage ≥ ${fmt(gapAnalysis.selected.homeGap)} goals; away advantage ≥ ${fmt(gapAnalysis.selected.awayGap)} goals; otherwise DRAW.</p>
+    <p><strong>Untouched holdout:</strong> gap-rule accuracy ${fpPossPct(gapAnalysis.selected.holdout.accuracy)} (${gapAnalysis.selected.holdout.correct}/${eligible.length}) vs probability selection ${fpPossPct(gapAnalysis.probabilityPick.accuracy)} (${gapAnalysis.probabilityPick.correct}/${eligible.length}); symmetric-gap accuracy ${fpPossPct(gapAnalysis.symmetricComparator.holdout.accuracy)}.</p>
+    <p><strong>Draws:</strong> ${gapAnalysis.selected.holdout.drawPredicted} predicted; ${gapAnalysis.selected.holdout.drawCorrect} correct out of ${gapAnalysis.selected.holdout.drawActual} actual; precision ${fpPossPct(gapAnalysis.selected.holdout.drawPrecision)}, recall ${fpPossPct(gapAnalysis.selected.holdout.drawRecall)}. Changed ${gapAnalysis.selected.holdout.changedFromProbabilityPick} picks, corrected ${gapAnalysis.selected.holdout.correctedPredictions}, spoiled ${gapAnalysis.selected.holdout.spoiledPredictions}.</p>
+    <p class="muted smalltext">Thresholds are selected exclusively on eligible training fixtures. Copy test outputs includes every training and holdout threshold combination, actual/predicted H/D/A confusion matrix, goal-gap bands, total-goals bands, draw-probability calibration and each fixture's original versus gap-based prediction.</p>
+   </details>
    <details open><summary>1 · League coverage and missing histories</summary>${table(leagueMetrics)}<p class="muted smalltext">Ineligible reasons: ${esc(JSON.stringify(missingReasons))}. Data errors: ${esc(JSON.stringify(failure))}.</p></details>
    <details><summary>2 · Possession suppression impact</summary>${table(bySuppression)}</details>
    <details><summary>3 · Goal-scale slope direction</summary>${table(bySlope)}</details>
@@ -2158,7 +2234,7 @@ async function fpRunPossessionResearch(){
    <details><summary>7 · Rolling points strength</summary>${table(byStrength)}</details>
    <details><summary>8 · Actual H / D / A</summary>${table(byOutcome)}</details>
    <details><summary>9 · Predicted H / D / A</summary>${table(byPrediction)}</details>
-   <p class="muted smalltext">Copy the full JSON for fixture-level predictions, 1–100 scale samples, observed possession ranges, fitted slopes, suppression, extrapolation, oracle-vs-predicted goals and all benchmark comparisons. The oracle uses final possession only to diagnose the goal scale, not to predict matches.</p>`;
+   <p class="muted smalltext">Copy the full JSON for gap-rule predictions, training-selected home/away thresholds, full draw diagnostics, fixture-level predictions, 1–100 scale samples, observed possession ranges, fitted slopes, suppression, extrapolation, oracle-vs-predicted goals and all benchmark comparisons. The oracle uses final possession only to diagnose the goal scale, not to predict matches.</p>`;
   document.getElementById('fpPossReport').value=JSON.stringify(test,null,2);
   status.textContent=`Completed · ${picked.length} summaries · ${eligible.length}/${hold.length} eligible holdout matches. Use Copy test outputs to paste the full report here.`;
  }catch(e){status.textContent='Research failed: '+String(e.message||e);console.error(e)}finally{fpPossBusy=false;btn.disabled=false}
