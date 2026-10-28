@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101827">
-<title>V12 · Footy Picks · Reliable Test Export</title>
+<title>Footy Picks · Model 2 + MM2</title>
 <style>
 :root{
  color-scheme:dark;
@@ -665,33 +665,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 @media(max-width:600px){.fp-at-risk{font-size:9px;padding:2px 5px}
 .fp-risk-detail{font-size:10px}.fp-result-counts{gap:5px!important}
 .fp-result-counts .tag{font-size:10px;padding:4px 6px}}
-</style>
-<style>
-.fp-points-form{margin:10px 0 8px;padding:10px 11px 8px;background:#101f30;border:1px solid #29425a;border-radius:11px;min-width:0}
-.fp-form-heading,.fp-form-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.fp-form-heading{margin-bottom:8px;color:#c4d7e7;font-weight:750;font-size:10px;letter-spacing:.075em}
-.fp-form-heading small{font-size:10px;letter-spacing:0;color:#9fb5c7;font-weight:500;text-align:right}
-.fp-form-line+.fp-form-line{margin-top:9px}
-.fp-form-label{font-size:11px;color:#b6cce0;margin-bottom:5px}
-.fp-form-label strong{font-size:13px;color:#f1f8ff;font-variant-numeric:tabular-nums}
-.fp-form-label small{font-size:9px;color:#8da7bb;font-weight:400}
-.fp-form-empty{font-size:10px;color:#8398ad}
-.fp-form-scale{display:grid;grid-template-columns:repeat(21,minmax(0,1fr));gap:2px;height:10px}
-.fp-form-scale i{display:block;min-width:0;border-radius:2px;background:hsl(calc(2 + var(--tone)*135) 55% 33%);opacity:.58;position:relative}
-.fp-form-scale i.selected{opacity:1;outline:2px solid #e9f5ff;outline-offset:1px;z-index:1;box-shadow:0 0 6px #a5d9f880}
-.fp-form-ends{display:flex;justify-content:space-between;font-size:9px;color:#6f90a8;margin-top:5px}
-.fp-points-form.compact{padding:8px 10px;margin:8px 0}
-.fp-form-line.unavailable .fp-form-scale i{background:#30465a;opacity:.34}
-.fp-form-line.unavailable .fp-form-scale{opacity:.75}
-.fp-points-form.compact .fp-form-heading{margin-bottom:6px}
-.fp-points-form.compact .fp-form-scale{height:7px}
-.fp-points-form.compact .fp-form-line+.fp-form-line{margin-top:7px}
-.fp-points-test .tablewrap{margin-top:9px}
-@media(max-width:600px){.fp-points-form{margin:8px 0;padding:9px 9px 7px}
-.fp-form-heading small{font-size:9px}.fp-form-scale{gap:2px;height:9px}
-.fp-form-label{font-size:10px}.fp-points-form.compact .fp-form-scale{height:6px}}
-</style>
-</head>
+</style></head>
 <body>
 <header>
  <div class="row between">
@@ -811,7 +785,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 <section id="test" hidden>
  <h2>Prediction Test</h2>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run full Model 2 + MM2 test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy · full historical test</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><div id="fpFullMMStatus" class="muted smalltext" aria-live="polite">The full Model Test also evaluates Model 2 + MM2 on the same holdout selections. MM2 needs goal-event histories and may take longer.</div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><button class="btn secondary" type="button" id="fpCopyPointsReport" onclick="fpCopyPointsReport()">Copy Model 2 report</button><span id="fpCopyPointsStatus" class="muted smalltext" aria-live="polite"></span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><section class="panel" id="fpPossessionResearch"><h3>V16 · Core 1X2 Model 2 + MM2 Agreement Test</h3><p class="muted smalltext">Fixed V15 winning configuration: Model 2 probability pick (alpha 0) + MM2 agreement. Compares original core 1X2 predictions, unfiltered probability picks and MM2-agreed picks on identical fixtures. No Double Chance, no betting selection gate, no parameter search. Original Model 2 remains available as baseline.</p><div class="row wrap"><label>Competition <select id="fpPossLeague"><option value="all">Auto-select data-rich leagues</option></select></label><label>Event summaries <select id="fpPossLimit"><option value="360">360 · quicker</option><option value="600" selected>600 · recommended</option><option value="900">900 · deeper</option></select></label><button class="btn" type="button" id="fpRunPossession" onclick="fpRunV10Research()">Run V16 core prediction test</button><button class="btn secondary" type="button" onclick="fpCopyPossessionReport()">Copy test outputs</button><button class="btn secondary" type="button" onclick="fpDownloadV12Report()">Download test JSON</button></div><p id="fpPossStatus" class="muted smalltext" aria-live="polite">Run the comparison, then copy the compact JSON. Historical odds are not supplied; selection win rate is not profitability.</p><div id="fpPossResults"></div><details class="fp-advanced"><summary>JSON diagnostic report</summary><textarea id="fpPossReport" readonly style="width:100%;min-height:160px;font-size:11px"></textarea></details></section><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><p class="muted smalltext">Model 2 + MM2: predict only when independent MM2 agrees with Model 2 probability argmax. Disagreement or insufficient verified goal history = REDUNDANT. Accuracy is conditional on approved fixtures; coverage is reported separately.</p><div id="fpFullMMStatus" class="muted smalltext"></div><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced" hidden><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -1371,7 +1345,7 @@ function fpAverageConfidence(m){
  return nums.length?nums.reduce((a,b)=>a+b,0)/nums.length:0;
 }
 
-function fpStatusTag(m){const f=fpModelFlags(m);return f.selected?'<span class="fp-status fp-status-green">BET ON OUTCOME</span>':''}
+function fpStatusTag(m){const f=fpModelFlags(m);return f.selected?'<span class="fp-status fp-status-green">MM2 VALIDATED</span>':'<span class="fp-status fp-status-amber">REDUNDANT</span>'}
 function fpIndependentProbs(v){
  if(!v)return null;
  const raw=v.probs;
@@ -1408,7 +1382,7 @@ function comparisonRows(m){
 }
 
 function fpRate(h,n){return n?`${(100*h/n).toFixed(1)}%`:'—'}
-function fpHistoryFlags(x){const selected=['H','A'].includes(x.prediction)&&x.selection===x.prediction;return {matching:selected,consensus:selected,disagree:false,count:1}}
+function fpHistoryFlags(x){const selected=['H','A'].includes(x.prediction)&&x.selection===x.prediction&&!!x.mm2Decision?.approved;return {matching:selected,consensus:selected,disagree:false,count:1}}
 
 function fpResultMatches(x){const f=fpHistoryFlags(x);return fpResultFilter==='all'||!!f[fpResultFilter];}
 function comparisonSummary(list){
@@ -1416,7 +1390,7 @@ function comparisonSummary(list){
  const selected=settled.filter(x=>fpHistoryFlags(x).consensus),hit=a=>a.filter(x=>x.actualOutcome===x.prediction).length;
  const rate=a=>a.length?`${(100*hit(a)/a.length).toFixed(1)}%`:'—';
  const leagues={};for(const x of settled)(leagues[x.leagueId||x.league||'Unknown']??=[]).push(x);
- return `<div class="row wrap fp-result-counts" style="gap:7px;margin-bottom:12px"><span class="tag">Recorded ${list.length}</span><span class="tag">Settled ${settled.length}</span><span class="tag">Pending ${list.length-settled.length}</span><span class="tag">Leagues ${Object.keys(leagues).length}</span></div><div class="fp-metrics"><div class="fp-metric"><span class="fp-label">Prediction accuracy</span><strong>${rate(settled)}</strong><span class="fp-count">${hit(settled)}/${settled.length}</span></div><div class="fp-metric fp-bet-summary"><span class="fp-label">Bet on Outcome</span><strong>${rate(selected)}</strong><span class="fp-count">${hit(selected)}/${selected.length} correct</span></div></div><div class="panel"><h3 class="fp-section-title">League accuracy</h3><div class="tablewrap"><table><thead><tr><th>League</th><th>Predictions</th><th>Accuracy</th><th>Bet on Outcome</th></tr></thead><tbody>${Object.entries(leagues).sort((a,b)=>a[0].localeCompare(b[0])).map(([id,a])=>{const picks=a.filter(x=>fpHistoryFlags(x).consensus);return `<tr><td>${esc(a[0].league||id)}</td><td>${hit(a)}/${a.length} · ${rate(a)}</td><td>${rate(a)}</td><td>${hit(picks)}/${picks.length} · ${rate(picks)}</td></tr>` }).join('')||'<tr><td colspan="4">No settled predictions in this period.</td></tr>'}</tbody></table></div><p class="muted smalltext">Breakdowns use predictions saved before kick-off; they cannot reconstruct predictions for matches that were never recorded.</p></div>`;
+ return `<div class="row wrap fp-result-counts" style="gap:7px;margin-bottom:12px"><span class="tag">Recorded ${list.length}</span><span class="tag">Settled ${settled.length}</span><span class="tag">Pending ${list.length-settled.length}</span><span class="tag">Leagues ${Object.keys(leagues).length}</span></div><div class="fp-metrics"><div class="fp-metric"><span class="fp-label">Model 2 raw accuracy</span><strong>${rate(settled)}</strong><span class="fp-count">${hit(settled)}/${settled.length}</span></div><div class="fp-metric fp-bet-summary"><span class="fp-label">MM2 validated accuracy</span><strong>${rate(selected)}</strong><span class="fp-count">${hit(selected)}/${selected.length} correct</span></div></div><div class="panel"><h3 class="fp-section-title">League accuracy</h3><div class="tablewrap"><table><thead><tr><th>League</th><th>Predictions</th><th>Accuracy</th><th>Bet on Outcome</th></tr></thead><tbody>${Object.entries(leagues).sort((a,b)=>a[0].localeCompare(b[0])).map(([id,a])=>{const picks=a.filter(x=>fpHistoryFlags(x).consensus);return `<tr><td>${esc(a[0].league||id)}</td><td>${hit(a)}/${a.length} · ${rate(a)}</td><td>${rate(a)}</td><td>${hit(picks)}/${picks.length} · ${rate(picks)}</td></tr>` }).join('')||'<tr><td colspan="4">No settled predictions in this period.</td></tr>'}</tbody></table></div><p class="muted smalltext">Only pre-kickoff saved MM2 approvals count as validated. Older records without an MM2 decision remain unvalidated; no retrospective claims.</p></div>`;
 }
 
 function updatePredictions(matches,index=state.activeIndex){
@@ -1426,7 +1400,7 @@ function updatePredictions(matches,index=state.activeIndex){
   let i=0;
   while(i<rows.length){const kickoff=new Date(rows[i].date).getTime();let end=i+1;
    while(end<rows.length&&new Date(rows[end].date).getTime()===kickoff)end++;
-   for(let j=i;j<end;j++){const m=rows[j];Object.assign(m,calculatePrediction(m,previous,{...MODELS[index],windows:WINDOW_SETS[state.activeWindow]}));m.pointsForm=fpPointsFromFixture(m,previous);m.originalPrediction=calculateOriginalIndependent(m,previous);m.rankedPrediction=null;m.drawRisk=null;/* retired experimental Model 1 */}
+   for(let j=i;j<end;j++){const m=rows[j];Object.assign(m,calculatePrediction(m,previous,{...MODELS[index],windows:WINDOW_SETS[state.activeWindow]}));m.originalPrediction=calculateOriginalIndependent(m,previous);m.rankedPrediction=null;m.drawRisk=null;/* retired experimental Model 1 */}
    for(let j=i;j<end;j++)if(isFinished(rows[j]))previous.push(rows[j]);
    i=end;
   }
@@ -1442,7 +1416,7 @@ function probsHtml(m){
  ${fpModelProbabilityHtml(m,'02 · Team-form')}
  
  <div class="fp-prob-model fp-combined"><strong>Active probability · ${strategy==='23'?'Models 2+3':'Model 2'}</strong>${pct?`<div class="fp-prob-triplet">${[['H','HOME'],['D','DRAW'],['A','AWAY']].map(([k,n])=>`<span class="${combined[k]===Math.max(combined.H,combined.D,combined.A)?'fp-prob-active':''}">${n}<b>${pct[k]}%</b></span>`).join('')}</div>`:'<p class="muted smalltext">Unavailable until all active model probabilities are available.</p>'}</div>
- <details class="fp-calc-details"><summary>How probabilities are calculated</summary><p class="muted smalltext">The displayed outlook uses Model 2 outcome probabilities only. It is informational and does not override Model 2 SELECT decisions. Poisson-derived estimates are used for display where needed. The joint estimate has not been independently calibrated.</p></details></div>`;
+ <details class="fp-calc-details"><summary>How probabilities are calculated</summary><p class="muted smalltext">Model 2 probabilities remain unchanged. MM2 independently forecasts using verified historical goal-event sequences; only agreement with Model 2 probability argmax produces an actionable 1X2 prediction. Insufficient MM2 data or disagreement means REDUNDANT. Poisson-derived estimates are used for display where needed. The joint estimate has not been independently calibrated.</p></details></div>`;
 }
 
 function formHtml(f){
@@ -1513,79 +1487,12 @@ function riskDetailsHtml(m){
  const lines=risk.flags.map(f=>`<li><strong>${esc(f.name)}:</strong> ${esc(f.text)}.</li>`).join("");
  return `<div class="notice" style="border-left-color:${risk.level==="high"?"var(--red)":"var(--amber)"}"><strong>${risk.level==="high"?"HIGH RISK — confidence reduced":"FORM WARNING — confidence reduced"}</strong><ul style="margin:6px 0 0;padding-left:19px">${lines}</ul><p class="analytics-note">This alert uses recent league results and score patterns. Historical shots, shots on target and xG are not available consistently in the current scoreboard history, so this is a result-based warning rather than a full performance-shock test.</p></div>`;
 }
-
-/* Independent Points Form research. Does not feed Model 2 probabilities, prediction or confidence. */
-const FP_POINTS_CONFIG_KEY="fp_points_form_choice_v1";
-let fpPointsConfig=readStore(FP_POINTS_CONFIG_KEY,{window:10,method:"hybrid",weight:.5});
-function fpPointsRaw(m,previous,n,method="overall",weight=.5){
- if(!previous||!m||!["H","A","D"].includes(m.prediction))return null;
- const h=historyForTeam(previous,teamKey(m,"H")),a=historyForTeam(previous,teamKey(m,"A"));
- const calc=(rows,venue)=>{const r=(venue?rows.filter(x=>x.venue===venue):rows).slice(-n);return {n:r.length,p:r.reduce((v,x)=>v+x.points,0)}};
- const ho=calc(h),ao=calc(a),hv=calc(h,"home"),av=calc(a,"away");
- const valid=(x,y)=>x.n>=n&&y.n>=n;
- if(method==="overall"&&!valid(ho,ao)||method==="venue"&&!valid(hv,av)||method==="hybrid"&&(!valid(ho,ao)||!valid(hv,av)))return null;
- const overall=ho.p-ao.p,venue=hv.p-av.p;
- const gap=method==="venue"?venue:method==="hybrid"?(1-weight)*overall+weight*venue:overall;
- const signed=m.prediction==="A"?-gap:m.prediction==="H"?gap:10-2*Math.abs(gap/(3*n)*10);
- const value=m.prediction==="D"?Math.max(-10,Math.min(10,signed)):Math.max(-10,Math.min(10,10*signed/(3*n)));
- return {score:Math.round(value),raw:gap,home:ho.p,away:ao.p,homeVenue:hv.p,awayVenue:av.p,n,method,weight};
-}
-// Experimental results rating: W=+10, D=0, L=-10. Kept separate from league-points form.
-function fpResultsFormRaw(m,previous,n,method="overall",weight=.5){
- if(!previous||!m||!["H","A"].includes(m.prediction))return null;
- const h=historyForTeam(previous,teamKey(m,"H")),a=historyForTeam(previous,teamKey(m,"A"));
- const calc=(rows,venue)=>{const r=(venue?rows.filter(x=>x.venue===venue):rows).slice(-n);
-  return {n:r.length,w:r.filter(x=>x.points===3).length,d:r.filter(x=>x.points===1).length,l:r.filter(x=>x.points===0).length,
-   total:r.reduce((v,x)=>v+(x.points===3?10:x.points===1?0:-10),0)};
- };
- const ho=calc(h),ao=calc(a),hv=calc(h,"home"),av=calc(a,"away");
- const valid=(x,y)=>x.n>=n&&y.n>=n;
- if(method==="overall"&&!valid(ho,ao)||method==="venue"&&!valid(hv,av)||method==="hybrid"&&(!valid(ho,ao)||!valid(hv,av)))return null;
- const overall=ho.total-ao.total,venue=hv.total-av.total;
- const gap=method==="venue"?venue:method==="hybrid"?(1-weight)*overall+weight*venue:overall;
- const signed=m.prediction==="A"?-gap:gap;
- return {score:Math.max(-10,Math.min(10,Math.round(signed/(2*n)))),raw:gap,
-  home:ho,away:ao,homeVenue:hv,awayVenue:av,n,method,weight};
-}
-function fpPointsFromFixture(m,previous){
- const config=fpPointsConfig;
- return {window:fpPointsRaw(m,previous,config.window,config.method,config.weight),
- last5:fpPointsRaw(m,previous,5,"overall"),config:{...config}};
-}
-function fpPointsBar(label,item,compact=false){
- if(!item)return `<div class="fp-form-line unavailable"><div class="fp-form-label"><span>${label}</span><span class="fp-form-empty">Insufficient history · —</span></div><div class="fp-form-scale" aria-label="${esc(label)}: insufficient history">${Array.from({length:21},()=>"<i></i>").join("")}</div>${compact?"":`<div class="fp-form-ends"><span>−10</span><span>0</span><span>+10</span></div>`}</div>`;
- const v=item.score,kind=v>=3?"positive":v<=-3?"negative":"neutral";
- const cells=Array.from({length:21},(_,i)=>`<i class="${i===v+10?"selected":""}" style="--tone:${i/20}" aria-hidden="true"></i>`).join("");
- return `<div class="fp-form-line ${kind}"><div class="fp-form-label"><span>${label}</span><strong>${v>0?"+":""}${v}<small> / 10</small></strong></div><div class="fp-form-scale" role="img" aria-label="${esc(label)}: ${v>0?"+":""}${v} out of 10">${cells}</div>${compact?"":`<div class="fp-form-ends"><span>−10</span><span>0</span><span>+10</span></div>`}</div>`;
-}
-function fpPointsVerdict(p){
- if(!p?.window||!p?.last5)return "Awaiting sufficient history";
- const a=p.window.score,b=p.last5.score;
- if(a>=3&&b>=3)return "Both support prediction";
- if(a<=-3&&b<=-3)return "Both contradict prediction";
- if(a>=3&&b<=-3)return "Recent form warning";
- if(a<=-3&&b>=3)return "Recent form improving relative to window";
- if(Math.abs(a)<=2&&Math.abs(b)<=2)return "Similar recent points performance";
- return "Mixed form evidence";
-}
-function fpPointsHtml(p,compact=false){
- p=p||{window:null,last5:null,config:fpPointsConfig};
- const label=p.window?`Window ${p.config?.window||p.window.n} · ${p.config?.method||p.window.method}`:"Window form";
- return `<div class="fp-points-form ${compact?"compact":""}"><div class="fp-form-heading"><span>POINTS FORM</span>${!compact?`<small>${esc(fpPointsVerdict(p))}</small>`:""}</div>${fpPointsBar(label,p.window,compact)}${fpPointsBar("Last 5 · all venues",p.last5,compact)}</div>`;
-}
-function fpPointsDetails(p){
- p=p||{window:null,last5:null};
- const row=(label,v)=>`<div class="form-summary"><strong>${label}:</strong> ${v?`Home ${v.home} pts · Away ${v.away} pts${v.method!=="overall"?` · venue Home ${v.homeVenue} / Away ${v.awayVenue} pts`:""}`:"Insufficient previous league results"}</div>`;
- return `<div class="analytics-card full"><h4>Independent points form</h4>${row("Window",p.window)}${row("Last five",p.last5)}<p class="analytics-note">Both scores use only completed league matches before kick-off. Positive supports Model 2; negative challenges it. A draw prediction uses closeness of points instead of picking a side. This is not a win probability and does not alter the prediction or confidence.</p></div>`;
-}
-function fpPointsForMatch(m){return m.pointsForm||state.history.find(x=>x.id===eventId(m))?.pointsForm||{window:null,last5:null,config:fpPointsConfig}}
-
 function matchCard(m){
  const id=eventId(m),added=state.acc.some(x=>x.id===id),shownScore=isFinished(m)?resultString(m):"vs";
  return`<article class="match"><div class="row between"><span class="league">${esc(m.league)}</span><div class="row wrap">${Math.min(m.h?.count??0,m.a?.count??0)<5?`<span class="tag">Limited history</span>`:""}</div></div>
  <div class="meta" style="margin:7px 0">${esc(fmtDate(m.date))}${m.venue?" · "+esc(m.venue):""}</div>
  <div class="row between"><div class="grow teamline">${esc(m.home)}<div class="meta">${m.h.count} prior league matches</div></div><strong style="white-space:nowrap;font-size:19px">${shownScore}</strong><div class="grow teamline" style="text-align:right">${esc(m.away)}<div class="meta">${m.a.count} prior league matches</div></div></div>
- ${comparisonRows(m)}${fpPointsHtml(fpPointsForMatch(m))}${fpEvidenceLine(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?"Added":"Add pick"}</button><button class="btn small fp-dc-button" data-dc-toggle="${esc(id)}" type="button">Double chance</button><button class="btn small fp-bet-button" data-bet-toggle="${esc(id)}" type="button">Bet on</button></div><details class="fixture-secondary"><summary>Probabilities &amp; calculation breakdown</summary>${fpDrawDecision(m)}${fpPointsDetails(fpPointsForMatch(m))}${probsHtml(m)}${explainHtml(m)}</details></article>`;
+ ${comparisonRows(m)}${fpMM2VerdictHtml(m)}<details class="fixture-secondary"><summary>MM2 team types and match-management profile</summary>${fpMM2ProfileHtml(m)}</details>${fpEvidenceLine(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')" ${!m.mm2Decision?.approved?"disabled title='Redundant: MM2 did not validate'":""}>${added?"Added":"Add pick"}</button><button class="btn small fp-dc-button" data-dc-toggle="${esc(id)}" type="button">Double chance</button><button class="btn small fp-bet-button" data-bet-toggle="${esc(id)}" type="button">Bet on</button></div><details class="fixture-secondary"><summary>Probabilities &amp; calculation breakdown</summary>${fpDrawDecision(m)}${probsHtml(m)}${explainHtml(m)}</details></article>`;
 }
 function upcoming(){
  const now=new Date(),v=$("days").value,league=$("league").value,todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
@@ -1600,22 +1507,22 @@ function upcoming(){
 function fpModelFlags(m){
  const strategy='2',single=true;
  const teamSelected=['H','A'].includes(m.prediction)&&m.selection===m.prediction;
- const selected=teamSelected;
- return {valid:['H','D','A'].includes(m.prediction),matching:teamSelected,count:1,selected,consensus:selected,disagree:false,strategy,outcome:selected?m.prediction:'N'};
+ const selected=teamSelected&&!!m.mm2Decision?.approved;
+ return {valid:['H','D','A'].includes(m.prediction),matching:selected,count:1,selected,consensus:selected,disagree:false,strategy,outcome:selected?m.prediction:'N'};
 }
 let fpFixtureFilter='all',fpResultFilter='all',fpWeeklyFilter='all';
 function renderFixtures(){
  const all=upcoming(),counts={all:all.length,matching:0,consensus:0};
  for(const m of all){const f=fpModelFlags(m);if(f.matching)counts.matching++;if(f.consensus)counts.consensus++;}
  const list=all.filter(m=>fpFixtureFilter==='all'||!!fpModelFlags(m)[fpFixtureFilter]);
- document.querySelectorAll('#fixtureFilters button').forEach(b=>{b.classList.toggle('active',b.dataset.fpFilter===fpFixtureFilter);b.textContent=({all:'All',matching:'Bet on Outcome',consensus:'Bet on Outcome'}[b.dataset.fpFilter])+' ('+counts[b.dataset.fpFilter]+')';});
+ document.querySelectorAll('#fixtureFilters button').forEach(b=>{b.classList.toggle('active',b.dataset.fpFilter===fpFixtureFilter);b.textContent=({all:'All',matching:'MM2 validated',consensus:'MM2 validated'}[b.dataset.fpFilter])+' ('+counts[b.dataset.fpFilter]+')';});
  $('fixtureStatus').textContent=state.loaded?`${all.length} fixtures · ${counts.consensus} Bet on Outcome`:'';
  $('fixtureList').innerHTML=list.length?list.map(matchCard).join(''):`<div class="empty">${state.loaded?'No fixtures match this filter.':'Load fixtures to see predictions.'}</div>`;
  if(state.topMode)renderTop10();if(state.goalThreatMode)renderGoalThreats();
 }
 function fpCompactFixture(m,heading='',extra=''){
  const id=eventId(m),added=state.acc.some(x=>x.id===id);
- return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="muted smalltext">${esc(fmtDate(m.date))}</span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpPointsHtml(fpPointsForMatch(m))}${fpEvidenceLine(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-dc-button" data-dc-toggle="${esc(id)}">Double chance</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Calculation breakdown &amp; probabilities</summary>${fpDrawDecision(m)}${fpPointsDetails(fpPointsForMatch(m))}${probsHtml(m)}${explainHtml(m)}</details></article>`;
+ return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="muted smalltext">${esc(fmtDate(m.date))}</span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpEvidenceLine(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-dc-button" data-dc-toggle="${esc(id)}">Double chance</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Calculation breakdown &amp; probabilities</summary>${fpDrawDecision(m)}${probsHtml(m)}${explainHtml(m)}</details></article>`;
 }
 function fpDrawDecision(m){
  const gap=Math.abs(Number(m.xgDifference)),prob=Number(m.probs?.D),stability=Number(m.stability??1),messages=[];
@@ -1652,7 +1559,7 @@ function renderAccumulator(){
  $("accList").innerHTML=state.acc.length?state.acc.map((x,i)=>{const current=state.matches.find(m=>eventId(m)===x.id),savedConfidence=Number(x.confidence),currentConfidence=Number(current?.confidence),confidence=Number.isFinite(savedConfidence)?savedConfidence:currentConfidence;return`<div class="pick"><div class="row between"><div class="grow"><strong>${esc(x.home)} vs ${esc(x.away)}</strong><div class="meta">${esc(x.league)} · ${esc(fmtDate(x.date))}</div><div style="margin-top:6px">${confidenceBadge(confidence)} <span class="tag">${outcomeName(x.outcome)} · ${Math.round(x.prob*100)}%</span></div></div><button class="btn danger small" onclick="removeAcc(${i})">Remove</button></div></div>`}).join(""):`<div class="empty">Add picks from Fixtures.</div>`;
 }
 function addToAccumulator(id,outcome){
- const m=state.matches.find(x=>eventId(x)===id);if(!m||!m.probs)return;
+ const m=state.matches.find(x=>eventId(x)===id);if(!m||!m.probs||!m.mm2Decision?.approved)return;
  const existing=state.acc.findIndex(x=>x.id===id);
  if(existing!==-1){removeAcc(existing);return;}
  state.acc.push({id,home:m.home,away:m.away,league:m.league,leagueId:m.leagueId,date:m.date,outcome,prob:m.probs[outcome],confidence:m.confidence});store("fp_acc",state.acc);renderAccumulator();renderFixtures();
@@ -1672,7 +1579,7 @@ function snapshotPredictions(matches){
   const agreement={count:flags.count,strategy:flags.strategy,sameOutcome:flags.matching,betOnOutcome:flags.consensus};
   if(existing){continue;} // First saved pre-kickoff forecast is immutable, including agreement and model availability.
 
-  const snap={pointsForm:m.pointsForm||null,ranked,original,drawRisk:m.drawRisk?{...m.drawRisk}:null,agreement,model3Config:JSON.parse(JSON.stringify(rankedSettings)),model2Settings:{windowIndex:state.activeWindow,modelIndex:state.activeIndex,homeGap:state.homeGap,awayGap:state.awayGap,drawGap:state.drawGap,drawProb:state.drawProb},id,leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,date:m.date,prediction:m.prediction,selection:m.selection??selectionWithDraw(m.xgDifference,m.prediction,m.probs),confidence:m.confidence,probs:{...m.probs},predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,expectedGoalBreakdown:m.expectedGoalBreakdown,supportFlags:(m.risk?.supportFlags||[]).map(f=>typeof f==='string'?f:f.text),riskLevel:m.risk?.level||'low',riskFlags:(m.risk?.flags||[]).map(f=>typeof f==='string'?f:f.text),modelIndex:state.activeIndex,windowIndex:state.activeWindow,teamRankSettings:{...winRankSettings.team},savedAt:new Date().toISOString()};
+  const snap={mm2Decision:m.mm2Decision?{...m.mm2Decision}:null,mm2Profiles:m.mm2?.eligible?{home:fpControlType(m.mm2.home),away:fpControlType(m.mm2.away),homeSample:m.mm2.home.n,awaySample:m.mm2.away.n}:null,ranked,original,drawRisk:m.drawRisk?{...m.drawRisk}:null,agreement,model3Config:JSON.parse(JSON.stringify(rankedSettings)),model2Settings:{windowIndex:state.activeWindow,modelIndex:state.activeIndex,homeGap:state.homeGap,awayGap:state.awayGap,drawGap:state.drawGap,drawProb:state.drawProb},id,leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,date:m.date,prediction:m.prediction,selection:m.selection??selectionWithDraw(m.xgDifference,m.prediction,m.probs),confidence:m.confidence,probs:{...m.probs},predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,expectedGoalBreakdown:m.expectedGoalBreakdown,supportFlags:(m.risk?.supportFlags||[]).map(f=>typeof f==='string'?f:f.text),riskLevel:m.risk?.level||'low',riskFlags:(m.risk?.flags||[]).map(f=>typeof f==='string'?f:f.text),modelIndex:state.activeIndex,windowIndex:state.activeWindow,teamRankSettings:{...winRankSettings.team},savedAt:new Date().toISOString()};
   state.history.push(snap);byId.set(id,snap);added++;
  }
  state.history=state.history.filter(x=>Date.now()-new Date(x.date).getTime()<730*86400000).slice(-10000);
@@ -1697,12 +1604,12 @@ function renderHistory(){
  const range=$('historyDays').value,days=Number(range),league=$('historyLeague').value,cut=range==='all'?0:Date.now()-days*86400000;
  const list=state.history.filter(x=>new Date(x.date).getTime()>=cut&&new Date(x.date).getTime()<=Date.now()&&(league==='all'||x.leagueId===league)).sort((a,b)=>new Date(b.date)-new Date(a.date));
  const visible=list.filter(fpResultMatches),settled=visible.filter(x=>x.actualOutcome),hits=settled.filter(x=>x.actualOutcome===x.prediction).length;
- document.querySelectorAll('#resultFilters button').forEach(b=>{b.classList.toggle('active',b.dataset.resultFilter===fpResultFilter);const count=list.filter(x=>b.dataset.resultFilter==='all'||fpHistoryFlags(x).consensus).length;b.textContent=(b.dataset.resultFilter==='all'?'All results':'Bet on Outcome')+' ('+count+')'});
+ document.querySelectorAll('#resultFilters button').forEach(b=>{b.classList.toggle('active',b.dataset.resultFilter===fpResultFilter);const count=list.filter(x=>b.dataset.resultFilter==='all'||fpHistoryFlags(x).consensus).length;b.textContent=(b.dataset.resultFilter==='all'?'All results':'MM2 validated')+' ('+count+')'});
  $('historyStats').innerHTML=comparisonSummary(list);
  renderConfidencePerformance(settled);renderRiskPerformance(settled);
  if(!visible.length){$('historyList').innerHTML='<div class="empty">No saved predictions in this period.</div>';return}
  $('historyList').innerHTML=visible.map(x=>{const done=!!x.actualOutcome,ok=done&&x.actualOutcome===x.prediction,score=x.actualScore||'Result pending',p=fpIndependentProbs(x);
- return `<article class="match"><div class="row between wrap"><span class="league">${esc(x.league)}</span><div class="row wrap">${confidenceBadge(x.confidence)}<span class="tag ${!done?'':ok?'good':'bad'}">${!done?'Pending':ok?'Correct':'Incorrect'}</span></div></div><div class="meta">${esc(fmtDate(x.date))}</div><div class="row between" style="margin-top:7px"><strong class="grow">${esc(x.home)}</strong><strong>${esc(score)}</strong><strong class="grow" style="text-align:right">${esc(x.away)}</strong></div><div class="row wrap" style="margin-top:9px"><strong>${esc(outcomeName(x.prediction))}</strong>${fpStatusTag(x)}${fpDrawBadge(x)}<span data-bet-history-badge="${esc(x.id)}"></span></div>${fpPointsHtml(x.pointsForm,true)}${p?`<div class="probrow">${[['H','Home'],['D','Draw'],['A','Away']].map(([k,n])=>`<div class="prob"><span>${n}</span><strong>${(p[k]*100).toFixed(0)}%</strong></div>`).join('')}</div>`:''}</article>`}).join('');
+ return `<article class="match"><div class="row between wrap"><span class="league">${esc(x.league)}</span><div class="row wrap">${confidenceBadge(x.confidence)}<span class="tag ${!done?'':ok?'good':'bad'}">${!done?'Pending':ok?'Correct':'Incorrect'}</span></div></div><div class="meta">${esc(fmtDate(x.date))}</div><div class="row between" style="margin-top:7px"><strong class="grow">${esc(x.home)}</strong><strong>${esc(score)}</strong><strong class="grow" style="text-align:right">${esc(x.away)}</strong></div><div class="row wrap" style="margin-top:9px"><strong>${esc(outcomeName(x.prediction))}</strong>${fpStatusTag(x)}${fpDrawBadge(x)}<span data-bet-history-badge="${esc(x.id)}"></span></div>${p?`<div class="probrow">${[['H','Home'],['D','Draw'],['A','Away']].map(([k,n])=>`<div class="prob"><span>${n}</span><strong>${(p[k]*100).toFixed(0)}%</strong></div>`).join('')}</div>`:''}</article>`}).join('');
 }
 const LEAGUE_INFLUENCES=[0];
 let testCancelRequested=false;
@@ -1827,6 +1734,8 @@ async function loadData(){
   else {state.activeIndex=state.manualIndex;state.activeWindow=state.manualWindow;}
   setBusy("Calculating predictions…",78);await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));updatePredictions(state.matches,state.activeIndex);state.loaded=true;updateModelBanner();
   if(state.mode==="auto"&&state.lastTest){const b=bestTestModel(state.lastTest);$("activeModelNote")&&($("activeModelNote").textContent=b?`Auto selected ${b.name} by outcome accuracy ${testRate(b.correct,b.total)}.`:`Not enough test matches for Auto; using manual fallback, Option ${MODELS[state.manualIndex].short}.`)}
+  setBusy("Validating predictions with MM2 goal history…",83);
+  await fpMM2ApplyFixtures(state.matches,(n,total,valid)=>{setBusy(`MM2 history ${n}/${total} · ${valid} verified`,83+Math.round(8*n/Math.max(1,total)))});
   setBusy("Saving prediction snapshots…",92);const added=snapshotPredictions(state.matches);$("connection").textContent="Data loaded";
   $("fixtureStatus").textContent=`Loaded ${state.matches.length} matches across ${requestedIds.length} competitions.`+`${result.errors.length?" Some competitions unavailable: "+result.errors.join(", ")+".":""} ${added} new pre-match snapshots saved.`;
   await new Promise(resolve=>requestAnimationFrame(resolve));renderFixtures();renderAccumulator();renderWeeklyTop6();await refreshHistoryScoresFromLoaded();if(state.lastTest)renderTest(state.lastTest);
@@ -1887,7 +1796,8 @@ async function doTest(){
   // The single pass below produces predictions and all downstream DC statistics.
   // Legacy multi-model grid searches, ranking optimisation and draw research do not run.
   const report=await fpHybridBacktest(result.matches);
-  await fpFullMMBacktest(result.matches,report);
+  fpPerfUpdate('MM2 historical validation',88,'Checking goal-event histories');
+  await fpFullMMBacktest(result.matches);
   analysisMs=performance.now()-started-downloadMs;
   const timing={downloadSeconds:+(downloadMs/1000).toFixed(2),analysisSeconds:+(analysisMs/1000).toFixed(2),totalSeconds:+((performance.now()-started)/1000).toFixed(2)};
   report.timings=timing;
@@ -1904,68 +1814,32 @@ async function doTest(){
 }
 
 
-
-/* V17: MM2 on the SAME 75/25 full-test holdout picks as the original Model 2.
-   MM2 only filters predictions; alpha=0, no probability blending, no betting rule changes.
-   Event summaries are obtained for every fixture in each league's pre-holdout
-   warmup and holdout period, not merely for the 120-fixture research sample. */
-async function fpFullMMBacktest(matches,originalReport){
- const status=document.getElementById('fpFullMMStatus'),dash=document.getElementById('fpUnifiedTestDashboard');
- const targets=window.fpFullMMTargets||[];
- const groups={};for(const m of matches.filter(isFinished))(groups[m.leagueId]??=[]).push(m);
- const needed=new Map(),leagueWindows={};
- for(const [id,raw] of Object.entries(groups)){
-  const sorted=raw.slice().sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
-  const cut=Math.floor(sorted.length*.75),holdTargets=targets.filter(x=>x.league===id);
-  if(!holdTargets.length)continue;
-  // Include all holdout fixtures plus 150 prior games to warm up each team's MM history.
-  // Explicitly report incomplete coverage when the API cannot supply timelines.
-  const first=Math.max(0,cut-150),chosen=sorted.slice(first);
-  leagueWindows[id]={total:sorted.length,holdoutStart:cut,warmup:first,requested:chosen.length};
-  for(const m of chosen)needed.set(id+':'+m.id,m);
+async function fpFullMMBacktest(matches){
+ const targets=window.fpFullMMTargets||[],groups={};for(const m of matches.filter(isFinished))(groups[m.leagueId]??=[]).push(m);
+ const needed=new Map();for(const [id,raw] of Object.entries(groups)){
+  const sorted=raw.slice().sort((a,b)=>Date.parse(a.date)-Date.parse(b.date)),cut=Math.floor(sorted.length*.75);
+  if(!targets.some(t=>t.league===id))continue;
+  for(const m of sorted.slice(Math.max(0,cut-150)))needed.set(id+':'+m.id,m);
  }
- const events=[],errors={http:0,network:0,invalidTimeline:0},items=[...needed.values()];let index=0,finished=0;
- if(status)status.textContent=`Full MM2 test: downloading ${items.length} historical goal-event summaries for ${targets.length} original holdout predictions. This may take several minutes.`;
- const workers=Array.from({length:6},async()=>{
-  while(index<items.length){testCheckpoint();const m=items[index++];let goals=[],valid=false;
-   try{const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);let res;
-    try{res=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${m.leagueId}/summary?event=${encodeURIComponent(m.id)}`,{signal:ctrl.signal})}finally{clearTimeout(timer)}
-    if(!res.ok)errors.http++;else{const data=fpControlGoals(await res.json(),m.homeScore,m.awayScore);valid=data.valid;goals=data.goals||[];if(!valid)errors.invalidTimeline++}
-   }catch(_){errors.network++}
-   events.push({m,league:m.leagueId,date:m.date,hk:teamKey(m,'H'),ak:teamKey(m,'A'),hg:m.homeScore,ag:m.awayScore,goals,goalTimelineValid:valid});
-   finished++;if(finished%25===0||finished===items.length){if(status)status.textContent=`Full MM2 histories: ${finished}/${items.length} summaries · ${events.filter(e=>e.goalTimelineValid).length} valid. Comparing against ${targets.length} original selections…`;await new Promise(r=>setTimeout(r,0))}
-  }
- });await Promise.all(workers);
- const eventGroups={};for(const e of events)(eventGroups[e.league]??=[]).push(e);
- for(const list of Object.values(eventGroups))list.sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
- const resultRows=[];
- for(const t of targets){testCheckpoint();const kick=Date.parse(t.m.date);
-  const past=(eventGroups[t.league]||[]).filter(e=>e.goalTimelineValid&&Date.parse(e.date)+3*3600000<=kick);
-  const target={hk:teamKey(t.m,'H'),ak:teamKey(t.m,'A')};
-  const mm=fpMMForecast(past,target,20);
-  // Same experimental V15 winner: argmax original Model 2 probabilities, MM2 agreement.
-  // The original full-test baseline prediction and original selection gate remain untouched.
-  const allLeague=(groups[t.league]||[]).filter(m=>Date.parse(m.date)+3*3600000<=kick);
-  const model=fpV10Model(t.m,allLeague);
-  const pick=model.probs?fpV10Pick(model.probs):null;
-  const mmPick=mm.eligible?fpV10Pick(mm.models.MM2):null;
-  resultRows.push({league:t.league,id:t.m.id,date:t.m.date,fixture:`${t.m.home} vs ${t.m.away}`,actual:t.actual,originalPrediction:t.originalPrediction,
-   originalCorrect:t.originalPrediction===t.actual,experimentalPrediction:pick,mm2Prediction:mmPick,
-   mmEligible:mm.eligible,agreed:mm.eligible&&pick===mmPick,experimentalCorrect:pick===t.actual,
-   reason:mm.eligible?null:mm.reason});
+ const status=document.getElementById('fpFullMMStatus');
+ const eventGroups=await fpMM2BuildEvents([...needed.values()],(n,total,valid)=>{
+  fpPerfUpdate('Validating MM2 goal history',88+Math.round(8*n/Math.max(1,total)),`${n}/${total} summaries · ${valid} valid`);
+  if(status)status.textContent=`MM2 goal histories: ${n}/${total} · ${valid} verified`;
+ });
+ const rows=[];for(const t of targets){testCheckpoint();const mm=fpMM2ForFixture(eventGroups,t.m);
+  // Exactly the historical winning configuration: Model 2 probability argmax + MM2 agreement, no blending.
+  const prior=(groups[t.league]||[]).filter(m=>Date.parse(m.date)+3*3600000<=Date.parse(t.m.date));
+  const baseline=calculateOriginalIndependent(t.m,prior);
+  const pick=fpMM2Argmax(baseline.probs),mmPick=mm.eligible?fpMM2Argmax(mm.models.MM2):null;
+  rows.push({league:t.league,fixture:`${t.m.home} vs ${t.m.away}`,id:t.m.id,actual:t.actual,originalPrediction:t.originalPrediction,experimentalPrediction:pick,mm2Prediction:mmPick,mmEligible:mm.eligible,agreed:mm.eligible&&pick===mmPick,reason:mm.eligible?null:mm.reason,originalCorrect:t.originalPrediction===t.actual,experimentalCorrect:pick===t.actual});
  }
- const score=arr=>({n:arr.length,correct:arr.filter(r=>r.experimentalCorrect).length,accuracy:arr.length?arr.filter(r=>r.experimentalCorrect).length/arr.length:null});
- const eligible=resultRows.filter(r=>r.mmEligible),agreed=eligible.filter(r=>r.agreed),disagreed=eligible.filter(r=>!r.agreed);
- const stats={baseline:{n:resultRows.length,correct:resultRows.filter(r=>r.originalCorrect).length,accuracy:resultRows.length?resultRows.filter(r=>r.originalCorrect).length/resultRows.length:null},
-  experimentalAll:score(resultRows.filter(r=>r.experimentalPrediction)),mmEligible:eligible.length,mmUnavailable:resultRows.length-eligible.length,
-  agreed:score(agreed),disagreed:score(disagreed),retained:agreed.length,filtered:disagreed.length,
-  coverage:resultRows.length?agreed.length/resultRows.length:null,
-  originalOnAgreed:{n:agreed.length,correct:agreed.filter(r=>r.originalCorrect).length},
-  perLeague:Object.keys(leagueWindows).map(id=>{const a=resultRows.filter(r=>r.league===id),b=a.filter(r=>r.agreed);return {league:id,baseline:{n:a.length,correct:a.filter(r=>r.originalCorrect).length},agreed:score(b),mmUnavailable:a.filter(r=>!r.mmEligible).length}})};
+ const stat=(a,key='experimentalCorrect')=>({n:a.length,correct:a.filter(r=>r[key]).length,accuracy:a.length?a.filter(r=>r[key]).length/a.length:null});
+ const eligible=rows.filter(r=>r.mmEligible),accepted=eligible.filter(r=>r.agreed),disagreed=eligible.filter(r=>!r.agreed),unavailable=rows.filter(r=>!r.mmEligible);
+ const stats={baseline:stat(rows,'originalCorrect'),experimentalAll:stat(rows),accepted:stat(accepted),disagreed:stat(disagreed),unavailable:stat(unavailable),originalOnAccepted:stat(accepted,'originalCorrect'),coverage:rows.length?accepted.length/rows.length:null};
  const pct=x=>x==null?'—':(100*x).toFixed(1)+'%';
- if(dash)dash.innerHTML=`<div class="panel fp-scorecard"><span class="fp-scorecard-label">Original Model 2 · full holdout</span><strong>${pct(stats.baseline.accuracy)}</strong><span class="muted smalltext">${stats.baseline.correct}/${stats.baseline.n} correct</span></div><div class="panel fp-scorecard"><span class="fp-scorecard-label">Model 2 + MM2 · full holdout</span><strong>${pct(stats.agreed.accuracy)}</strong><span class="muted smalltext">${stats.agreed.correct}/${stats.agreed.n} correct · ${pct(stats.coverage)} of original selections retained</span></div><div class="panel fp-scorecard"><span class="fp-scorecard-label">Experimental 1X2 · unfiltered</span><strong>${pct(stats.experimentalAll.accuracy)}</strong><span class="muted smalltext">${stats.experimentalAll.correct}/${stats.experimentalAll.n} · Model 2 probability argmax</span></div><div class="panel fp-scorecard"><span class="fp-scorecard-label">MM2 disagreement</span><strong>${pct(stats.disagreed.accuracy)}</strong><span class="muted smalltext">${stats.disagreed.correct}/${stats.disagreed.n} · rejected predictions</span></div>`;
- if(status)status.textContent=`Full holdout comparison: ${stats.baseline.n} original selections; MM2 agreed on ${stats.agreed.n}, disagreed on ${stats.disagreed.n}, and lacked history for ${stats.mmUnavailable}. Event summaries: ${events.length}, valid ${events.filter(e=>e.goalTimelineValid).length}. Original Model 2 unchanged.`;
- const box=document.getElementById('fpAdaptiveReport');if(box){let old={};try{old=JSON.parse(box.value)}catch(_){}old.fullMM2={version:'FOOTYPICKS-V17-FULL-MODEL-TEST-MM2',configuration:'V15 fixed winner: alpha=0, probability argmax + MM2 agreement',notes:'Same original Model 2 holdout selection fixtures; MM2 uses only pre-kickoff valid timelines. No event history = unavailable, not rejection. Filtered accuracy is conditional on agreement.',stats,coverage:{summariesRequested:items.length,summariesValid:events.filter(e=>e.goalTimelineValid).length,errors,leagueWindows},fixtures:resultRows};box.value=JSON.stringify(old,null,2)}
+ const dash=document.getElementById('fpUnifiedTestDashboard');if(dash)dash.innerHTML=`<div class="panel fp-scorecard"><span class="fp-scorecard-label">Original Model 2 · full holdout</span><strong>${pct(stats.baseline.accuracy)}</strong><span class="muted smalltext">${stats.baseline.correct}/${stats.baseline.n}</span></div><div class="panel fp-scorecard"><span class="fp-scorecard-label">Model 2 + MM2 · validated only</span><strong>${pct(stats.accepted.accuracy)}</strong><span class="muted smalltext">${stats.accepted.correct}/${stats.accepted.n} · ${pct(stats.coverage)} coverage</span></div><div class="panel fp-scorecard"><span class="fp-scorecard-label">Original Model 2 on same retained fixtures</span><strong>${pct(stats.originalOnAccepted.accuracy)}</strong><span class="muted smalltext">${stats.originalOnAccepted.correct}/${stats.originalOnAccepted.n}</span></div><div class="panel fp-scorecard"><span class="fp-scorecard-label">Redundant / no prediction</span><strong>${rows.length-accepted.length}</strong><span class="muted smalltext">${disagreed.length} disagree · ${unavailable.length} unavailable</span></div>`;
+ if(status)status.textContent=`MM2 full holdout complete · ${accepted.length} approved · ${disagreed.length} disagreements · ${unavailable.length} insufficient data · ${needed.size} goal summaries requested.`;
+ const box=document.getElementById('fpAdaptiveReport');if(box){let old={};try{old=JSON.parse(box.value)}catch(_){}old.fullMM2={version:'V6.5-MODEL2-MM2',configuration:'Model 2 probability argmax + MM2 independent agreement, alpha=0; missing MM2 means REDUNDANT',stats,fixtures:rows};box.value=JSON.stringify(old,null,2)}
  return stats;
 }
 
@@ -1983,34 +1857,13 @@ function fpDrawBadge(m){const f=fpModelFlags(m),p=fpIndependentProbs(m);if(!f.se
 
 function fpDrawDetail(m){return ''}
 
-async function fpCopyResultsSummary(){
- const box=document.getElementById("fpAdaptiveReport"),status=document.getElementById("fpCopyPointsStatus");
- if(!box)return;
- try{
-  const data=JSON.parse(box.value),experiment=data.resultsFormExperiment;
-  if(!experiment)throw new Error("Run Model Test first");
-  const old=data.pointsForm;
-  const summary={model2:data.summary,oldPointsForm:{chosen:old.chosen,windowDistribution:old.windowDistribution,last5Distribution:old.last5Distribution,independent:old.independent,combinations:old.combinations},
-   newResultsForm:{...experiment,fixtureAudit:undefined},sampleFixtures:experiment.fixtureAudit?.slice(0,25)};
-  const text=JSON.stringify(summary,null,2);
-  if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
-  else {const temp=document.createElement("textarea");temp.value=text;document.body.appendChild(temp);temp.select();document.execCommand("copy");temp.remove()}
-  if(status)status.textContent="NEW experiment summary copied. Paste it into chat.";
- }catch(e){if(status)status.textContent="Run Model Test first, then try again: "+e.message}
-}
-async function fpCopyPointsReport(){
- const box=document.getElementById("fpAdaptiveReport"),status=document.getElementById("fpCopyPointsStatus");
- if(!box)return;
- try{await navigator.clipboard.writeText(box.value);if(status)status.textContent="Copied full JSON report — paste it into chat."}
- catch(e){box.focus();box.select();try{document.execCommand("copy");if(status)status.textContent="Report selected/copied. Paste into chat."}catch(_){if(status)status.textContent="Select the JSON below and copy manually."}}
-}
 /* Adaptive model contribution audit, V3. Historical outcomes never used to set a holdout threshold. */
 const FP_HYBRID_KEY='fp_hybrid_leagues_v3',FP_DC_KEY='fp_double_chance_thresholds_v3';
 fpAdaptiveStrategies=readStore(FP_HYBRID_KEY,{});
 let fpDcThresholds=readStore(FP_DC_KEY,{2:.80,23:.80});
 async function fpHybridBacktest(matches){
  const groups={};for(const m of matches.filter(isFinished))(groups[m.leagueId]??=[]).push(m);
- const report={},all=[],pointsRows=[],mmTargets=[];let done=0,totalLeagues=Object.keys(groups).length;
+ const report={},all=[],mmTargets=[];let done=0,totalLeagues=Object.keys(groups).length;
  const totalFixtures=Object.values(groups).reduce((n,g)=>n+g.length,0);
  let processedFixtures=0;
  fpStageUpdate(1,0,`Grouping ${totalFixtures} completed fixtures`,"Running");
@@ -2023,8 +1876,7 @@ async function fpHybridBacktest(matches){
   for(let j=0;j<rows.length;j++){
    const m=rows[j],kick=kickoffs[j];while(cursor<rows.length&&kickoffs[cursor]<kick)past.push(rows[cursor++]);
    try{const b=calculatePrediction(m,past,{...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]});
-    if(['H','A'].includes(b.prediction)&&b.selection===b.prediction){const p=fpIndependentProbs(b);if(p){
-     const actual=getOutcome(m.homeScore,m.awayScore);observations.push({date:m.date,fixture:`${m.home} vs ${m.away}`,prediction:b.prediction,train:j<cut,actual,win:actual===b.prediction,draw:actual==='D',loss:actual!==b.prediction&&actual!=='D',dc:p[b.prediction]+p.D,side:b.prediction==='H'?'1X':'X2',confidence:Number(b.confidence)||null});}}
+    if(['H','A'].includes(b.prediction)&&b.selection===b.prediction){const p=fpIndependentProbs(b);if(p){const actual=getOutcome(m.homeScore,m.awayScore);observations.push({m,prediction:b.prediction,train:j<cut,actual,win:actual===b.prediction,draw:actual==='D',loss:actual!==b.prediction&&actual!=='D',dc:p[b.prediction]+p.D,side:b.prediction==='H'?'1X':'X2',confidence:Number(b.confidence)||null});}}
    }catch(e){console.warn('Model 2 historical fixture skipped',id,e)}
    processedFixtures++;
    if(j%50===0||j===rows.length-1){
@@ -2036,9 +1888,7 @@ async function fpHybridBacktest(matches){
   const metric=a=>({n:a.length,wins:a.filter(x=>x.win).length,draws:a.filter(x=>x.draw).length,losses:a.filter(x=>x.loss).length,accuracy:a.length?a.filter(x=>x.win).length/a.length:null,dcHit:a.length?a.filter(x=>!x.loss).length/a.length:null});
   const train=observations.filter(x=>x.train),hold=observations.filter(x=>!x.train),flag=hold.filter(x=>x.dc>=.78);
   report[id]={league:rows[0]?.league||id,fixtures:rows.length,training:metric(train),holdout:metric(hold),flagged78:metric(flag),flaggedCoverage:hold.length?flag.length/hold.length:null};
-  for(const x of observations)pointsRows.push({...x,league:id});
-  for(const x of hold)all.push({...x,league:id});
-  for(const x of hold){const m=rows.find(r=>r.date===x.date&&`${r.home} vs ${r.away}`===x.fixture);if(m)mmTargets.push({m,originalPrediction:x.prediction,actual:x.actual,league:id})}done++;
+  for(const x of hold){all.push({...x,league:id});mmTargets.push({m:x.m,originalPrediction:x.prediction,actual:x.actual,league:id})}done++;
   fpStageUpdate(3,Math.round(done/totalLeagues*80),`${done}/${totalLeagues} league summaries calculated`,"Running");
   await new Promise(r=>setTimeout(r,0));
  }
@@ -2048,7 +1898,6 @@ async function fpHybridBacktest(matches){
  await new Promise(r=>setTimeout(r,0));
  const metric=a=>({n:a.length,wins:a.filter(x=>x.win).length,draws:a.filter(x=>x.draw).length,losses:a.filter(x=>x.loss).length,straightAccuracy:a.length?a.filter(x=>x.win).length/a.length:null,doubleChanceHit:a.length?a.filter(x=>!x.loss).length/a.length:null});
  const confidence=Array.from({length:10},(_,i)=>i+1).map(score=>{const a=all.filter(x=>x.confidence===score);return {score,...metric(a)}});const summary={leagues:Object.keys(report).length,holdout:metric(all),flagged78:metric(all.filter(x=>x.dc>=.78)),threshold:.78};
-
  const pct=v=>v==null?'—':(v*100).toFixed(1)+'%';
  const el=document.getElementById('fpAdaptiveResults');if(el)el.innerHTML=`<p class="muted smalltext">PREDICTION-DC-V6 · Model 2 only · chronological 75/25 league holdout · 78% Double Chance suggestion threshold is a display rule, not optimised or calibrated. Configuration may overlap holdout; earlier retired-model comparisons need reassessment if leakage is confirmed.</p><div class="fp-draw-summary"><div><small>Leagues</small><strong>${summary.leagues}</strong></div><div><small>Model 2 holdout</small><strong>${summary.holdout.wins}/${summary.holdout.n} · ${pct(summary.holdout.straightAccuracy)}</strong></div><div><small>Automatic DC</small><strong>${pct(summary.holdout.doubleChanceHit)}</strong></div><div><small>78% flags</small><strong>${summary.flagged78.n} · ${pct(summary.flagged78.doubleChanceHit)}</strong></div></div><div class="tablewrap"><table><thead><tr><th>League</th><th>Training wins</th><th>Holdout wins</th><th>Holdout DC</th><th>78% flags</th><th>Flagged W / D / L</th></tr></thead><tbody>${Object.values(report).map(x=>`<tr><td>${esc(x.league)}</td><td>${x.training.wins}/${x.training.n}</td><td>${x.holdout.wins}/${x.holdout.n} · ${pct(x.holdout.accuracy)}</td><td>${pct(x.holdout.dcHit)}</td><td>${x.flagged78.n} · ${pct(x.flaggedCoverage)}</td><td>${x.flagged78.wins} / ${x.flagged78.draws} / ${x.flagged78.losses}</td></tr>`).join('')}</tbody></table></div><h4>Confidence accuracy · holdout</h4><div class="tablewrap"><table><thead><tr><th>Score</th><th>Correct / selections</th><th>Accuracy</th></tr></thead><tbody>${confidence.map(x=>`<tr><td>${x.score}/10</td><td>${x.wins}/${x.n}</td><td>${pct(x.straightAccuracy)}</td></tr>`).join('')}</tbody></table></div><p class="muted smalltext">Integrity: prior matches only; same-kickoff fixtures excluded from one another's form. Historical settings may overlap the holdout, so this is not independent nested validation. Empty confidence bands are reported, not artificially filled.</p>`;
  window.fpFullMMTargets=mmTargets;
@@ -2069,196 +1918,8 @@ function fpInitThreeModelUI(){
  document.getElementById('fpApplyDrawRecommendations')?.addEventListener('click',()=>{if(fpDrawRecommendations?.league)a.value=fpDrawRecommendations.league.gap.toFixed(2);if(fpDrawRecommendations?.team)b.value=fpDrawRecommendations.team.gap.toFixed(2);if(window.fpRankedRecommendation)c.value=window.fpRankedRecommendation.boundary.toFixed(2);document.getElementById('settingsStatus').textContent='Recommended gaps copied. Save settings to apply.'});
 }
 
-/* Possession-to-goals scale V3: standalone research; Model 2 is untouched. */
-let fpPossBusy=false;
-function fpPossPct(x){return x==null?'—':(100*x).toFixed(1)+'%'}
 function fpPossMean(a){return a.length?a.reduce((s,x)=>s+x,0)/a.length:null}
 function fpPossClamp(x,lo,hi){return Math.max(lo,Math.min(hi,x))}
-function fpPossProb(home,away){
- const fact=[1,1,2,6,24,120,720,5040,40320],h=fpPossClamp(home,.05,4.5),a=fpPossClamp(away,.05,4.5);let H=0,D=0,A=0;
- for(let i=0;i<=8;i++)for(let j=0;j<=8;j++){const v=Math.exp(-h-a)*Math.pow(h,i)*Math.pow(a,j)/(fact[i]*fact[j]);if(i>j)H+=v;else if(i===j)D+=v;else A+=v}
- const total=H+D+A;return {H:H/total,D:D/total,A:A/total};
-}
-function fpPossPick(p){return Object.keys(p).sort((a,b)=>p[b]-p[a])[0]}
-/* Ridge-shrunk team-specific 1–100 possession-to-goals scale. Extrapolation is bounded and flagged. */
-function fpPossGoalScale(rows){
- const n=rows.length,meanPoss=fpPossMean(rows.map(x=>x.poss)),meanGoals=fpPossMean(rows.map(x=>x.goals));
- const spread=rows.reduce((s,r)=>s+(r.poss-meanPoss)**2,0);
- const covariance=rows.reduce((s,r)=>s+(r.poss-meanPoss)*(r.goals-meanGoals),0);
- // 400 possession-points-squared per sample regularises small or narrow possession histories.
- const rawSlope=spread>0?covariance/spread:0;
- const slope=fpPossClamp(covariance/(spread+400*n),-.055,.055);
- const observedMin=Math.min(...rows.map(x=>x.poss)),observedMax=Math.max(...rows.map(x=>x.poss));
- const at=(p)=>fpPossClamp(meanGoals+slope*(fpPossClamp(p,1,100)-meanPoss),.05,4.5);
- const points=Array.from({length:100},(_,i)=>at(i+1));
- return {n,meanPoss,meanGoals,rawSlope,slope,observedMin,observedMax,points,
-  sample:{'1':points[0],'10':points[9],'20':points[19],'30':points[29],'40':points[39],'50':points[49],'60':points[59],'70':points[69],'80':points[79],'90':points[89],'100':points[99]}};
-}
-function fpPossForecast(past,m,n){
- const h=m.hk||teamKey(m,'H'),a=m.ak||teamKey(m,'A');
- const teamRows=(key)=>past.filter(x=>x.hasPoss&&(x.hk===key||x.ak===key)).slice(-n).map(x=>{
-  const isH=x.hk===key;return {poss:isH?x.hp:x.ap,goals:isH?x.hg:x.ag,venue:isH?'H':'A',opponentPoss:isH?x.ap:x.hp,date:x.date};
- });
- const rh=teamRows(h),ra=teamRows(a);
- const results=(key)=>past.filter(x=>x.hk===key||x.ak===key).slice(-n);
- const hh=results(h),aa=results(a);
- const issues=[];for(const [name,rows,res] of [['home',rh,hh],['away',ra,aa]]){
-  if(rows.length<5)issues.push(name+' possession '+rows.length+'/5');
-  if(res.length<5)issues.push(name+' results '+res.length+'/5');
- }
- if(issues.length)return {eligible:false,reason:issues.join('; '),homePossSamples:rh.length,awayPossSamples:ra.length,homeResults:hh.length,awayResults:aa.length};
- const pointRate=(rows,key)=>rows.reduce((sum,x)=>{const home=x.hk===key,g=home?x.hg:x.ag,against=home?x.ag:x.hg;return sum+(g>against?3:g===against?1:0)},0)/rows.length;
- const strengthGap=pointRate(hh,h)-pointRate(aa,a);
- const homeVenue=rh.filter(x=>x.venue==='H'),awayVenue=ra.filter(x=>x.venue==='A');
- const homeNormal=fpPossMean(rh.map(x=>x.poss)),awayNormal=fpPossMean(ra.map(x=>x.poss));
- // Venue estimates shrink towards all-venue means when venue-specific evidence is scarce.
- const venueEstimate=(venue,all)=>venue.length?(venue.length*fpPossMean(venue.map(x=>x.poss))+4*fpPossMean(all.map(x=>x.poss)))/(venue.length+4):fpPossMean(all.map(x=>x.poss));
- const hVenue=venueEstimate(homeVenue,rh),aVenue=venueEstimate(awayVenue,ra);
- // Opponent possession allowed gives a distinct measure of ability to disrupt ball control.
- const hAllowed=fpPossMean(rh.map(x=>x.opponentPoss)),aAllowed=fpPossMean(ra.map(x=>x.opponentPoss));
- const venueHome=fpPossClamp(50+(hVenue-aVenue)/2,5,95);
- const matchupHome=fpPossClamp(50+(hVenue-aVenue)/2+.12*(aAllowed-hAllowed)+2.5*strengthGap,5,95);
- const homePoss=matchupHome,awayPoss=100-homePoss;
- const homeScale=fpPossGoalScale(rh),awayScale=fpPossGoalScale(ra);
- const homeExpectedGoals=homeScale.points[Math.round(homePoss)-1],awayExpectedGoals=awayScale.points[Math.round(awayPoss)-1];
- const homeGoalBaseline=homeScale.meanGoals,awayGoalBaseline=awayScale.meanGoals;
- const venueHomeGoals=homeScale.points[Math.round(venueHome)-1],venueAwayGoals=awayScale.points[Math.round(100-venueHome)-1];
- const prob=fpPossProb(homeExpectedGoals,awayExpectedGoals),baselineProb=fpPossProb(homeGoalBaseline,awayGoalBaseline),venueProb=fpPossProb(venueHomeGoals,venueAwayGoals);
- return {eligible:true,homePoss,awayPoss,venueOnlyHomePoss:venueHome,venueOnlyAwayPoss:100-venueHome,
-  homeNormalPoss:hVenue,awayNormalPoss:aVenue,homeSuppression:hVenue-homePoss,awaySuppression:aVenue-awayPoss,
-  homeExpectedGoals,awayExpectedGoals,homeGoalBaseline,awayGoalBaseline,venueHomeGoals,venueAwayGoals,
-  homeNormalGoals:homeScale.points[Math.round(fpPossClamp(hVenue,1,100))-1],awayNormalGoals:awayScale.points[Math.round(fpPossClamp(aVenue,1,100))-1],
-  homeGoalImpact:homeExpectedGoals-homeScale.points[Math.round(fpPossClamp(hVenue,1,100))-1],
-  awayGoalImpact:awayExpectedGoals-awayScale.points[Math.round(fpPossClamp(aVenue,1,100))-1],
-  prob,baselineProb,venueProb,prediction:fpPossPick(prob),homeStrengthPoints:pointRate(hh,h)*hh.length,awayStrengthPoints:pointRate(aa,a)*aa.length,
-  homeStrengthMatches:hh.length,awayStrengthMatches:aa.length,strengthGap,
-  homePossSamples:rh.length,awayPossSamples:ra.length,homeVenueSamples:homeVenue.length,awayVenueSamples:awayVenue.length,
-  homeScale:{...homeScale,points:undefined},awayScale:{...awayScale,points:undefined},
-  homePossExtrapolated:homePoss<homeScale.observedMin||homePoss>homeScale.observedMax,
-  awayPossExtrapolated:awayPoss<awayScale.observedMin||awayPoss>awayScale.observedMax
- };
-}
-
-/* V11 corrected historical-baseline comparison. All existing Model 2 functions and settings are read-only. */
-let fpV10Busy=false;
-function fpV10Metrics(rows,fn){
- const picked=rows.filter(fn),n=picked.length,correct=picked.filter(r=>r.actual===r.testPick).length;
- return {n,correct,accuracy:n?correct/n:null,coverage:rows.length?n/rows.length:null,
-  drawPredicted:picked.filter(r=>r.testPick==='D').length,drawCorrect:picked.filter(r=>r.testPick==='D'&&r.actual==='D').length,
-  home:picked.filter(r=>r.testPick==='H').length,away:picked.filter(r=>r.testPick==='A').length};
-}
-function fpV10Score(rows,pred,selected){const a=rows.map(r=>({...r,testPick:pred(r)}));return fpV10Metrics(a,r=>selected(r)&&r.testPick!=='N')}
-function fpV10Brier(rows,prob){const x=rows.filter(r=>prob(r)&&['H','D','A'].every(k=>Number.isFinite(prob(r)[k])));return x.length?x.reduce((z,r)=>z+['H','D','A'].reduce((v,k)=>v+(prob(r)[k]-(r.actual===k?1:0))**2,0),0)/x.length:null}
-function fpV10Prob(base,d){const v={H:base.H*Math.exp(d),D:base.D,A:base.A*Math.exp(-d)},z=v.H+v.D+v.A;return {H:v.H/z,D:v.D/z,A:v.A/z}}
-function fpV10Pick(p){return ['H','D','A'].reduce((a,k)=>p[k]>p[a]?k:a,'H')}
-function fpV10Model(m,prior){try{const v=calculateOriginalIndependent(m,prior);return {prediction:v.prediction,selection:v.selection,probs:v.probs,xgDifference:v.xgDifference,confidence:v.confidence,homeLambda:v.homeLambda,awayLambda:v.awayLambda,homeSample:v.h?.count??null,awaySample:v.a?.count??null,leagueAverage:v.leagueAverage,selectionReason:v.confidenceBreakdown?.eligibilityReason??null}}catch(e){return {error:String(e.message||e)}}}
-function fpV10Candidate(r,mode,alpha){if(!r.model?.probs||!r.mm?.eligible)return null;
- const p=fpV10Prob(r.model.probs,alpha*r.formGap),mm=r.mm.models.MM2;
- const pick=mode==='baseline'?r.model.prediction:fpV10Pick(p);
- return {pick,prob:p,agree:pick===fpV10Pick(mm),mmPick:fpV10Pick(mm),mmConfidence:Math.max(mm.H,mm.D,mm.A)};
-}
-function fpV11BaselineHealth(rows,validation,test,baseVolume,minBets){
- const bySplit={};for(const split of ['train','validation','test']){
-  const r=rows.filter(x=>x.split===split&&x.model?.probs),n=r.length;
-  const zero=r.filter(x=>Math.abs(x.model.xgDifference)<1e-8).length;
-  const draws=r.filter(x=>x.model.prediction==='D').length;
-  const unique=new Set(r.map(x=>['H','D','A'].map(k=>x.model.probs[k].toFixed(5)).join('/'))).size;
-  const noHistory=r.filter(x=>x.historyCount===0).length;
-  bySplit[split]={n,zeroXg:zero,zeroXgRate:n?zero/n:null,drawPredictions:draws,drawRate:n?draws/n:null,uniqueProbabilityTriples:unique,noHistory,baselineBets:r.filter(x=>x.baselineSelected).length,medianHistoryCount:n?r.map(x=>x.historyCount).sort((a,b)=>a-b)[Math.floor(n/2)]:null};
- }
- const failures=[];for(const split of ['validation','test']){
-  const x=bySplit[split];if(x.n<50)failures.push(split+' has fewer than 50 comparable matches');
-  if(x.zeroXgRate>.50)failures.push(split+' has >50% zero xG gaps');
-  if(x.uniqueProbabilityTriples<Math.min(20,Math.floor(x.n*.30)))failures.push(split+' has too few distinct probability outputs');
-  if(x.drawRate>.85)failures.push(split+' predicts >85% draws');
- }
- if(baseVolume<minBets)failures.push('only '+baseVolume+' baseline validation bets (minimum '+minBets+')');
- if(bySplit.test.baselineBets<20)failures.push('fewer than 20 baseline test bets');
- return {ok:failures.length===0,failures,bySplit,minimumValidationBets:minBets};
-}
-async function fpRunV10Research(){
- if(fpV10Busy)return;document.getElementById('fpPossReport').value='';fpV10Busy=true;const button=document.getElementById('fpRunPossession'),status=document.getElementById('fpPossStatus');button.disabled=true;
- try{
- const limit=Number(document.getElementById('fpPossLimit').value),scope=document.getElementById('fpPossLeague').value;
- status.textContent='Fetching historical fixture list…';
- const result=await fetchAllLeagues(14,()=>{},scope==='all'?Object.keys(LEAGUES):[scope]);
- const all=result.matches.filter(isFinished).sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
- const groups={};for(const m of all)(groups[m.leagueId]??=[]).push(m);
- const count=scope==='all'?Math.max(1,Math.min(3,Math.floor(limit/260))):1;
- const selected=Object.values(groups).sort((a,b)=>b.length-a.length).slice(0,count),sample=[];let j=0;
- while(sample.length<limit){let progressed=false;for(const g of selected)if(j<g.length&&sample.length<limit){sample.push(g[j]);progressed=true}if(!progressed)break;j++}
- const events=[],errors={http:0,network:0,invalidTimeline:0};let cursor=0,completed=0;
- await Promise.all(Array.from({length:4},async()=>{while(cursor<sample.length){const m=sample[cursor++];let goals=[],valid=false,reason='';
-  try{const c=new AbortController(),timer=setTimeout(()=>c.abort(),11000);let response;try{response=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${m.leagueId}/summary?event=${encodeURIComponent(m.id)}`,{signal:c.signal})}finally{clearTimeout(timer)}
-   if(!response.ok){errors.http++;reason='HTTP '+response.status}else{const t=fpControlGoals(await response.json(),m.homeScore,m.awayScore);valid=t.valid;goals=t.goals||[];reason=t.reason||'';if(!valid)errors.invalidTimeline++}
-  }catch(e){errors.network++;reason=String(e.message||e)}
-  events.push({m,league:m.leagueId,date:m.date,id:m.id,fixture:m.home+' vs '+m.away,hk:teamKey(m,'H'),ak:teamKey(m,'A'),hg:m.homeScore,ag:m.awayScore,goals,goalTimelineValid:valid,reason});
-  completed++;if(completed%20===0||completed===sample.length){status.textContent=`Event summaries ${completed}/${sample.length}; ${events.filter(x=>x.goalTimelineValid).length} valid goal timelines`;await new Promise(r=>setTimeout(r,0))}
- }}));
- events.sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
- const byLeague={};for(const e of events)(byLeague[e.league]??=[]).push(e);
- const rows=[],splits={};let done=0;
- for(const [id,leagueEvents] of Object.entries(byLeague)){
-  const leagueAll=groups[id]||[],n=leagueEvents.length,trainCut=Math.floor(n*.60),valCut=Math.floor(n*.80);
-  splits[id]={total:n,train:trainCut,validation:valCut-trainCut,test:n-valCut};
-  let idx=0;const accumulatedFixtures=[];for(let i=0;i<n;i++){
-   const e=leagueEvents[i],kick=Date.parse(e.date),priorEvents=leagueEvents.filter(x=>Date.parse(x.date)<kick);
-   // Persistent cumulative history: V10 accidentally reset priorFixtures on EVERY match.
-   // This caused near-universal empty history, zero xG gaps and false draw predictions.
-   // Admit only games completed at least three hours before the prediction kickoff.
-   while(idx<leagueAll.length&&Date.parse(leagueAll[idx].date)+3*3600000<=kick){accumulatedFixtures.push(leagueAll[idx]);idx++}
-   const safeFixtures=accumulatedFixtures;
-   const safeEvents=priorEvents.filter(x=>Date.parse(x.date)+3*3600000<=kick);
-   const model=fpV10Model(e.m,safeFixtures),mm=fpMMForecast(safeEvents,e,20);
-   const w=[15,10,5],weight=[.15,.25,.60],h=fpV9Form(safeEvents,e.hk,w,weight,'points',null),a=fpV9Form(safeEvents,e.ak,w,weight,'points',null);
-   const formGap=(h.score*h.n+1.5)/(h.n+3)-(a.score*a.n+1.5)/(a.n+3);
-   const actual=e.hg>e.ag?'H':e.hg<e.ag?'A':'D';
-   const baselineSelected=model.selection===model.prediction&&['H','D','A'].includes(model.prediction);
-   rows.push({id:e.id,league:id,date:e.date,fixture:e.fixture,split:i<trainCut?'train':i<valCut?'validation':'test',actual,score:[e.hg,e.ag],model,baselineSelected,historyCount:safeFixtures.length,mm:mm.eligible?{eligible:true,models:{MM2:mm.models.MM2},descriptors:mm.descriptors,diagnostics:mm.diagnostics}: {eligible:false},formGap,formSamples:[h.n,a.n],goalTimelineValid:e.goalTimelineValid,goals:e.goalTimelineValid?e.goals:undefined,exclusion:e.reason||null});
-   done++;if(done%30===0){status.textContent=`Computing original Model 2 and research signals ${done}/${events.length}`;await new Promise(r=>setTimeout(r,0))}
-  }
- }
-
- // V16: fixed V15 winner, alpha=0, agreement. No optimisation or betting gate.
- // Crucially, selected accuracy and all-fixture prediction accuracy are distinct.
- const comparable=rows.filter(r=>r.model?.probs&&r.mm.eligible);
- const summarize=(set)=>{
-  const candidates=set.map(r=>({...r,_c:fpV10Candidate(r,'enhanced',0)}));
-  const agreed=candidates.filter(r=>r._c.agree);
-  const disagreed=candidates.filter(r=>!r._c.agree);
-  return {fixtures:set.length,
-   originalAll:fpV10Score(set,r=>r.model.prediction,()=>true),
-   combinedAll:fpV10Score(candidates,r=>r._c.pick,()=>true),
-   combinedAgreed:fpV10Score(agreed,r=>r._c.pick,()=>true),
-   combinedDisagreed:fpV10Score(disagreed,r=>r._c.pick,()=>true),
-   retained:agreed.length,filtered:disagreed.length,
-   originalOnAgreed:fpV10Score(agreed,r=>r.model.prediction,()=>true),
-   originalOnDisagreed:fpV10Score(disagreed,r=>r.model.prediction,()=>true)};
- };
- const validation=comparable.filter(r=>r.split==='validation');
- const test=comparable.filter(r=>r.split==='test');
- const report={version:'FOOTYPICKS-V16-CORE-1X2-MM2',created:new Date().toISOString(),
-  protocol:{configuration:'V15 experimental winner: alpha=0, MM2 agreement; fixed before this run',
-   selection:'Agreement between argmax(Model 2 H/D/A probabilities) and MM2; no original Bet on Outcome gate',
-   baseline:'Original Model 2 prediction on identical fixtures',
-   allFixtures:'Combined unfiltered prediction is argmax of unchanged Model 2 probabilities. MM2 only filters; it does not modify 1X2 probabilities.',
-   history:'Model 2 uses all earlier finished league fixtures with 3-hour buffer; MM2 uses sampled earlier valid goal summaries',
-   split:'Chronological within each sampled league: 60% train / 20% validation / 20% final test',
-   limitation:'The historical 404-fixture 64.6% benchmark is a different sample and is not a direct paired comparator. Agreement-only accuracy excludes predictions.'},
-  settings:{requested:limit,sampled:sample.length,leagueScope:scope,alpha:0,filter:'agreement',probabilityBlend:0},
-  coverage:{allHistorical:all.length,events:events.length,validTimelines:events.filter(e=>e.goalTimelineValid).length,errors,splits,comparable:comparable.length,mmUnavailable:rows.filter(r=>!r.mm.eligible).length},
-  validation:summarize(validation),test:summarize(test),
-  perLeague:Object.keys(splits).map(id=>({league:id,validation:summarize(validation.filter(r=>r.league===id)),test:summarize(test.filter(r=>r.league===id))})),
-  fixtures:rows.filter(r=>r.split!=='train').map(r=>{const c=r.model?.probs&&r.mm.eligible?fpV10Candidate(r,'enhanced',0):null;return {id:r.id,league:r.league,date:r.date,fixture:r.fixture,split:r.split,actual:r.actual,score:r.score,originalPrediction:r.model?.prediction??null,model2Probs:r.model?.probs??null,combinedPrediction:c?.pick??null,mm2Prediction:c?.mmPick??null,agrees:c?.agree??null,selected:c?.agree===true,mmEligible:r.mm.eligible,historyCount:r.historyCount,goalTimelineValid:r.goalTimelineValid}})};
- document.getElementById('fpPossReport').value=JSON.stringify(report);
- const pct=x=>x==null?'—':(100*x).toFixed(1)+'%';
- const t=report.test,v=report.validation;
- document.getElementById('fpPossResults').innerHTML=`<div class="fp-draw-summary"><div><small>Final test fixtures</small><strong>${t.fixtures}</strong></div><div><small>Original Model 2 · all</small><strong>${t.originalAll.correct}/${t.originalAll.n} · ${pct(t.originalAll.accuracy)}</strong></div><div><small>Model 2 probability pick · all</small><strong>${t.combinedAll.correct}/${t.combinedAll.n} · ${pct(t.combinedAll.accuracy)}</strong></div><div><small>Model 2 + MM2 agreement</small><strong>${t.combinedAgreed.correct}/${t.combinedAgreed.n} · ${pct(t.combinedAgreed.accuracy)}</strong></div><div><small>Predictions filtered out</small><strong>${t.filtered}/${t.fixtures}</strong></div></div><p class="muted smalltext"><strong>Core 1X2 predictions only.</strong> Fixed V15 winner: alpha 0, MM2 agreement. Agreement improves accuracy only on retained fixtures; it does not improve the underlying Model 2 probabilities. Validation agreement ${v.combinedAgreed.correct}/${v.combinedAgreed.n} (${pct(v.combinedAgreed.accuracy)}); final-test agreement ${t.combinedAgreed.correct}/${t.combinedAgreed.n} (${pct(t.combinedAgreed.accuracy)}). No Double Chance or betting selection gating. This sample is not the historical 404-match benchmark. Download the JSON for fixture-level comparisons.</p>`;
- status.textContent=`V16 completed: ${events.length} summaries; ${test.length} comparable final-test fixtures; ${t.retained} MM2-agreed predictions. Download test JSON.`;
- }catch(e){status.textContent='V16 test failed: '+String(e.message||e);console.error(e)}finally{fpV10Busy=false;button.disabled=false}
-}
-
-/* V5 independent event-sequence research. No Model 2 modifications. */
 function fpControlGoals(summary,expectedHome,expectedAway){
  const expectedH=Number(expectedHome),expectedA=Number(expectedAway),total=expectedH+expectedA;
  const sources=[['header.competitions.details',summary?.header?.competitions?.[0]?.details],['details',summary?.details],['scoringPlays',summary?.scoringPlays],['header.competitions.scoringPlays',summary?.header?.competitions?.[0]?.scoringPlays],['keyEvents',summary?.keyEvents],['plays',summary?.plays],['events',summary?.events],['commentary',summary?.commentary]];
@@ -2353,42 +2014,7 @@ function fpControlForecast(past,m,n){
   A:first.H*ifHomeFirst.A+first.A*ifAwayFirst.A};
  return {eligible:true,home:h,away:a,homeType:fpControlType(h),awayType:fpControlType(a),first,ifHomeFirst,ifAwayFirst,prob,prediction:fpPossPick(prob)};
 }
-function fpControlBlend(p,q,w){return {H:(1-w)*p.H+w*q.H,D:(1-w)*p.D+w*q.D,A:(1-w)*p.A+w*q.A}}
-function fpControlMetrics(rows,pick){
- const confusion={H:{H:0,D:0,A:0},D:{H:0,D:0,A:0},A:{H:0,D:0,A:0}};
- let correct=0,draws=0,drawHits=0,brier=0,logloss=0,changed=0,gained=0,spoiled=0;
- for(const r of rows){const p=pick(r),k=fpPossPick(p);confusion[r.actual][k]++;correct+=+(k===r.actual);draws+=+(k==='D');drawHits+=+(k==='D'&&r.actual==='D');
-  brier+=['H','D','A'].reduce((s,z)=>s+(p[z]-(r.actual===z?1:0))**2,0);logloss-=Math.log(Math.max(1e-9,p[r.actual]));
-  if(k!==r.prediction){changed++;gained+=+(k===r.actual);spoiled+=+(r.prediction===r.actual)}
- }
- const actualDraws=rows.filter(r=>r.actual==='D').length;
- return {n:rows.length,correct,accuracy:rows.length?correct/rows.length:null,drawPredicted:draws,drawActual:actualDraws,drawCorrect:drawHits,drawPrecision:draws?drawHits/draws:null,drawRecall:actualDraws?drawHits/actualDraws:null,brier:rows.length?brier/rows.length:null,logLoss:rows.length?logloss/rows.length:null,changedFromPossession:changed,correctedPredictions:gained,spoiledPredictions:spoiled,confusion};
-}
-function fpControlAnalysis(rows){
- const train=rows.filter(r=>r.train&&r.eligible&&r.control?.eligible),hold=rows.filter(r=>!r.train&&r.eligible&&r.control?.eligible);
- const weights=[0,.1,.25,.4,.5,.6,.75,.9,1];
- const candidates=weights.map(w=>({weight:w,training:fpControlMetrics(train,r=>fpControlBlend(r.prob,r.control.prob,w))}));
- // Select by training Brier, not by holdout outcome accuracy.
- const chosen=[...candidates].sort((a,b)=>(a.training.brier??Infinity)-(b.training.brier??Infinity)||a.weight-b.weight)[0];
- const selected=chosen?.weight??0;
- const holdoutGrid=weights.map(w=>({weight:w,holdout:fpControlMetrics(hold,r=>fpControlBlend(r.prob,r.control.prob,w))}));
- const byType=[];for(const side of ['home','away'])for(const type of ['Front-runner','Fragile leader','Slow starter','Comeback specialist','Balanced / mixed']){
-  const subset=hold.filter(r=>type==='Balanced / mixed'?r.control[side+'Type']===type:r.control[side+'Type']?.includes(type));
-  byType.push({side,type,n:subset.length,poss:fpControlMetrics(subset,r=>r.prob),combined:fpControlMetrics(subset,r=>fpControlBlend(r.prob,r.control.prob,selected))});
- }
- const byFirst=['H','A','none','missing'].map(k=>{const subset=hold.filter(r=>r.actualFirstGoal===k);return {firstGoal:k,n:subset.length,combined:fpControlMetrics(subset,r=>fpControlBlend(r.prob,r.control.prob,selected))}});
- const byLeague=[...new Set(hold.map(r=>r.league))].map(k=>{const subset=hold.filter(r=>r.league===k);return {league:k,n:subset.length,poss:fpControlMetrics(subset,r=>r.prob),combined:fpControlMetrics(subset,r=>fpControlBlend(r.prob,r.control.prob,selected))}});
- const allHold=rows.filter(r=>!r.train&&r.eligible),timelineHold=allHold.filter(r=>r.goalTimelineValid);
- const bins=[[0,.2],[.2,.25],[.25,.3],[.3,.35],[.35,.4],[.4,1.01]].map(([lo,hi])=>{const sub=hold.filter(r=>{const p=fpControlBlend(r.prob,r.control.prob,selected).D;return p>=lo&&p<hi});return {range:[lo,hi],n:sub.length,meanPredictedDraw:fpPossMean(sub.map(r=>fpControlBlend(r.prob,r.control.prob,selected).D)),actualDrawRate:sub.length?sub.filter(r=>r.actual==='D').length/sub.length:null}});
- return {method:'Goal-event timeline-based matchup probability tree. First-goal rate x opponent concession tendency; lead retention x trailing-side recovery. Rates shrink to fixed priors. Blend selected by TRAINING Brier only; no holdout optimisation.',
-  trainingEligible:train.length,holdoutEligible:hold.length,holdoutPossessionEligible:allHold.length,holdoutWithValidTimeline:timelineHold.length,
-  trainingBlendGrid:candidates,selectedWeight:selected,holdoutBlendGrid:holdoutGrid,
-  possessionSameCoverage:fpControlMetrics(hold,r=>r.prob),teamTypeOnly:fpControlMetrics(hold,r=>r.control.prob),combined:fpControlMetrics(hold,r=>fpControlBlend(r.prob,r.control.prob,selected)),
-  byType,byFirstGoal:byFirst,byLeague,drawCalibration:bins,
-  caution:'Event-history availability can bias eligible sample. No event-derived feature from the fixture being predicted is used. Rates are descriptive; inspect sample sizes and calibration before adopting.'};
-}
 
-/* V8 standalone match-management research. Model 2 and legacy experiments are untouched. */
 function fpMMHistory(past,key,n){
  const all=past.filter(x=>x.goalTimelineValid&&(x.hk===key||x.ak===key)).slice(-n);
  const base=fpControlTeamHistory(past,key,n);
@@ -2435,348 +2061,71 @@ function fpMMForecast(past,m,n){
   descriptors:{homeType:fpControlType(h),awayType:fpControlType(a)},
   diagnostics:{homeRegainRate:h.regainRate,awayRegainRate:a.regainRate,homeEqualiseRate:h.equaliseRate,awayEqualiseRate:a.equaliseRate}};
 }
-function fpMMResearch(rows){
- const train=rows.filter(r=>r.train&&r.mm?.eligible),hold=rows.filter(r=>!r.train&&r.mm?.eligible),commonTrain=train.filter(r=>r.eligible),commonHold=hold.filter(r=>r.eligible);
- const names=['MM1','MM2','MM3','MM4'];
- const model=(k,items)=>fpControlMetrics(items,r=>r.mm.models[k]);
- const trainModels=names.map(k=>({model:k,metrics:model(k,train)}));
- const selected=[...trainModels].sort((a,b)=>(a.metrics.brier??Infinity)-(b.metrics.brier??Infinity)||names.indexOf(a.model)-names.indexOf(b.model))[0]?.model||'MM1';
- const holdModels=names.map(k=>({model:k,metrics:model(k,hold)}));
- const weights=[0,.1,.25,.4,.5,.6,.75,.9,1];
- const blendTrain=weights.map(weight=>({weight,metrics:fpControlMetrics(commonTrain,r=>fpControlBlend(r.prob,r.mm.models[selected],weight))}));
- const blendWeight=[...blendTrain].sort((a,b)=>(a.metrics.brier??Infinity)-(b.metrics.brier??Infinity)||a.weight-b.weight)[0]?.weight??0;
- const blendHold=weights.map(weight=>({weight,metrics:fpControlMetrics(commonHold,r=>fpControlBlend(r.prob,r.mm.models[selected],weight))}));
- const chosen=fpControlMetrics(hold,r=>r.mm.models[selected]);
- const compare=(subset)=>({n:subset.length,selectedMM:fpControlMetrics(subset,r=>r.mm.models[selected]),possession:fpControlMetrics(subset.filter(r=>r.eligible),r=>r.prob)});
- const splits={byLeague:[...new Set(hold.map(r=>r.league))].map(k=>({league:k,...compare(hold.filter(r=>r.league===k))})),
-  byHomeType:[...new Set(hold.map(r=>r.mm.descriptors.homeType))].map(k=>({type:k,...compare(hold.filter(r=>r.mm.descriptors.homeType===k))})),
-  byAwayType:[...new Set(hold.map(r=>r.mm.descriptors.awayType))].map(k=>({type:k,...compare(hold.filter(r=>r.mm.descriptors.awayType===k))})),
-  byFirstGoal:['H','A','none','missing'].map(k=>({firstGoal:k,...compare(hold.filter(r=>r.actualFirstGoal===k))})),
-  byOutcome:['H','D','A'].map(k=>({actual:k,...compare(hold.filter(r=>r.actual===k))})),
-  bySample:['5–9','10–14','15–19','20+'].map((label,i)=>({label,...compare(hold.filter(r=>{const z=Math.min(r.mm.home.n,r.mm.away.n);return i===0?z<10:i===1?z<15:i===2?z<20:z>=20}))}))};
- const bins=[[0,.15],[.15,.2],[.2,.25],[.25,.3],[.3,.35],[.35,1.01]].map(([lo,hi])=>{const sub=hold.filter(r=>r.mm.models[selected].D>=lo&&r.mm.models[selected].D<hi);return {range:[lo,hi],n:sub.length,meanPrediction:fpPossMean(sub.map(r=>r.mm.models[selected].D)),actualDrawRate:sub.length?sub.filter(r=>r.actual==='D').length/sub.length:null}});
- const ablations=[{name:'Remove opponent matchup',compare:'MM1 vs MM2',training:trainModels[0].metrics,holdout:holdModels[0].metrics},
-  {name:'Remove strength adjustment',compare:'MM2 vs MM3',training:trainModels[1].metrics,holdout:holdModels[1].metrics},
-  {name:'Remove dynamics',compare:'MM3 vs MM4',training:trainModels[2].metrics,holdout:holdModels[2].metrics}];
- const conflict=commonHold.filter(r=>fpPossPick(r.prob)!==fpPossPick(r.mm.models[selected]));
- const agreement=commonHold.filter(r=>fpPossPick(r.prob)===fpPossPick(r.mm.models[selected]));
- const selection={selectedModel:selected,selectedBlendWeight:blendWeight,criterion:'Minimum training Brier; simpler-model/less-MM-weight tie break. Holdout never used for selection.'};
- return {method:'Standalone, no possession: MM1 first-goal/lead tree; MM2 opponent matchup; MM3 strength-adjusted; MM4 goal-sequence dynamics. Experimental coefficients fixed before test, not learned. All histories strictly pre-kickoff.',selection,
-  coverage:{training:train.length,holdout:hold.length,commonTraining:commonTrain.length,commonHoldout:commonHold.length,holdoutTotal:rows.filter(r=>!r.train).length},
-  trainingModels:trainModels,holdoutModels:holdModels,trainingBlendGrid:blendTrain,holdoutBlendGrid:blendHold,
-  selectedHoldout:chosen,selectedBlendHoldout:fpControlMetrics(commonHold,r=>fpControlBlend(r.prob,r.mm.models[selected],blendWeight)),
-  possessionCommonHoldout:fpControlMetrics(commonHold,r=>r.prob),
-  disagreements:{n:conflict.length,mm:compare(conflict).selectedMM,poss:compare(conflict).possession,agreements:agreement.length,agreementMetrics:compare(agreement)},
-  splits,drawCalibration:bins,ablations,
-  limitations:['MM3 strength proxy uses points per match and historical opponent form, not a separately validated rating.','MM4 event-dynamics features are experimental and heavily regularised.','Ablations are comparisons between nested variants, not causal feature importance.','No original Model 2 probabilities are computed here; the preserved possession model is the comparison benchmark.','Only earlier sampled matches contribute to profiles; sampling and league coverage can bias estimates.','Use additional rolling periods and a validation split before promoting a model.']};
-}
-
-/* V9 independent research: Model 2 window/weight candidates, opposition strength,
-   event timing, venue, matchup, and draw thresholds. Original Model 2 untouched. */
-const fpV9Windows=[[15,10,5],[12,8,4],[10,6,3],[8,5,3],[5,3,2]];
-const fpV9Weights=[{name:'A Stable',v:[.6,.3,.1]},{name:'B Balanced',v:[.4,.35,.25]},{name:'C Recent',v:[.25,.3,.45]},{name:'D Very recent',v:[.1,.2,.7]},{name:'Rank default',v:[.3,.3,.4]}];
-function fpV9Form(prior,key,windows,weights,method,venue){
- const hist=prior.filter(x=>(x.hk===key||x.ak===key)&&(!venue||(venue==='home'?x.hk===key:x.ak===key)));
- const score=window=>{const a=hist.slice(-window);if(!a.length)return .5;
-  return a.reduce((sum,x)=>{const h=x.hk===key,g=h?x.hg:x.ag,c=h?x.ag:x.hg;return sum+(method==='points'?(g>c?1:g===c?1/3:0):(g>c?1:0))},0)/a.length};
- return {score:windows.reduce((sum,w,i)=>sum+weights[i]*score(w),0)/weights.reduce((a,b)=>a+b,0),n:hist.length};
-}
-function fpV9Timing(prior,key,window,venue){
- const all=prior.filter(x=>x.goalTimelineValid&&(x.hk===key||x.ak===key)&&(!venue||(venue==='home'?x.hk===key:x.ak===key))).slice(-window);
- let firstN=0,early=0,late=0,protectedMinutes=0,exposure=0,concedeFirst=0,recover=0,recoverMinutes=0,lateRecovery=0,leadLost=0,regain=0;
- for(const x of all){if(!x.goals.length)continue;
-  const home=x.hk===key,side=home?'H':'A',first=x.goals[0];
-  if(first.side===side){firstN++;if(first.minute!=null){if(first.minute<=30)early++;if(first.minute>=75)late++;}}
-  else {concedeFirst++;if(first.minute!=null)recoverMinutes+=Math.max(0,90-first.minute)}
-  let prev=0,last=0,everLost=false,everRecovered=false;
-  for(const g of x.goals){const t=fpPossClamp(Number(g.minute)||0,0,90),diff=home?g.homeScore-g.awayScore:g.awayScore-g.homeScore;
-   if(prev>0){exposure+=Math.max(0,t-last);protectedMinutes+=Math.max(0,t-last)}
-   if(prev>0&&diff<=0){leadLost++;everLost=true}
-   if(prev<0&&diff>=0){everRecovered=true;if(t>=75)lateRecovery++}
-   if(everLost&&diff>0){regain++;everLost=false}
-   prev=diff;last=t;
-  }
-  if(prev>0){exposure+=Math.max(0,90-last);protectedMinutes+=Math.max(0,90-last)}
-  if(first.side!==side&&everRecovered)recover++;
- }
- return {n:all.length,firstN,early,late,concedeFirst,recover,leadLost,regain,lateRecovery,
-  earlyFirstRate:(early+1)/(firstN+3),lateFirstRate:(late+1)/(firstN+3),
-  recoveryRate:(recover+1)/(concedeFirst+3),leadMinutes:protectedMinutes,
-  leadExposure:exposure,recoveryMinutesAvailable:recoverMinutes,
-  // Event-derived duration measures are descriptive, not automatically evidence of superior defence.
-  leadDurationPerMatch:protectedMinutes/Math.max(1,all.length),
-  recoveriesPer90Available:recoverMinutes?recover*90/recoverMinutes:null};
-}
-function fpV9Predict(prior,e,mm){
- if(!mm?.eligible)return {eligible:false};
- const base=mm.models.MM2, variants={},timing={home:fpV9Timing(prior,e.hk,20),away:fpV9Timing(prior,e.ak,20),homeVenue:fpV9Timing(prior,e.hk,20,'home'),awayVenue:fpV9Timing(prior,e.ak,20,'away')};
- const normal=p=>{const z=p.H+p.D+p.A;return {H:p.H/z,D:p.D/z,A:p.A/z}};
- const shift=(p,d,draw=0)=>normal({H:p.H*Math.exp(d),D:p.D*Math.exp(draw),A:p.A*Math.exp(-d)});
- const combos=[];
- for(const w of fpV9Windows)for(const weight of fpV9Weights)for(const method of ['points','wins'])for(const venue of ['overall','venue'])for(const power of [0,.5,1,1.5]){
-  const key=`${method}|${w.join('/')}|${weight.name}|${venue}|${power}`;
-  const h=fpV9Form(prior,e.hk,w,weight.v,method,venue==='venue'?'home':null),a=fpV9Form(prior,e.ak,w,weight.v,method,venue==='venue'?'away':null);
-  // No league averages. Neutral shrinkage only for low-count form histories.
-  const hs=(h.score*h.n+.5*3)/(h.n+3),as=(a.score*a.n+.5*3)/(a.n+3);
-  variants[key]=shift(base,power*(hs-as));combos.push({key,method,windows:w,weights:weight.name,venue,power,homeScore:hs,awayScore:as,homeN:h.n,awayN:a.n});
- }
- variants['none']=base;
- const t=timing.home,u=timing.away;
- const earlyDiff=t.earlyFirstRate-u.earlyFirstRate,lateDiff=t.lateFirstRate-u.lateFirstRate;
- const recoveryDiff=t.recoveryRate-u.recoveryRate;
- const leadDiff=fpPossClamp((t.leadDurationPerMatch-u.leadDurationPerMatch)/90,-1,1);
- const interaction=fpPossClamp((t.earlyFirstRate*u.recoveryRate-u.earlyFirstRate*t.recoveryRate),-1,1);
- const timingFeatures={earlyDiff,lateDiff,recoveryDiff,leadDiff,interaction,
-  venueEarlyDiff:timing.homeVenue.earlyFirstRate-timing.awayVenue.earlyFirstRate};
- for(const [name,delta] of Object.entries({early:earlyDiff,late:lateDiff,recovery:recoveryDiff,leadDuration:leadDiff,interaction,venueEarly:timingFeatures.venueEarlyDiff}))
-  for(const power of [.25,.5,1])variants[`timing:${name}:${power}`]=shift(base,delta*power);
- for(const power of [.25,.5,1])variants[`timing:all:${power}`]=shift(base,power*(.3*earlyDiff+.2*lateDiff+.2*recoveryDiff+.2*leadDiff+.1*interaction));
- return {eligible:true,variants,combos,timing,timingFeatures};
-}
-function fpV9Research(rows){
- const train=rows.filter(r=>r.train&&r.v9?.eligible),hold=rows.filter(r=>!r.train&&r.v9?.eligible);
- const keys=Object.keys(train[0]?.v9.variants||{});
- const candidates=keys.map(key=>({key,training:fpControlMetrics(train,r=>r.v9.variants[key])}));
- // First optimise accuracy on the earlier training portion; Brier and simplicity tie-break.
- const ordered=[...candidates].sort((a,b)=>(b.training.accuracy??-1)-(a.training.accuracy??-1)||(a.training.brier??Infinity)-(b.training.brier??Infinity)||a.key.localeCompare(b.key));
- const best=ordered[0];const selected=best?.key||'none';
- const holdMetrics=keys.map(key=>({key,holdout:fpControlMetrics(hold,r=>r.v9.variants[key])}));
- const groups={none:keys.filter(k=>k==='none'),points:keys.filter(k=>k.startsWith('points|')),wins:keys.filter(k=>k.startsWith('wins|')),timing:keys.filter(k=>k.startsWith('timing:'))};
- const bestByGroup=Object.fromEntries(Object.entries(groups).map(([name,ks])=>{const chosen=ordered.find(x=>ks.includes(x.key));return [name,chosen?{key:chosen.key,training:chosen.training,holdout:fpControlMetrics(hold,r=>r.v9.variants[chosen.key])}:null]}));
- const drawGaps=[0,.02,.04,.06,.08,.1,.12,.15,.2];
- const drawPick=(r,key,h,a)=>{const p=r.v9.variants[key];return p.H-p.A>=h?'H':p.A-p.H>=a?'A':'D'};
- const drawMetrics=(items,key,h,a)=>{const confusion={H:{H:0,D:0,A:0},D:{H:0,D:0,A:0},A:{H:0,D:0,A:0}};let correct=0;for(const r of items){const pick=drawPick(r,key,h,a);confusion[r.actual][pick]++;if(pick===r.actual)correct++}return {n:items.length,correct,accuracy:items.length?correct/items.length:null,drawPredicted:Object.values(confusion).reduce((s,x)=>s+x.D,0),drawCorrect:confusion.D.D,drawActual:Object.values(confusion.D).reduce((a,b)=>a+b,0),confusion}};
- const grid=[];for(const h of drawGaps)for(const a of drawGaps)grid.push({homeGap:h,awayGap:a,training:drawMetrics(train,selected,h,a)});
- const drawSelected=[...grid].sort((a,b)=>b.training.accuracy-a.training.accuracy||Math.abs(a.homeGap-a.awayGap)-Math.abs(b.homeGap-b.awayGap)||a.homeGap+a.awayGap-b.homeGap-b.awayGap)[0];
- const byFirstMinute=[['0–15',0,15],['16–30',16,30],['31–60',31,60],['61–75',61,75],['76–90+',76,999],['0–0',null,null]].map(([label,lo,hi])=>{const sub=hold.filter(r=>lo===null?r.actualFirstGoal==='none':r.actualGoalSequence?.[0]?.minute>=lo&&r.actualGoalSequence?.[0]?.minute<=hi);return {label,n:sub.length,selected:fpControlMetrics(sub,r=>r.v9.variants[selected])}});
- const timingAudit=hold.map(r=>({fixture:r.fixture,league:r.league,date:r.date,firstGoal:r.actualGoalSequence?.[0]||null,goals:r.actualGoalSequence,home:r.v9.timing.home,away:r.v9.timing.away,features:r.v9.timingFeatures,actual:r.actual,selectedProbability:r.v9.variants[selected],selectedPrediction:fpPossPick(r.v9.variants[selected])}));
- return {method:'V9 independent diagnostic. Reuses Model 2 A/B/C/D weights and its windows plus existing ranking windows, testing wins or 3-1-0 points, venue, and no adjustment. Training accuracy selects candidate; no holdout selection. Timing variants exploratory.',
-  coverage:{training:train.length,holdout:hold.length},selection:{key:selected,criterion:'Training accuracy, then training Brier, then alphabetical; NOT holdout'},
-  trainingCandidates:candidates,holdoutCandidates:holdMetrics,bestByGroup,selectedHoldout:fpControlMetrics(hold,r=>r.v9.variants[selected]),
-  drawGapTest:{units:'Home-vs-away probability difference (NOT xG)',trainingGrid:grid,selected:drawSelected?{homeGap:drawSelected.homeGap,awayGap:drawSelected.awayGap,training:drawSelected.training,holdout:drawMetrics(hold,selected,drawSelected.homeGap,drawSelected.awayGap)}:null},
-  firstGoalMinuteBands:byFirstMinute,timingFixtureAudit:timingAudit,
-  limitations:['Selection on training accuracy only; independent validation split is needed before final adoption.','Candidate rankings on the holdout are diagnostic ONLY and cannot justify choosing a different configuration.','Lead minutes measure time leading, not defensive causality or true time until full-time stoppage.','Goal minutes are approximate and capped at 90 for exposure.','Original Model 2 prediction engine remains unchanged.','Historical results are sampled; form is computed from strictly earlier sampled fixtures, not complete club histories.','Opposition form tested is own team form difference; historical opponent-at-event strength weighting is not implemented in this version.']};
-}
-
-/* V4 draw-zone research: distinct home/away goal advantages, trained without holdout leakage. */
-const fpPossGapGrid=[0,.1,.15,.2,.25,.3,.35,.4,.5,.6,.75];
-function fpPossGapPick(r,homeGap,awayGap){
- const gap=r.homeExpectedGoals-r.awayExpectedGoals;
- return gap>=homeGap?'H':gap<=-awayGap?'A':'D';
-}
-function fpPossGapStats(rows,homeGap,awayGap){
- const confusion={H:{H:0,D:0,A:0},D:{H:0,D:0,A:0},A:{H:0,D:0,A:0}};
- let correct=0,drawPredicted=0,drawCorrect=0,drawActual=0,changed=0,gained=0,lost=0;
- for(const r of rows){
-  const p=fpPossGapPick(r,homeGap,awayGap);confusion[r.actual][p]++;
-  if(p===r.actual)correct++;
-  if(p==='D'){drawPredicted++;if(r.actual==='D')drawCorrect++}
-  if(r.actual==='D')drawActual++;
-  if(p!==r.prediction){changed++;if(p===r.actual)gained++;if(r.prediction===r.actual)lost++}
- }
- return {n:rows.length,homeGap,awayGap,correct,accuracy:rows.length?correct/rows.length:null,drawPredicted,drawActual,drawCorrect,
-  drawPrecision:drawPredicted?drawCorrect/drawPredicted:null,drawRecall:drawActual?drawCorrect/drawActual:null,
-  changedFromProbabilityPick:changed,correctedPredictions:gained,spoiledPredictions:lost,confusion};
-}
-function fpPossGapAnalysis(training,holdout){
- const grid=[];
- for(const homeGap of fpPossGapGrid)for(const awayGap of fpPossGapGrid){
-  const train=fpPossGapStats(training,homeGap,awayGap);
-  grid.push({homeGap,awayGap,training:train});
- }
- // Optimise training accuracy only; tie-break towards simpler symmetric and smaller thresholds.
- const ordered=[...grid].sort((a,b)=>b.training.accuracy-a.training.accuracy||
-  Math.abs(a.homeGap-a.awayGap)-Math.abs(b.homeGap-b.awayGap)||
-  a.homeGap+a.awayGap-b.homeGap-b.awayGap);
- const best=ordered[0];
- const symmetric=grid.filter(x=>x.homeGap===x.awayGap).sort((a,b)=>b.training.accuracy-a.training.accuracy||a.homeGap-b.homeGap)[0];
- const holdoutGrid=grid.map(x=>({homeGap:x.homeGap,awayGap:x.awayGap,...fpPossGapStats(holdout,x.homeGap,x.awayGap)}));
- const byActualOutcome=['H','D','A'].map(k=>({outcome:k,...fpPossGapStats(holdout.filter(r=>r.actual===k),best.homeGap,best.awayGap)}));
- const bands=[['Away gap ≥0.75',r=>r.homeExpectedGoals-r.awayExpectedGoals<=-.75],
- ['Away gap 0.35–0.75',r=>{const d=r.homeExpectedGoals-r.awayExpectedGoals;return d>-.75&&d<=-.35}],
- ['Away gap 0–0.35',r=>{const d=r.homeExpectedGoals-r.awayExpectedGoals;return d>-.35&&d<0}],
- ['Even expected goals',r=>Math.abs(r.homeExpectedGoals-r.awayExpectedGoals)<.00001],
- ['Home gap 0–0.35',r=>{const d=r.homeExpectedGoals-r.awayExpectedGoals;return d>=0&&d<.35}],
- ['Home gap 0.35–0.75',r=>{const d=r.homeExpectedGoals-r.awayExpectedGoals;return d>=.35&&d<.75}],
- ['Home gap ≥0.75',r=>r.homeExpectedGoals-r.awayExpectedGoals>=.75]]
- .map(([label,fn])=>({label,...fpPossGapStats(holdout.filter(fn),best.homeGap,best.awayGap)}));
- const totals=[['Under 2.0 goals',r=>r.homeExpectedGoals+r.awayExpectedGoals<2],
- ['2.0–3.0 goals',r=>r.homeExpectedGoals+r.awayExpectedGoals>=2&&r.homeExpectedGoals+r.awayExpectedGoals<3],
- ['3.0+ goals',r=>r.homeExpectedGoals+r.awayExpectedGoals>=3]]
- .map(([label,fn])=>({label,...fpPossGapStats(holdout.filter(fn),best.homeGap,best.awayGap)}));
- const drawProbabilityBands=[[0,.15],[.15,.2],[.2,.25],[.25,.3],[.3,.35],[.35,1]].map(([lo,hi])=>{
-  const subset=holdout.filter(r=>r.prob.D>=lo&&r.prob.D<hi);
-  return {range:`${Math.round(lo*100)}–${Math.round(hi*100)}%`,n:subset.length,
-   meanPredictedDrawProbability:fpPossMean(subset.map(r=>r.prob.D)),
-   observedDrawRate:subset.length?subset.filter(r=>r.actual==='D').length/subset.length:null};
- });
- return {method:'Separate home/away minimum expected-goals advantage; training accuracy selection, symmetric/smaller tie-break; no holdout optimisation',
-  thresholds:fpPossGapGrid,trainingEligible:training.length,holdoutEligible:holdout.length,
-  selected:{homeGap:best.homeGap,awayGap:best.awayGap,training:best.training,holdout:fpPossGapStats(holdout,best.homeGap,best.awayGap)},
-  symmetricComparator:{homeGap:symmetric.homeGap,awayGap:symmetric.awayGap,training:symmetric.training,holdout:fpPossGapStats(holdout,symmetric.homeGap,symmetric.awayGap)},
-  zeroGapComparator:{training:fpPossGapStats(training,0,0),holdout:fpPossGapStats(holdout,0,0)},
-  probabilityPick:{n:holdout.length,correct:holdout.filter(r=>r.prediction===r.actual).length,
-   accuracy:holdout.length?holdout.filter(r=>r.prediction===r.actual).length/holdout.length:null,
-   drawPredicted:holdout.filter(r=>r.prediction==='D').length},
-  byActualOutcome,byGoalGap:bands,byExpectedGoalTotal:totals,drawProbabilityCalibration:drawProbabilityBands,
-  trainingThresholdGrid:grid,holdoutThresholdGrid:holdoutGrid,
-  caution:'Holdout grid is diagnostic ONLY; selected gaps were chosen using eligible training fixtures, never holdout.'};
-}
-async function fpRunPossessionResearch(){
- if(fpPossBusy)return;fpPossBusy=true;const btn=document.getElementById('fpRunPossession'),status=document.getElementById('fpPossStatus');btn.disabled=true;
- try{
-  const n=20,limit=Number(document.getElementById('fpPossLimit').value);
-  const scope=document.getElementById('fpPossLeague')?.value||'all',ids=scope==='all'?Object.keys(LEAGUES):[scope];
-  status.textContent='Downloading historical fixtures…';
-  const data=await fetchAllLeagues(6,()=>{},ids);
-  const all=data.matches.filter(isFinished).sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
-  const byLeague={};for(const m of all)(byLeague[m.leagueId]??=[]).push(m);
-  const count=scope==='all'?Math.max(1,Math.min(3,Math.floor(limit/260))):1;
-  const groups=Object.values(byLeague).sort((a,b)=>b.length-a.length).slice(0,count),picked=[];let index=0;
-  while(picked.length<limit){let advanced=false;for(const g of groups){if(index<g.length&&picked.length<limit){picked.push(g[index]);advanced=true}}if(!advanced)break;index++}
-  const events=[];let next=0,complete=0;const failure={http:0,network:0,noPossession:0,invalidPossession:0};const timelineFailure={invalid:0,incomplete:0,valid:0,scoreless:0};const timelineDiagnostics={reasons:{},sources:{},examples:[]};
-  await Promise.all(Array.from({length:Math.min(4,picked.length)},async()=>{
-   while(next<picked.length){const m=picked[next++];let hp=null,ap=null,reason='',timeline={valid:false,goals:[],reason:'Summary unavailable'};
-    try{const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),11000);
-     let response;try{response=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${m.leagueId}/summary?event=${encodeURIComponent(m.id)}`,{signal:controller.signal})}finally{clearTimeout(timer)}
-     if(!response.ok){failure.http++;reason='HTTP '+response.status}
-     else{const body=await response.json();timeline=fpControlGoals(body,m.homeScore,m.awayScore);if(timeline.valid&&timeline.goals.length!==Number(m.homeScore)+Number(m.awayScore)){timeline={valid:false,goals:[],reason:'Incomplete goals vs final score'};timelineFailure.incomplete++}else if(!timeline.valid)timelineFailure.invalid++;else{timelineFailure.valid++;if(!timeline.goals.length)timelineFailure.scoreless++}if(!timeline.valid){timelineDiagnostics.reasons[timeline.reason]=(timelineDiagnostics.reasons[timeline.reason]||0)+1;if(timelineDiagnostics.examples.length<12)timelineDiagnostics.examples.push({fixture:m.home+' vs '+m.away,score:[m.homeScore,m.awayScore],reason:timeline.reason,sourceCounts:timeline.sourceCounts||{}})}else timelineDiagnostics.sources[timeline.source]=(timelineDiagnostics.sources[timeline.source]||0)+1;const st=extractStats(body,m);hp=statNum(st.home.possession);ap=statNum(st.away.possession);
-      if(hp===null||ap===null){failure.noPossession++;reason='No paired possession'}
-      else if(hp<0||ap<0||Math.abs(hp+ap-100)>6){failure.invalidPossession++;reason='Invalid possession totals';hp=ap=null}}
-    }catch(e){failure.network++;reason=String(e.message||e)}
-    events.push({league:m.leagueId,leagueId:m.leagueId,homeId:m.homeId,awayId:m.awayId,leagueName:m.league,date:m.date,id:m.id,fixture:m.home+' vs '+m.away,hk:teamKey(m,'H'),ak:teamKey(m,'A'),hg:m.homeScore,ag:m.awayScore,hp,ap,hasPoss:hp!==null&&ap!==null,reason,home:m.home,away:m.away,goalTimelineValid:timeline.valid,goalTimelineReason:timeline.reason||'',goals:timeline.goals});
-    complete++;if(complete%10===0||complete===picked.length){status.textContent=`Historical match summaries ${complete}/${picked.length} · possession available ${events.filter(x=>x.hasPoss).length} · source errors ${failure.http+failure.network}`;await new Promise(r=>setTimeout(r,0))}
-   }
-  }));
-  events.sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
-  const leagueGroups={};for(const e of events)(leagueGroups[e.league]??=[]).push(e);
-  const rows=[],coverage=[];
-  for(const [id,group] of Object.entries(leagueGroups)){
-   const cut=Math.floor(group.length*.75),prior=[];let cursor=0;
-   for(let i=0;i<group.length;i++){
-    const e=group[i],kick=Date.parse(e.date);
-    while(cursor<group.length&&Date.parse(group[cursor].date)<kick)prior.push(group[cursor++]);
-    const f=fpPossForecast(prior,e,n),control=fpControlForecast(prior,e,n),mm=fpMMForecast(prior,e,n),v9=fpV9Predict(prior,e,mm),actual=e.hg>e.ag?'H':e.hg<e.ag?'A':'D';
-    const extra=f.eligible&&e.hasPoss?{
-     possError:Math.abs(f.homePoss-e.hp),venuePossError:Math.abs(f.venueOnlyHomePoss-e.hp),
-     oracleHomeGoals:fpPossClamp(f.homeScale.meanGoals+f.homeScale.slope*(e.hp-f.homeScale.meanPoss),.05,4.5),
-     oracleAwayGoals:fpPossClamp(f.awayScale.meanGoals+f.awayScale.slope*(e.ap-f.awayScale.meanPoss),.05,4.5),
-     homeActualPossExtrapolated:e.hp<f.homeScale.observedMin||e.hp>f.homeScale.observedMax,
-     awayActualPossExtrapolated:e.ap<f.awayScale.observedMin||e.ap>f.awayScale.observedMax
-    }:{possError:null,venuePossError:null,oracleHomeGoals:null,oracleAwayGoals:null};
-    rows.push({league:id,leagueName:e.leagueName,date:e.date,fixture:e.fixture,train:i<cut,actual,actualHomeGoals:e.hg,actualAwayGoals:e.ag,actualHomePoss:e.hp,actualAwayPoss:e.ap,possAvailable:e.hasPoss,possReason:e.reason,goalTimelineValid:e.goalTimelineValid,goalTimelineReason:e.goalTimelineReason,actualFirstGoal:e.goalTimelineValid?(e.goals[0]?.side||'none'):'missing',actualGoalSequence:e.goalTimelineValid?e.goals:null,control,mm,v9,...f,...extra});
-   }
-   coverage.push({league:id,name:group[0].leagueName,fixtures:group.length,possAvailable:group.filter(x=>x.hasPoss).length,holdout:rows.filter(x=>x.league===id&&!x.train).length,eligible:rows.filter(x=>x.league===id&&!x.train&&x.eligible).length});
-  }
-  const train=rows.filter(x=>x.train),hold=rows.filter(x=>!x.train),eligible=hold.filter(x=>x.eligible),missingReasons={};
-  for(const r of hold.filter(x=>!x.eligible))missingReasons[r.reason||'unknown']=(missingReasons[r.reason||'unknown']||0)+1;
-  const mae=(items,h,a)=>fpPossMean(items.filter(x=>Number.isFinite(x[h])&&Number.isFinite(x[a])).map(x=>(Math.abs(x[h]-x.actualHomeGoals)+Math.abs(x[a]-x.actualAwayGoals))/2));
-  const summary=(items)=>{
-   const n=items.length,correct=items.filter(x=>x.prediction===x.actual).length,baselineCorrect=items.filter(x=>fpPossPick(x.baselineProb)===x.actual).length,venueCorrect=items.filter(x=>fpPossPick(x.venueProb)===x.actual).length;
-   const brier=(field)=>fpPossMean(items.map(x=>['H','D','A'].reduce((s,k)=>s+(x[field][k]-(x.actual===k?1:0))**2,0)));
-   return {n,correct,accuracy:n?correct/n:null,baselineCorrect,baselineAccuracy:n?baselineCorrect/n:null,venueCorrect,venueAccuracy:n?venueCorrect/n:null,
-    brier:brier('prob'),baselineBrier:brier('baselineProb'),venueBrier:brier('venueProb'),
-    goalMAE:mae(items,'homeExpectedGoals','awayExpectedGoals'),baselineGoalMAE:mae(items,'homeGoalBaseline','awayGoalBaseline'),
-    venueGoalMAE:mae(items,'venueHomeGoals','venueAwayGoals'),oracleGoalMAE:mae(items,'oracleHomeGoals','oracleAwayGoals'),
-    possMAE:fpPossMean(items.map(x=>x.possError).filter(Number.isFinite)),venuePossMAE:fpPossMean(items.map(x=>x.venuePossError).filter(Number.isFinite)),
-    homeSuppressionMean:fpPossMean(items.map(x=>x.homeSuppression)),homeGoalImpactMean:fpPossMean(items.map(x=>x.homeGoalImpact)),
-    extrapolatedMatches:items.filter(x=>x.homePossExtrapolated||x.awayPossExtrapolated).length,
-    slopePositiveHome:items.filter(x=>x.homeScale.slope>.005).length,slopeNegativeHome:items.filter(x=>x.homeScale.slope<-.005).length};
-  };
-  const segments=(spec)=>spec.map(([label,fn])=>({label,...summary(eligible.filter(fn))}));
-  const gapTraining=train.filter(x=>x.eligible),gapAnalysis=fpPossGapAnalysis(gapTraining,eligible),controlAnalysis=fpControlAnalysis(rows),mmResearch=fpMMResearch(rows),v9Research=fpV9Research(rows);
-  for(const r of rows)if(r.eligible){r.expectedGoalGap=r.homeExpectedGoals-r.awayExpectedGoals;
-   r.gapPrediction=fpPossGapPick(r,gapAnalysis.selected.homeGap,gapAnalysis.selected.awayGap);
-   r.equalGapPrediction=fpPossGapPick(r,gapAnalysis.symmetricComparator.homeGap,gapAnalysis.symmetricComparator.awayGap);
-   r.gapPredictionChanged=r.gapPrediction!==r.prediction;
-   if(r.control?.eligible){r.controlBlendProbability=fpControlBlend(r.prob,r.control.prob,controlAnalysis.selectedWeight);r.controlBlendPrediction=fpPossPick(r.controlBlendProbability);r.controlChanged=r.controlBlendPrediction!==r.prediction;}
-  }
-  const byPoss=segments([['Home <40%',x=>x.homePoss<40],['Home 40–50%',x=>x.homePoss>=40&&x.homePoss<50],['Home 50–60%',x=>x.homePoss>=50&&x.homePoss<60],['Home ≥60%',x=>x.homePoss>=60]]);
-  const byStrength=segments([['Home weaker',x=>x.strengthGap<-.4],['Similar strength',x=>Math.abs(x.strengthGap)<=.4],['Home stronger',x=>x.strengthGap>.4]]);
-  const bySample=segments([['5–9 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)<10],['10–14 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)>=10&&Math.min(x.homePossSamples,x.awayPossSamples)<15],['15–19 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)>=15&&Math.min(x.homePossSamples,x.awayPossSamples)<20],['20 matches',x=>Math.min(x.homePossSamples,x.awayPossSamples)>=20]]);
-  const bySuppression=segments([['Home suppressed ≥10 pts',x=>x.homeSuppression>=10],['Home suppressed 3–10 pts',x=>x.homeSuppression>=3&&x.homeSuppression<10],['Home roughly normal',x=>Math.abs(x.homeSuppression)<3],['Home boosted ≥3 pts',x=>x.homeSuppression<=-3]]);
-  const bySlope=segments([['Home positive goal slope',x=>x.homeScale.slope>.005],['Home flat goal slope',x=>Math.abs(x.homeScale.slope)<=.005],['Home negative goal slope',x=>x.homeScale.slope<-.005]]);
-  const byExtrapolation=segments([['Inside both observed ranges',x=>!x.homePossExtrapolated&&!x.awayPossExtrapolated],['At least one extrapolated',x=>x.homePossExtrapolated||x.awayPossExtrapolated]]);
-  const leagueMetrics=coverage.map(c=>({...c,metrics:summary(eligible.filter(x=>x.league===c.league))}));
-  const byOutcome=segments(['H','D','A'].map(k=>[k,x=>x.actual===k]));
-  const byPrediction=segments(['H','D','A'].map(k=>[k,x=>x.prediction===k]));
-  const test={version:'MATCH-MANAGEMENT-V9-WINDOW-TIMING-RESEARCH',created:new Date().toISOString(),settings:{internalWindow:n,requestedSummaries:limit,actualSummaries:picked.length,scope,months:6,holdout:'Last 25% per league, chronological; predictions use only strictly earlier sampled matches',ridgePerMatch:400,maxAbsoluteSlope:.055},
-   coverage:{historicalFixtures:all.length,sampled:picked.length,withPossession:events.filter(x=>x.hasPoss).length,withoutPossession:events.filter(x=>!x.hasPoss).length,failures:failure,goalTimelineFailures:timelineFailure,goalTimelineDiagnostics:timelineDiagnostics,validGoalTimelines:events.filter(x=>x.goalTimelineValid).length,training:train.length,holdout:hold.length,holdoutEligible:eligible.length,holdoutMissing:hold.length-eligible.length,holdoutMissingReasons:missingReasons},
-   overall:summary(eligible),drawGapAnalysis:gapAnalysis,teamTypeAnalysis:controlAnalysis,matchManagementResearch:mmResearch,windowTimingResearch:v9Research,byPoss,byStrength,bySample,bySuppression,bySlope,byExtrapolation,byLeague:leagueMetrics,byOutcome,byPrediction,rawFixtures:rows,
-   notes:['Independent research: Model 2 unchanged. Fixed internal 20-match lookback; no window selection to optimise on holdout.','Each team has a ridge-shrunk 1–100% possession-to-goals scale; sample points and slope in every eligible fixture.','Goal scale is a descriptive association, not a causal estimate; full-time possession is affected by game state.','Prematch predictions use predicted possession only. Oracle goals using actual possession are diagnostic after match and NEVER enter forecast probabilities.','Baseline uses mean goals; venue variant uses venue-based possession without strength/suppression adjustment.','Only earlier sampled matches are used. Sampling incomplete leagues can limit effective team histories.','Holdout must not be used to tune slope, possession coefficients or window.','Extrapolated possession is flagged; small holdout is inconclusive.','V4 goal gaps remain trained on training fixtures only. V5 adds opponent-specific first-goal and lead/recovery matchup trees; blending weight is selected by training Brier, never holdout.','Goal events must reconstruct the full final score; missing/ambiguous events are excluded from team-type histories and flagged.','Team-type analysis compares only common eligible fixtures; coverage and selection bias must be reviewed before promotion.','V9 tests Model 2 form windows and weighting profiles, venue, points vs wins, timing and standalone probability draw gaps. These are independent experiments, not modifications to Model 2.','V8 MM1–MM4 use goal timelines and results only, never possession in standalone models. Model 2 unchanged. Training-only selection; inspect holdout without tuning.']};
-  const fmt=x=>x==null?'—':Number(x).toFixed(2);
-  const table=(items)=>`<div class="tablewrap"><table><thead><tr><th>Segment</th><th>N</th><th>Possession scale accuracy</th><th>Baseline</th><th>V4 scale goal MAE</th><th>Baseline MAE</th><th>Oracle goal MAE</th><th>Poss MAE</th></tr></thead><tbody>${items.map(x=>{const y=x.metrics||x;return `<tr><td>${esc(x.label||x.name||x.league)}</td><td>${y.n}</td><td>${fpPossPct(y.accuracy)}</td><td>${fpPossPct(y.baselineAccuracy)}</td><td>${fmt(y.goalMAE)}</td><td>${fmt(y.baselineGoalMAE)}</td><td>${fmt(y.oracleGoalMAE)}</td><td>${fmt(y.possMAE)}</td></tr>`}).join('')}</tbody></table></div>`;
-  document.getElementById('fpPossResults').innerHTML=`<div class="fp-draw-summary"><div><small>Possession coverage</small><strong>${test.coverage.withPossession}/${test.coverage.sampled}</strong></div><div><small>Holdout eligible</small><strong>${eligible.length}/${hold.length}</strong></div><div><small>Possession result accuracy</small><strong>${fpPossPct(test.overall.accuracy)}</strong></div><div><small>Mean-goals baseline</small><strong>${fpPossPct(test.overall.baselineAccuracy)}</strong></div></div>
-   <p class="muted smalltext"><strong>Holdout-only:</strong> V3 goals MAE ${fmt(test.overall.goalMAE)} vs baseline ${fmt(test.overall.baselineGoalMAE)} vs actual-possession diagnostic ${fmt(test.overall.oracleGoalMAE)}. Predicted possession MAE ${fmt(test.overall.possMAE)} vs venue-only ${fmt(test.overall.venuePossMAE)}. Brier ${fmt(test.overall.brier)} vs baseline ${fmt(test.overall.baselineBrier)}. Extrapolated fixtures ${test.overall.extrapolatedMatches}/${eligible.length}.</p>
-   <details open><summary>V9 · Window, Strength, Timing &amp; Draw Research</summary><p><strong>Training-selected:</strong> ${esc(v9Research.selection.key)}. Holdout accuracy ${fpPossPct(v9Research.selectedHoldout.accuracy)} (${v9Research.selectedHoldout.correct}/${v9Research.selectedHoldout.n}).</p><p><strong>Best within groups (training selected):</strong> ${Object.entries(v9Research.bestByGroup).map(([k,v])=>`${k}: ${v?esc(v.key)+' — '+fpPossPct(v.holdout.accuracy):'—'}`).join(' | ')}.</p><p><strong>Standalone probability draw-gap:</strong> home ${v9Research.drawGapTest.selected?.homeGap}, away ${v9Research.drawGapTest.selected?.awayGap}; holdout ${fpPossPct(v9Research.drawGapTest.selected?.holdout.accuracy)}.</p><p class='muted smalltext'>Copy Test Outputs includes every candidate, both train and holdout metrics, first-goal timing, lead durations, and fixture-level features. No holdout-based selection. Model 2 unchanged.</p></details>
-   <details open><summary>V8 · Standalone Match Management (MM1–MM4)</summary>
-    <p><strong>Goal timeline coverage:</strong> ${test.coverage.validGoalTimelines}/${test.coverage.sampled}; standalone MM holdout ${mmResearch.coverage.holdout}/${mmResearch.coverage.holdoutTotal} (common with possession ${mmResearch.coverage.commonHoldout}).</p>
-    <p><strong>Training-selected model:</strong> ${mmResearch.selection.selectedModel}, selected using training Brier only. <strong>Holdout:</strong> ${fpPossPct(mmResearch.selectedHoldout.accuracy)} (${mmResearch.selectedHoldout.correct}/${mmResearch.selectedHoldout.n}), Brier ${fmt(mmResearch.selectedHoldout.brier)}, log loss ${fmt(mmResearch.selectedHoldout.logLoss)}.</p>
-    <p><strong>All four holdout models:</strong> ${mmResearch.holdoutModels.map(x=>`${x.model} ${fpPossPct(x.metrics.accuracy)} · Brier ${fmt(x.metrics.brier)} · draws ${x.metrics.drawCorrect}/${x.metrics.drawPredicted}`).join(' | ')}.</p>
-    <p><strong>Common coverage comparison:</strong> possession ${fpPossPct(mmResearch.possessionCommonHoldout.accuracy)} (Brier ${fmt(mmResearch.possessionCommonHoldout.brier)}); training-selected MM+possession blend ${fpPossPct(mmResearch.selectedBlendHoldout.accuracy)} (Brier ${fmt(mmResearch.selectedBlendHoldout.brier)}), weight ${(mmResearch.selection.selectedBlendWeight*100).toFixed(0)}% MM.</p>
-    <p><strong>Disagreement matches:</strong> ${mmResearch.disagreements.n}; standalone MM ${mmResearch.disagreements.mm.correct}/${mmResearch.disagreements.n} correct, possession ${mmResearch.disagreements.poss.correct}/${mmResearch.disagreements.n} correct.</p>
-    <p class="muted smalltext">Copy Test Outputs includes MM1–MM4 train/holdout metrics, confusion matrices, Brier and log loss, standalone vs possession, training-only blend selection, feature ablations, first-goal and league breakdowns, draw calibration, strength/lead/recovery/goal-dynamics profiles and per-fixture probabilities. Experimental Model 2 remains untouched. The report does not claim to benchmark original Model 2 probabilities.</p>
-   </details>
-   <details open><summary>V5 · Team Types, First Goal & Match Control</summary>
-    <p><strong>Goal timeline coverage:</strong> ${test.coverage.validGoalTimelines}/${test.coverage.sampled} complete; ${controlAnalysis.holdoutEligible}/${controlAnalysis.holdoutPossessionEligible} possession-eligible holdout fixtures have usable historical control profiles.</p>
-    <p><strong>Training-selected blend:</strong> ${(100*controlAnalysis.selectedWeight).toFixed(0)}% team-type probabilities + ${(100*(1-controlAnalysis.selectedWeight)).toFixed(0)}% possession probabilities (selected by training Brier).</p>
-    <p><strong>Common holdout:</strong> possession ${fpPossPct(controlAnalysis.possessionSameCoverage.accuracy)} · team type ${fpPossPct(controlAnalysis.teamTypeOnly.accuracy)} · combined ${fpPossPct(controlAnalysis.combined.accuracy)}. Brier ${fmt(controlAnalysis.possessionSameCoverage.brier)} / ${fmt(controlAnalysis.teamTypeOnly.brier)} / ${fmt(controlAnalysis.combined.brier)}.</p>
-    <p><strong>Combined draws:</strong> ${controlAnalysis.combined.drawCorrect}/${controlAnalysis.combined.drawPredicted} correct predictions, ${controlAnalysis.combined.drawActual} actual; precision ${fpPossPct(controlAnalysis.combined.drawPrecision)}, recall ${fpPossPct(controlAnalysis.combined.drawRecall)}. Corrected ${controlAnalysis.combined.correctedPredictions}, spoiled ${controlAnalysis.combined.spoiledPredictions}.</p>
-    <p class="muted smalltext">Copied JSON contains training and diagnostic holdout blend grids, first-goal probabilities, team types, lead retention, comeback wins/draws, match-level goal sequences, calibration, type and league splits, missing-event reasons and changed predictions. Only training data selects the blend.</p>
-   </details><details open><summary>0 · Home / Draw / Away minimum goal-gap test</summary>
-    <p><strong>Training-selected thresholds:</strong> Home advantage ≥ ${fmt(gapAnalysis.selected.homeGap)} goals; away advantage ≥ ${fmt(gapAnalysis.selected.awayGap)} goals; otherwise DRAW.</p>
-    <p><strong>Untouched holdout:</strong> gap-rule accuracy ${fpPossPct(gapAnalysis.selected.holdout.accuracy)} (${gapAnalysis.selected.holdout.correct}/${eligible.length}) vs probability selection ${fpPossPct(gapAnalysis.probabilityPick.accuracy)} (${gapAnalysis.probabilityPick.correct}/${eligible.length}); symmetric-gap accuracy ${fpPossPct(gapAnalysis.symmetricComparator.holdout.accuracy)}.</p>
-    <p><strong>Draws:</strong> ${gapAnalysis.selected.holdout.drawPredicted} predicted; ${gapAnalysis.selected.holdout.drawCorrect} correct out of ${gapAnalysis.selected.holdout.drawActual} actual; precision ${fpPossPct(gapAnalysis.selected.holdout.drawPrecision)}, recall ${fpPossPct(gapAnalysis.selected.holdout.drawRecall)}. Changed ${gapAnalysis.selected.holdout.changedFromProbabilityPick} picks, corrected ${gapAnalysis.selected.holdout.correctedPredictions}, spoiled ${gapAnalysis.selected.holdout.spoiledPredictions}.</p>
-    <p class="muted smalltext">Thresholds are selected exclusively on eligible training fixtures. Copy test outputs includes every training and holdout threshold combination, actual/predicted H/D/A confusion matrix, goal-gap bands, total-goals bands, draw-probability calibration and each fixture's original versus gap-based prediction.</p>
-   </details>
-   <details open><summary>1 · League coverage and missing histories</summary>${table(leagueMetrics)}<p class="muted smalltext">Ineligible reasons: ${esc(JSON.stringify(missingReasons))}. Data errors: ${esc(JSON.stringify(failure))}.</p></details>
-   <details><summary>2 · Possession suppression impact</summary>${table(bySuppression)}</details>
-   <details><summary>3 · Goal-scale slope direction</summary>${table(bySlope)}</details>
-   <details><summary>4 · Scale extrapolation</summary>${table(byExtrapolation)}</details>
-   <details><summary>5 · Historical sample sizes</summary>${table(bySample)}</details>
-   <details><summary>6 · Predicted possession bands</summary>${table(byPoss)}</details>
-   <details><summary>7 · Rolling points strength</summary>${table(byStrength)}</details>
-   <details><summary>8 · Actual H / D / A</summary>${table(byOutcome)}</details>
-   <details><summary>9 · Predicted H / D / A</summary>${table(byPrediction)}</details>
-   <p class="muted smalltext">Copy the full JSON for gap-rule predictions, training-selected home/away thresholds, full draw and match-control diagnostics, fixture-level goal sequences, first-goal matchup probabilities, team types, 1–100 scale samples, observed possession ranges, fitted slopes, suppression, extrapolation, oracle-vs-predicted goals and all benchmark comparisons. The oracle uses final possession only to diagnose the goal scale, not to predict matches.</p>`;
-  document.getElementById('fpPossReport').value=JSON.stringify(test,null,2);
-  status.textContent=`Completed · ${picked.length} summaries · ${eligible.length}/${hold.length} eligible holdout matches. Use Copy test outputs to paste the full report here.`;
- }catch(e){status.textContent='Research failed: '+String(e.message||e);console.error(e)}finally{fpPossBusy=false;btn.disabled=false}
-}
-function fpV12ReportText(){
- const el=document.getElementById('fpPossReport');
- if(!el||!el.value.trim())throw Error('No results yet. Run the V16 core prediction test first.');
- let data;try{data=JSON.parse(el.value)}catch(_){throw Error('The report is not valid JSON. Please rerun the comparison.');}
- if(data.version!=='FOOTYPICKS-V16-CORE-1X2-MM2'||!data.test||!data.coverage)throw Error('The report is not the V16 core prediction output. Run the V16 core prediction test first.');
- return el.value;
-}
-function fpDownloadV12Report(){
- const st=document.getElementById('fpPossStatus');
- try{
-  const payload=fpV12ReportText();
-  const blob=new Blob([payload],{type:'application/json;charset=utf-8'});
-  const url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='FootyPicks_V16_Core_1X2_Test_'+new Date().toISOString().slice(0,10)+'.json';
-  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-  st.textContent='JSON download requested ('+Math.round(blob.size/1024)+' KB). Attach the downloaded .json file here.';
- }catch(e){st.textContent='Export unavailable: '+String(e.message||e)}
-}
-async function fpCopyPossessionReport(){
- const st=document.getElementById('fpPossStatus');let payload;
- try{payload=fpV12ReportText()}catch(e){st.textContent='Copy unavailable: '+String(e.message||e);return}
- try{
-  if(!navigator.clipboard?.writeText)throw Error('Clipboard API unavailable');
-  await navigator.clipboard.writeText(payload);
-  st.textContent='Test JSON copied ('+Math.round(payload.length/1024)+' KB). Paste into chat. If HTML appears, use Download test JSON instead.';
- }catch(e){
-  const el=document.getElementById('fpPossReport');el.closest('details')?.setAttribute('open','');el.focus();el.select();
-  let ok=false;try{ok=!!document.execCommand('copy')}catch(_){}
-  st.textContent=ok?'JSON selected and browser reports it copied. If pasting gives HTML, use Download test JSON.':'Clipboard copy blocked. JSON is selected; use Download test JSON instead.';
- }
-}
 
 
-(function(){const sel=document.getElementById('fpPossLeague'),source=document.getElementById('fpTestLeague');if(!sel||!source)return;const fill=()=>{const selected=sel.value;for(const opt of source.options){if(opt.value==='all'||Array.from(sel.options).some(o=>o.value===opt.value))continue;sel.add(new Option(opt.textContent,opt.value))}if(Array.from(sel.options).some(o=>o.value===selected))sel.value=selected};fill();setTimeout(fill,1500);setTimeout(fill,4500)})();
+// Model 2 is unchanged. MM2 only validates the probability-argmax outcome.
+function fpMM2Decision(m){
+ const original=m.mm2BasePick||fpMM2Argmax(m.probs);
+ if(!['H','D','A'].includes(original))return {approved:false,reason:'No Model 2 probabilities'};
+ if(!m.mm2||!m.mm2.eligible)return {approved:false,reason:m.mm2?.reason||'MM2 goal history unavailable',basePick:original};
+ const mmPick=fpMM2Argmax(m.mm2.models.MM2);
+ return {approved:mmPick===original,reason:mmPick===original?'MM2 agrees':'MM2 disagrees',basePick:original,mmPick};
+}
+function fpMM2Argmax(p){return p?['H','D','A'].reduce((a,k)=>Number(p[k])>Number(p[a])?k:a,'H'):null}
+const fpMM2Memory=new Map();let fpMM2DatabasePromise;
+function fpMM2Database(){return fpMM2DatabasePromise??=new Promise(resolve=>{try{const r=indexedDB.open('footypicks-mm2-timelines-v1',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('timelines'))r.result.createObjectStore('timelines')};r.onsuccess=()=>resolve(r.result);r.onerror=()=>resolve(null)}catch(_){resolve(null)}})}
+async function fpMM2Summary(m){
+ const key=m.leagueId+':'+m.id+':'+m.homeScore+':'+m.awayScore;
+ if(fpMM2Memory.has(key))return fpMM2Memory.get(key);
+ const db=await fpMM2Database();let cached=null;
+ if(db)cached=await new Promise(resolve=>{try{const r=db.transaction('timelines','readonly').objectStore('timelines').get(key);r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>resolve(null)}catch(_){resolve(null)}});
+ if(cached){fpMM2Memory.set(key,cached);return cached}
+ let value={valid:false,goals:[],error:'Unavailable'};
+ try{const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);let res;
+  try{res=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${m.leagueId}/summary?event=${encodeURIComponent(m.id)}`,{signal:controller.signal})}finally{clearTimeout(timer)}
+  if(res.ok){const data=fpControlGoals(await res.json(),m.homeScore,m.awayScore);value={valid:!!data.valid,goals:data.goals||[],error:data.reason||null};
+   if(db)try{db.transaction('timelines','readwrite').objectStore('timelines').put(value,key)}catch(_){}
+  }else value.error='HTTP '+res.status;
+ }catch(e){value.error=String(e.message||e)}
+ // Transient HTTP/network errors are never permanently cached.
+ if(value.valid||value.error===null)fpMM2Memory.set(key,value);
+ return value;
+}
+async function fpMM2BuildEvents(matches,progress){
+ const items=matches.filter(isFinished),out=[];let cursor=0,completed=0,valid=0;
+ const workers=Array.from({length:12},async()=>{while(cursor<items.length){if(typeof testCheckpoint==='function')testCheckpoint();const m=items[cursor++],s=await fpMM2Summary(m);
+  out.push({league:m.leagueId,date:m.date,hk:teamKey(m,'H'),ak:teamKey(m,'A'),hg:m.homeScore,ag:m.awayScore,goals:s.goals,goalTimelineValid:s.valid});completed++;if(s.valid)valid++;
+  if(progress&&(completed%15===0||completed===items.length))progress(completed,items.length,valid);
+ }});await Promise.all(workers);
+ const groups={};for(const e of out)(groups[e.league]??=[]).push(e);
+ for(const v of Object.values(groups))v.sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));return groups;
+}
+function fpMM2ForFixture(groups,m){const kick=Date.parse(m.date);const past=(groups[m.leagueId]||[]).filter(e=>e.goalTimelineValid&&Date.parse(e.date)+3*3600000<=kick);
+ return fpMMForecast(past,{hk:teamKey(m,'H'),ak:teamKey(m,'A')},20)}
+async function fpMM2ApplyFixtures(matches,progress){
+ const by={};for(const m of matches)(by[m.leagueId]??=[]).push(m);
+ const relevant=new Map();for(const [id,group] of Object.entries(by)){
+  const upcoming=group.filter(m=>!isFinished(m)&&Date.parse(m.date)>Date.now()-7200000);
+  if(!upcoming.length)continue;
+  const first=Math.min(...upcoming.map(m=>Date.parse(m.date)));
+  // Fetch up to 150 recent completed league games, including only pre-kickoff history.
+  const past=group.filter(m=>isFinished(m)&&Date.parse(m.date)+3*3600000<=first).sort((a,b)=>Date.parse(b.date)-Date.parse(a.date)).slice(0,150);
+  for(const m of past)relevant.set(id+':'+m.id,m);
+ }
+ const groups=await fpMM2BuildEvents([...relevant.values()],progress);
+ for(const m of matches){if(isFinished(m))continue;
+  m.mm2=fpMM2ForFixture(groups,m);m.mm2BasePick=fpMM2Argmax(m.probs);
+  m.mm2Decision=fpMM2Decision(m);
+ }
+ return groups;
+}
+function fpMM2ProfileHtml(m){if(!m.mm2)return '<div class="muted smalltext">MM2 profile not loaded</div>';
+ const mm=m.mm2;if(!mm.eligible)return `<div class="muted smalltext">MM2 unavailable · ${esc(mm.reason||'Insufficient goal timelines')}</div>`;
+ const side=(label,t)=>`<div class="analytics-card"><strong>${esc(label)}</strong><div class="fp-flag-row"><span class="tag">${esc(fpControlType(t))}</span></div><div class="smalltext muted">${t.n} verified matches · Scores first ${(100*t.firstRate).toFixed(0)}% · Holds first lead ${(100*t.leadWinRate).toFixed(0)}% · Comeback win ${(100*t.comebackWinRate).toFixed(0)}% · Lead lost ${(100*t.leadLostRate).toFixed(0)}%</div></div>`;
+ return `<div class="analytics-grid">${side(m.home,mm.home)}${side(m.away,mm.away)}</div>`;
+}
+function fpMM2VerdictHtml(m){const d=m.mm2Decision||fpMM2Decision(m);return `<div class="notice" style="border-left-color:${d.approved?'var(--green)':'var(--red)'}"><strong>${d.approved?'MM2 VALIDATED · '+outcomeName(d.basePick).toUpperCase():'REDUNDANT · NO PREDICTION'}</strong><div class="smalltext">${esc(d.reason)}${d.mmPick?' · MM2: '+outcomeName(d.mmPick):''}</div></div>`}
+
 /* LIVE CENTRE */
 function isLive(m){return m.state==="in"||/live|in progress|half/i.test(m.statusName||"")||((m.state==="in")&&validScore(m))}
 function extractStats(summary,m){
@@ -2850,7 +2199,7 @@ function attachLivePredictions(matches){
  const model=MODELS[state.activeIndex]||MODELS[state.manualIndex]||MODELS[1];
  for(const match of matches){
   const saved=snapshotsById.get(eventId(match))||state.history.find(row=>sameFixture(row,match)&&new Date(row.savedAt||row.date).getTime()<new Date(row.date).getTime());
-  if(saved&&saved.probs){const sum=Number(saved.probs.H)+Number(saved.probs.D)+Number(saved.probs.A);if(sum>0){match.preGameProbs={H:saved.probs.H/sum,D:saved.probs.D/sum,A:saved.probs.A/sum};match.probs={...match.preGameProbs};match.prediction=saved.prediction;match.predictedScore=saved.predictedScore;match.confidence=saved.confidence;match.selection=saved.selection??null;match.pointsForm=saved.pointsForm||null;match.preGameHomeLambda=saved.homeLambda;match.preGameAwayLambda=saved.awayLambda;continue;}}
+  if(saved&&saved.probs){const sum=Number(saved.probs.H)+Number(saved.probs.D)+Number(saved.probs.A);if(sum>0){match.preGameProbs={H:saved.probs.H/sum,D:saved.probs.D/sum,A:saved.probs.A/sum};match.probs={...match.preGameProbs};match.prediction=saved.prediction;match.predictedScore=saved.predictedScore;match.confidence=saved.confidence;match.selection=saved.selection??null;match.preGameHomeLambda=saved.homeLambda;match.preGameAwayLambda=saved.awayLambda;continue;}}
   const loaded=new Date(match.date).getTime()>Date.now()?(loadedById.get(eventId(match))||state.matches.find(row=>sameFixture(row,match)&&row.probs&&["H","D","A"].every(key=>Number.isFinite(Number(row.probs[key]))))):null;
   if(loaded?.probs&&["H","D","A"].every(key=>Number.isFinite(Number(loaded.probs[key])))){
    const sum=Number(loaded.probs.H)+Number(loaded.probs.D)+Number(loaded.probs.A);
@@ -2859,7 +2208,7 @@ function attachLivePredictions(matches){
     match.probs={...match.preGameProbs};
     match.prediction=loaded.prediction||["H","D","A"].sort((a,b)=>match.probs[b]-match.probs[a])[0];
     match.predictedScore=loaded.predictedScore;
-    match.confidence=loaded.confidence;match.pointsForm=loaded.pointsForm||null;
+    match.confidence=loaded.confidence;
     const loadedForecast=loaded&&Number.isFinite(loaded.homeLambda)&&Number.isFinite(loaded.awayLambda)?loaded:null;
     if(loadedForecast){match.preGameHomeLambda=loadedForecast.homeLambda;match.preGameAwayLambda=loadedForecast.awayLambda;match.risk=loadedForecast.risk;}
     continue;
@@ -2878,7 +2227,7 @@ function attachLivePredictions(matches){
   match.confidence=forecast.confidence;
   match.preGameHomeLambda=forecast.homeLambda;
   match.preGameAwayLambda=forecast.awayLambda;
-  match.risk=forecast.risk;match.pointsForm=fpPointsFromFixture(match,previous);
+  match.risk=forecast.risk;
  }
 }
 
@@ -3197,7 +2546,7 @@ function liveCard(m,index,mode="all"){
   <div class="row between wrap"><span class="live-rank">${modeLabel}</span><div class="row wrap" style="gap:6px;justify-content:flex-end"><span data-bet-live-badge="${esc(id)}"></span>${redCardFlag}${stormTag}${demoTag}<button class="btn small secondary" data-live-toggle="${esc(id)}">${hidden?"Unhide Game":"Hide Game"}</button></div></div>
   <div class="meta" style="margin-top:7px">${esc(m.league||"League")} · ${esc(m.statusName||"Live match")}</div>
   <div class="row between" style="margin:12px 0;gap:6px"><div class="grow"><div class="live-team">${esc(m.home)}</div><div class="meta">Pre-game win: ${prePct.H}%</div></div><div style="text-align:center;min-width:82px"><div class="live-score">${scoreLine}</div><div class="live-minute">${esc(status)}</div><div class="muted smalltext" style="margin-top:4px">Team-form prediction: ${esc(preSnap?.predictedScore||"Not saved")}<br>Pre-match confidence: ${`<strong>${esc(liveConfidenceText(originalConfidence))}</strong>`}<br>Original selection: <strong>${!preSnap?"N/A":preSnap.selection?preSnap.selection==="N"?"No Selection":outcomeName(preSnap.selection):"Not recorded"}</strong></div></div><div class="grow" style="text-align:right"><div class="live-team">${esc(m.away)}</div><div class="meta">Pre-game win: ${prePct.A}%</div></div></div>
-  ${fpPointsHtml(fpPointsForMatch(m),true)}${a.projected?`<div class="fp-live-outcome"><span>LIVE PREDICTED OUTCOME</span><strong>${esc(outcomeName(a.projected.prediction))} · ${esc(a.projected.score)}</strong><small>Indicative in-play estimate</small></div>`:''}
+  ${a.projected?`<div class="fp-live-outcome"><span>LIVE PREDICTED OUTCOME</span><strong>${esc(outcomeName(a.projected.prediction))} · ${esc(a.projected.score)}</strong><small>Indicative in-play estimate</small></div>`:''}
   <details class="fp-live-chances"><summary>In-game chances and estimates</summary>
   
   ${divergence.strong?`<div class="notice" style="border-left-color:var(--amber)"><strong>⚠️ Live performance differs from pre-match expectation</strong><div class="muted smalltext" style="margin-top:4px">The pre-match stronger side is currently behind on ${esc(divergence.statLabelText)}. Treat the live projection with extra caution.</div></div>`:""}
@@ -3364,7 +2713,10 @@ function liveModelComparison(m){
  const b=data;
  const cell=(v,label)=>v&&['H','D','A'].includes(v.prediction)?`<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">${Number.isFinite(Number(v.homeLambda))&&Number.isFinite(Number(v.awayLambda))&&v.homeLambda!=null&&v.awayLambda!=null?`Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${(Number(v.homeLambda)-Number(v.awayLambda)).toFixed(2)}`:("Expected goals unavailable")}</div><div class="model-bottom"><span class="${v.selection===v.prediction?'model-select':'model-no-select'}">${v.selection===v.prediction?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">${Number.isFinite(+v.confidence)?v.confidence+'/10':'—'}</span></div></div>`:`<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Prediction unavailable</div></div>`;
  const full=false;
- return `<div class="fixture-comparison">${fpPointsHtml(data.pointsForm,true)}${fpDrawBadge({...data,leagueId:m.leagueId})}${fpStatusTag({...b,leagueId:m.leagueId})}<div class="model-grid">${cell(b,'Prediction')}</div></div>`;
+ const verdict=data.mm2Decision;
+ const types=data.mm2Profiles;
+ const profile=types?`<details class="fp-schedule-detail"><summary>MM2 team profiles</summary><div class="smalltext">${esc(m.home)}: ${esc(types.home)} (${types.homeSample} verified matches)<br>${esc(m.away)}: ${esc(types.away)} (${types.awaySample} verified matches)</div></details>`:'<div class="muted smalltext">MM2 profiles unavailable for this historical snapshot.</div>';
+ return `<div class="fixture-comparison"><div class="notice" style="border-left-color:${verdict?.approved?'var(--green)':'var(--red)'}"><strong>${verdict?.approved?'MM2 VALIDATED · '+outcomeName(verdict.basePick):'REDUNDANT · NO PREDICTION'}</strong><div class="smalltext">${esc(verdict?.reason||'No saved MM2 validation')}</div></div><details class="fp-schedule-detail"><summary>Underlying Model 2 calculation</summary><div class="model-grid">${cell(b,'Model 2 · diagnostic only')}</div></details>${profile}</div>`;
 }
 function renderLiveScheduleCategory(){
  if(fpScheduleLoading&&!state.liveSchedule.length){
@@ -3624,7 +2976,7 @@ function fpBetMonitor(){
   return{m,b,current,projected,supported,risk:fpRiskAssess(b,m)};
  });
  root.innerHTML=`<div class="row between wrap"><h3 style="margin:0">✓ My live bets</h3><span class="tag">${rows.length} live · ${counts.winning} winning · ${counts.drawing} drawing · ${counts.losing} losing</span></div>
- ${data.map(({m,b,current,projected,supported,risk})=>`<div class="fp-bet-row"><div class="grow"><strong>${esc(m.home)} ${validScore(m)?`${m.homeScore}–${m.awayScore}`:"vs"} ${esc(m.away)}</strong><div class="fp-bet-mini">${esc(getLiveMinute(m))} · ${b.market==="doubleChance"?"Double chance":"Straight bet"} · ${esc(fpBetLabel(b))}${fpPointsForMatch(m)?.window?` · Window ${fpPointsForMatch(m).window.score>0?"+":""}${fpPointsForMatch(m).window.score}`:""}${fpPointsForMatch(m)?.last5?` · Last 5 ${fpPointsForMatch(m).last5.score>0?"+":""}${fpPointsForMatch(m).last5.score}`:""}${risk?` <span class="fp-at-risk ${risk.level}" title="${esc(risk.explanation)}">${risk.level==="high"?"⚠ High risk":"⚠ At risk"}</span>`:""}</div>${risk?`<details class="fp-risk-detail"><summary>Why at risk?</summary><span>${esc(risk.explanation)} ${esc(risk.note)}</span></details>`:""}<div class="fp-bet-mini">Live prediction: ${projected?`${esc(outcomeName(projected.prediction))} · ${esc(projected.score||"—")}`:"Unavailable"}${supported===null?"":supported?" · On track":" · Unfavourable"}</div></div><span class="fp-bet-state ${current}">${current.charAt(0).toUpperCase()+current.slice(1)}</span></div>`).join("")}`;
+ ${data.map(({m,b,current,projected,supported,risk})=>`<div class="fp-bet-row"><div class="grow"><strong>${esc(m.home)} ${validScore(m)?`${m.homeScore}–${m.awayScore}`:"vs"} ${esc(m.away)}</strong><div class="fp-bet-mini">${esc(getLiveMinute(m))} · ${b.market==="doubleChance"?"Double chance":"Straight bet"} · ${esc(fpBetLabel(b))}${risk?` <span class="fp-at-risk ${risk.level}" title="${esc(risk.explanation)}">${risk.level==="high"?"⚠ High risk":"⚠ At risk"}</span>`:""}</div>${risk?`<details class="fp-risk-detail"><summary>Why at risk?</summary><span>${esc(risk.explanation)} ${esc(risk.note)}</span></details>`:""}<div class="fp-bet-mini">Live prediction: ${projected?`${esc(outcomeName(projected.prediction))} · ${esc(projected.score||"—")}`:"Unavailable"}${supported===null?"":supported?" · On track":" · Unfavourable"}</div></div><span class="fp-bet-state ${current}">${current.charAt(0).toUpperCase()+current.slice(1)}</span></div>`).join("")}`;
 }
 function fpBetHistory(){
  const root=$("myBetsHistory");if(!root)return;
