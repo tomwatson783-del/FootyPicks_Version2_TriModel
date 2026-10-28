@@ -2072,43 +2072,52 @@ function fpPossForecast(past,m,n){
 }
 /* V5 independent event-sequence research. No Model 2 modifications. */
 function fpControlGoals(summary,expectedHome,expectedAway){
- // ESPN soccer summaries expose goals in different locations across competitions.
- // Never interpret an absent scoring feed as a 0-0 game.
- const sources=[['scoringPlays',summary?.scoringPlays],['details',summary?.details],
-  ['header.competitions.details',summary?.header?.competitions?.[0]?.details],
-  ['header.competitions.scoringPlays',summary?.header?.competitions?.[0]?.scoringPlays],
-  ['keyEvents',summary?.keyEvents],['plays',summary?.plays],
-  ['commentary',summary?.commentary],['events',summary?.events]];
- const goalish=x=>{
-  const t=[x.type?.text,x.type?.displayName,x.type?.name,x.type?.abbreviation,x.type?.id,
-   x.play?.type?.text,x.text,x.shortText,x.description,x.eventType,x.type].filter(v=>typeof v==='string').join(' ').toLowerCase();
-  return x.scoringPlay===true||x.isGoal===true||x.goal===true||/\b(goal|own goal|penalty scored|penalty goal)\b/.test(t)&&!/\b(no goal|disallowed|offside|saved|missed|shootout|cancelled|overturned)\b/.test(t);
- };
- const candidates=[];const sourceCounts={};
- for(const [name,items] of sources){if(!Array.isArray(items))continue;sourceCounts[name]=items.length;
-  for(const x of items)if(x&&typeof x==='object'&&goalish(x))candidates.push({...x,_source:name});}
  const expectedH=Number(expectedHome),expectedA=Number(expectedAway),total=expectedH+expectedA;
+ const sources=[['header.competitions.details',summary?.header?.competitions?.[0]?.details],['details',summary?.details],['scoringPlays',summary?.scoringPlays],['header.competitions.scoringPlays',summary?.header?.competitions?.[0]?.scoringPlays],['keyEvents',summary?.keyEvents],['plays',summary?.plays],['events',summary?.events],['commentary',summary?.commentary]];
+ const sourceCounts={};for(const [name,items] of sources)if(Array.isArray(items))sourceCounts[name]=items.length;
  if(!Number.isInteger(expectedH)||!Number.isInteger(expectedA))return {valid:false,reason:'Missing final score',goals:[],sourceCounts};
  if(total===0)return {valid:true,goals:[],source:'verified-final-score-0-0',sourceCounts};
- if(!candidates.length)return {valid:false,reason:'No scoring events in known ESPN summary fields',goals:[],sourceCounts};
- const scoreNum=(v)=>v===null||v===undefined||v===''?null:Number(v);
- const parsed=[];
- for(const x of candidates){const score=x.score&&typeof x.score==='object'?x.score:{};
-  const h=scoreNum(x.homeScore??x.homeTeamScore??score.home??x.home?.score),a=scoreNum(x.awayScore??x.awayTeamScore??score.away??x.away?.score);
-  const clock=String(x.clock?.displayValue??x.clock?.value??x.clock??x.time?.displayValue??x.time??x.minute??'');
-  const minute=Number((clock.match(/\d+/)||[])[0]);
-  const sideRaw=String(x.team?.id??x.teamId??x.scoringTeam?.id??'');
-  parsed.push({id:String(x.id??x.playId??''),h,a,minute:Number.isFinite(minute)?minute:null,clock,sideRaw,source:x._source});
+ const comps=summary?.header?.competitions?.[0]?.competitors||[];
+ const ids={};for(const c of comps){const id=String(c.team?.id??c.id??'');if(id&&/^(home|away)$/i.test(c.homeAway||''))ids[id]=c.homeAway.toUpperCase()==='HOME'?'H':'A';}
+ const num=v=>v==null||v===''?null:Number(v);
+ const candidates=[];
+ for(const [source,items] of sources){if(!Array.isArray(items))continue;
+  for(const x of items){if(!x||typeof x!=='object')continue;
+   const type=[x.type?.text,x.type?.displayName,x.type?.name,x.type?.abbreviation,x.play?.type?.text,x.eventType].filter(v=>typeof v==='string').join(' ').toLowerCase();
+   const txt=String(x.text??x.shortText??x.description??'').toLowerCase();
+   const isGoal=x.scoringPlay===true||x.isGoal===true||x.goal===true||/\b(goal|own goal|penalty scored|penalty goal)\b/.test(type)||(/\b(goal|own goal)\b/.test(txt)&&source==='header.competitions.details');
+   if(!isGoal||/\b(disallowed|no goal|overturned|cancelled|penalty shootout|missed penalty|saved penalty)\b/.test(type+' '+txt))continue;
+   const score=x.score&&typeof x.score==='object'?x.score:{};
+   const h=num(x.homeScore??x.homeTeamScore??score.home??x.home?.score),a=num(x.awayScore??x.awayTeamScore??score.away??x.away?.score);
+   const clock=String(x.clock?.displayValue??x.clock?.value??x.clock??x.time?.displayValue??x.time??x.minute??'');
+   const mm=clock.match(/\d+/),minute=mm?Number(mm[0]):null;
+   const teamId=String(x.team?.id??x.teamId??x.scoringTeam?.id??x.play?.team?.id??'');
+   const side=ids[teamId]||(/^(home|away)$/i.test(x.homeAway||'')?(x.homeAway.toLowerCase()==='home'?'H':'A'):null);
+   candidates.push({source,id:String(x.id??x.playId??''),minute,clock,h,a,side,teamId,type});
+  }
  }
- // Prefer explicit score snapshots; they prove the goal order without guessing team identity.
- const scored=parsed.filter(x=>Number.isInteger(x.h)&&Number.isInteger(x.a)&&x.h>=0&&x.a>=0&&x.h<=expectedH&&x.a<=expectedA);
+ // First use verified score snapshots if available.
+ const scored=candidates.filter(x=>Number.isInteger(x.h)&&Number.isInteger(x.a)&&x.h>=0&&x.a>=0&&x.h<=expectedH&&x.a<=expectedA);
  const unique=new Map();for(const x of scored){const k=x.h+':'+x.a;if(!unique.has(k))unique.set(k,x)}
- const ordered=[...unique.values()].sort((x,y)=>(x.h+x.a)-(y.h+y.a)||((x.minute??999)-(y.minute??999)));
- const goals=[];let h=0,a=0;
- for(const x of ordered){if(x.h===h+1&&x.a===a){goals.push({side:'H',minute:x.minute,homeScore:x.h,awayScore:x.a});h++;}
-  else if(x.h===h&&x.a===a+1){goals.push({side:'A',minute:x.minute,homeScore:x.h,awayScore:x.a});a++;}}
+ const ordered=[...unique.values()].sort((x,y)=>(x.h+x.a)-(y.h+y.a)||(x.minute??999)-(y.minute??999));
+ let goals=[],h=0,a=0;
+ for(const x of ordered){if(x.h===h+1&&x.a===a){goals.push({side:'H',minute:x.minute,homeScore:++h,awayScore:a});}else if(x.h===h&&x.a===a+1){goals.push({side:'A',minute:x.minute,homeScore:h,awayScore:++a});}}
  if(h===expectedH&&a===expectedA&&goals.length===total)return {valid:true,goals,source:'score-snapshots',sourceCounts};
- return {valid:false,reason:`Could reconstruct ${goals.length}/${total} goals from ${candidates.length} candidates; scoring feeds lack complete score snapshots`,goals:[],sourceCounts};
+ // ESPN soccer 'details' often provides a team ID and minute, but no running score.
+ // Use ONE source at a time to avoid counting duplicated goals across feeds.
+ for(const source of sources.map(x=>x[0])){
+  const rows=candidates.filter(x=>x.source===source&&x.side&&Number.isFinite(x.minute));
+  if(!rows.length)continue;
+  const seen=new Set(),dedup=[];
+  for(const x of rows){const key=x.id||x.side+':'+x.clock+':'+x.type;if(seen.has(key))continue;seen.add(key);dedup.push(x)}
+  dedup.sort((x,y)=>x.minute-y.minute||((x.clock.includes('+')?1:0)-(y.clock.includes('+')?1:0)));
+  // Equal-minute events from opposite teams have ambiguous scoring order.
+  if(dedup.some((x,i)=>i&&x.minute===dedup[i-1].minute&&x.side!==dedup[i-1].side))continue;
+  if(dedup.length!==total||dedup.filter(x=>x.side==='H').length!==expectedH||dedup.filter(x=>x.side==='A').length!==expectedA)continue;
+  h=0;a=0;goals=dedup.map(x=>{if(x.side==='H')h++;else a++;return {side:x.side,minute:x.minute,homeScore:h,awayScore:a}});
+  return {valid:true,goals,source:'team-id-goal-events:'+source,sourceCounts};
+ }
+ return {valid:false,reason:`Could reconstruct ${goals.length}/${total} goals; ${candidates.length} candidates, ${candidates.filter(x=>x.side).length} mapped to home/away team IDs`,goals:[],sourceCounts,diagnostic:{competitorIds:comps.map(c=>({id:c.team?.id,homeAway:c.homeAway})),candidateSamples:candidates.slice(0,5)}};
 }
 function fpControlTeamHistory(past,key,n){
  const all=past.filter(x=>x.goalTimelineValid&&(x.hk===key||x.ak===key)).slice(-n);
@@ -2332,7 +2341,7 @@ async function fpRunPossessionResearch(){
   const leagueMetrics=coverage.map(c=>({...c,metrics:summary(eligible.filter(x=>x.league===c.league))}));
   const byOutcome=segments(['H','D','A'].map(k=>[k,x=>x.actual===k]));
   const byPrediction=segments(['H','D','A'].map(k=>[k,x=>x.prediction===k]));
-  const test={version:'POSSESSION-GOAL-SCALE-V6-DATA-REPAIR',created:new Date().toISOString(),settings:{internalWindow:n,requestedSummaries:limit,actualSummaries:picked.length,scope,months:6,holdout:'Last 25% per league, chronological; predictions use only strictly earlier sampled matches',ridgePerMatch:400,maxAbsoluteSlope:.055},
+  const test={version:'POSSESSION-GOAL-SCALE-V7-EVENT-TEAM-MAPPING',created:new Date().toISOString(),settings:{internalWindow:n,requestedSummaries:limit,actualSummaries:picked.length,scope,months:6,holdout:'Last 25% per league, chronological; predictions use only strictly earlier sampled matches',ridgePerMatch:400,maxAbsoluteSlope:.055},
    coverage:{historicalFixtures:all.length,sampled:picked.length,withPossession:events.filter(x=>x.hasPoss).length,withoutPossession:events.filter(x=>!x.hasPoss).length,failures:failure,goalTimelineFailures:timelineFailure,goalTimelineDiagnostics:timelineDiagnostics,validGoalTimelines:events.filter(x=>x.goalTimelineValid).length,training:train.length,holdout:hold.length,holdoutEligible:eligible.length,holdoutMissing:hold.length-eligible.length,holdoutMissingReasons:missingReasons},
    overall:summary(eligible),drawGapAnalysis:gapAnalysis,teamTypeAnalysis:controlAnalysis,byPoss,byStrength,bySample,bySuppression,bySlope,byExtrapolation,byLeague:leagueMetrics,byOutcome,byPrediction,rawFixtures:rows,
    notes:['Independent research: Model 2 unchanged. Fixed internal 20-match lookback; no window selection to optimise on holdout.','Each team has a ridge-shrunk 1–100% possession-to-goals scale; sample points and slope in every eligible fixture.','Goal scale is a descriptive association, not a causal estimate; full-time possession is affected by game state.','Prematch predictions use predicted possession only. Oracle goals using actual possession are diagnostic after match and NEVER enter forecast probabilities.','Baseline uses mean goals; venue variant uses venue-based possession without strength/suppression adjustment.','Only earlier sampled matches are used. Sampling incomplete leagues can limit effective team histories.','Holdout must not be used to tune slope, possession coefficients or window.','Extrapolated possession is flagged; small holdout is inconclusive.','V4 goal gaps remain trained on training fixtures only. V5 adds opponent-specific first-goal and lead/recovery matchup trees; blending weight is selected by training Brier, never holdout.','Goal events must reconstruct the full final score; missing/ambiguous events are excluded from team-type histories and flagged.','Team-type analysis compares only common eligible fixtures; coverage and selection bias must be reviewed before promotion.']};
