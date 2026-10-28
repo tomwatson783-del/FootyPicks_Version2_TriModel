@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101827">
-<title>Footy Picks · Consolidated</title>
+<title>V10 · Footy Picks · Consolidated</title>
 <style>
 :root{
  color-scheme:dark;
@@ -811,7 +811,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 <section id="test" hidden>
  <h2>Prediction Test</h2>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><button class="btn secondary" type="button" id="fpCopyPointsReport" onclick="fpCopyPointsReport()">Copy Model 2 report</button><span id="fpCopyPointsStatus" class="muted smalltext" aria-live="polite"></span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><section class="panel" id="fpPossessionResearch"><h3>Possession → Goals Scale · V6 goal-timeline repair & match-control test</h3><p class="muted smalltext">Builds a separate 1–100% possession-to-goals scale for each team using earlier matches, predicts possession against the upcoming opponent, then reads expected goals from each team's scale. A fixed internal 20-match lookback avoids redundant window controls. Tests goal-gap thresholds alongside independent first-goal, lead-security and comeback matchup models, with chronological training-only selection, event coverage audits, and detailed copied JSON. Model 2 and all other app features remain unchanged.</p><div class="row wrap"><label>Competition <select id="fpPossLeague"><option value="all">Auto-select data-rich leagues</option></select></label><label>Research depth <select id="fpPossLimit"><option value="360">360 summaries · quick</option><option value="600" selected>600 summaries · recommended</option><option value="900">900 summaries · deeper</option></select></label><button class="btn" type="button" id="fpRunPossession" onclick="fpRunPossessionResearch()">Run test</button><button class="btn secondary" type="button" onclick="fpCopyPossessionReport()">Copy test outputs</button></div><p id="fpPossStatus" class="muted smalltext" aria-live="polite">Run the test, then select Copy test outputs and paste the complete JSON into chat. Larger samples take longer but produce more usable team histories.</p><div id="fpPossResults"></div><details class="fp-advanced"><summary>Full JSON test outputs (also available via Copy test outputs)</summary><textarea id="fpPossReport" readonly aria-label="Possession scale full JSON test outputs" style="width:100%;min-height:150px;font-size:11px;margin-top:12px" placeholder="Full fixture-level report appears here after running the test."></textarea></details></section><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><button class="btn secondary" type="button" id="fpCopyPointsReport" onclick="fpCopyPointsReport()">Copy Model 2 report</button><span id="fpCopyPointsStatus" class="muted smalltext" aria-live="polite"></span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><section class="panel" id="fpPossessionResearch"><h3>V10 · Model 2 Betting Improvement Feasibility</h3><p class="muted smalltext">Focused chronological comparison: unchanged Model 2 vs experimental weighted-form probability adjustments, Match Management agreement/disagreement filters, and combined variants. No legacy possession-goal-scale or V8/V9 grid searches. Train / validation / final test are separate within each sampled league. Original Model 2 and live Bet on Outcome rules are unchanged.</p><div class="row wrap"><label>Competition <select id="fpPossLeague"><option value="all">Auto-select data-rich leagues</option></select></label><label>Event summaries <select id="fpPossLimit"><option value="360">360 · quicker</option><option value="600" selected>600 · recommended</option><option value="900">900 · deeper</option></select></label><button class="btn" type="button" id="fpRunPossession" onclick="fpRunV10Research()">Run V10 comparison</button><button class="btn secondary" type="button" onclick="fpCopyPossessionReport()">Copy test outputs</button></div><p id="fpPossStatus" class="muted smalltext" aria-live="polite">Run the comparison, then copy the compact JSON. Historical odds are not supplied; selection win rate is not profitability.</p><div id="fpPossResults"></div><details class="fp-advanced"><summary>JSON diagnostic report</summary><textarea id="fpPossReport" readonly style="width:100%;min-height:160px;font-size:11px"></textarea></details></section><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced" hidden><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -2070,6 +2070,108 @@ function fpPossForecast(past,m,n){
   awayPossExtrapolated:awayPoss<awayScale.observedMin||awayPoss>awayScale.observedMax
  };
 }
+
+/* V10 focused, independent comparison. All existing Model 2 functions and settings are read-only. */
+let fpV10Busy=false;
+function fpV10Metrics(rows,fn){
+ const picked=rows.filter(fn),n=picked.length,correct=picked.filter(r=>r.actual===r.testPick).length;
+ return {n,correct,accuracy:n?correct/n:null,coverage:rows.length?n/rows.length:null,
+  drawPredicted:picked.filter(r=>r.testPick==='D').length,drawCorrect:picked.filter(r=>r.testPick==='D'&&r.actual==='D').length,
+  home:picked.filter(r=>r.testPick==='H').length,away:picked.filter(r=>r.testPick==='A').length};
+}
+function fpV10Score(rows,pred,selected){const a=rows.map(r=>({...r,testPick:pred(r)}));return fpV10Metrics(a,r=>selected(r)&&r.testPick!=='N')}
+function fpV10Brier(rows,prob){const x=rows.filter(r=>prob(r)&&['H','D','A'].every(k=>Number.isFinite(prob(r)[k])));return x.length?x.reduce((z,r)=>z+['H','D','A'].reduce((v,k)=>v+(prob(r)[k]-(r.actual===k?1:0))**2,0),0)/x.length:null}
+function fpV10Prob(base,d){const v={H:base.H*Math.exp(d),D:base.D,A:base.A*Math.exp(-d)},z=v.H+v.D+v.A;return {H:v.H/z,D:v.D/z,A:v.A/z}}
+function fpV10Pick(p){return ['H','D','A'].reduce((a,k)=>p[k]>p[a]?k:a,'H')}
+function fpV10Model(m,prior){try{const v=calculateOriginalIndependent(m,prior);return {prediction:v.prediction,selection:v.selection,probs:v.probs,xgDifference:v.xgDifference,confidence:v.confidence}}catch(e){return {error:String(e.message||e)}}}
+function fpV10Candidate(r,mode,alpha){if(!r.model?.probs||!r.mm?.eligible)return null;
+ const p=fpV10Prob(r.model.probs,alpha*r.formGap),mm=r.mm.models.MM2;
+ const pick=mode==='baseline'?r.model.prediction:fpV10Pick(p);
+ return {pick,prob:p,agree:pick===fpV10Pick(mm),mmPick:fpV10Pick(mm),mmConfidence:Math.max(mm.H,mm.D,mm.A)};
+}
+async function fpRunV10Research(){
+ if(fpV10Busy)return;fpV10Busy=true;const button=document.getElementById('fpRunPossession'),status=document.getElementById('fpPossStatus');button.disabled=true;
+ try{
+ const limit=Number(document.getElementById('fpPossLimit').value),scope=document.getElementById('fpPossLeague').value;
+ status.textContent='Fetching historical fixture list…';
+ const result=await fetchAllLeagues(14,()=>{},scope==='all'?Object.keys(LEAGUES):[scope]);
+ const all=result.matches.filter(isFinished).sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
+ const groups={};for(const m of all)(groups[m.leagueId]??=[]).push(m);
+ const count=scope==='all'?Math.max(1,Math.min(3,Math.floor(limit/260))):1;
+ const selected=Object.values(groups).sort((a,b)=>b.length-a.length).slice(0,count),sample=[];let j=0;
+ while(sample.length<limit){let progressed=false;for(const g of selected)if(j<g.length&&sample.length<limit){sample.push(g[j]);progressed=true}if(!progressed)break;j++}
+ const events=[],errors={http:0,network:0,invalidTimeline:0};let cursor=0,completed=0;
+ await Promise.all(Array.from({length:4},async()=>{while(cursor<sample.length){const m=sample[cursor++];let goals=[],valid=false,reason='';
+  try{const c=new AbortController(),timer=setTimeout(()=>c.abort(),11000);let response;try{response=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${m.leagueId}/summary?event=${encodeURIComponent(m.id)}`,{signal:c.signal})}finally{clearTimeout(timer)}
+   if(!response.ok){errors.http++;reason='HTTP '+response.status}else{const t=fpControlGoals(await response.json(),m.homeScore,m.awayScore);valid=t.valid;goals=t.goals||[];reason=t.reason||'';if(!valid)errors.invalidTimeline++}
+  }catch(e){errors.network++;reason=String(e.message||e)}
+  events.push({m,league:m.leagueId,date:m.date,id:m.id,fixture:m.home+' vs '+m.away,hk:teamKey(m,'H'),ak:teamKey(m,'A'),hg:m.homeScore,ag:m.awayScore,goals,goalTimelineValid:valid,reason});
+  completed++;if(completed%20===0||completed===sample.length){status.textContent=`Event summaries ${completed}/${sample.length}; ${events.filter(x=>x.goalTimelineValid).length} valid goal timelines`;await new Promise(r=>setTimeout(r,0))}
+ }}));
+ events.sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
+ const byLeague={};for(const e of events)(byLeague[e.league]??=[]).push(e);
+ const rows=[],splits={};let done=0;
+ for(const [id,leagueEvents] of Object.entries(byLeague)){
+  const leagueAll=groups[id]||[],n=leagueEvents.length,trainCut=Math.floor(n*.60),valCut=Math.floor(n*.80);
+  splits[id]={total:n,train:trainCut,validation:valCut-trainCut,test:n-valCut};
+  let idx=0;for(let i=0;i<n;i++){
+   const e=leagueEvents[i],kick=Date.parse(e.date),priorEvents=leagueEvents.filter(x=>Date.parse(x.date)<kick),priorFixtures=[];
+   while(idx<leagueAll.length&&Date.parse(leagueAll[idx].date)<kick){priorFixtures.push(leagueAll[idx]);idx++}
+   // Exclude fixtures ending too close to kickoff: conservative 3h buffer (no future results).
+   const safeFixtures=priorFixtures.filter(x=>Date.parse(x.date)+3*3600000<=kick);
+   const safeEvents=priorEvents.filter(x=>Date.parse(x.date)+3*3600000<=kick);
+   const model=fpV10Model(e.m,safeFixtures),mm=fpMMForecast(safeEvents,e,20);
+   const w=[15,10,5],weight=[.15,.25,.60],h=fpV9Form(safeEvents,e.hk,w,weight,'points',null),a=fpV9Form(safeEvents,e.ak,w,weight,'points',null);
+   const formGap=(h.score*h.n+1.5)/(h.n+3)-(a.score*a.n+1.5)/(a.n+3);
+   const actual=e.hg>e.ag?'H':e.hg<e.ag?'A':'D';
+   const baselineSelected=model.selection===model.prediction&&['H','A'].includes(model.prediction);
+   rows.push({id:e.id,league:id,date:e.date,fixture:e.fixture,split:i<trainCut?'train':i<valCut?'validation':'test',actual,score:[e.hg,e.ag],model,baselineSelected,mm:mm.eligible?{eligible:true,models:{MM2:mm.models.MM2},descriptors:mm.descriptors,diagnostics:mm.diagnostics}: {eligible:false},formGap,formSamples:[h.n,a.n],goalTimelineValid:e.goalTimelineValid,goals:e.goalTimelineValid?e.goals:undefined,exclusion:e.reason||null});
+   done++;if(done%30===0){status.textContent=`Computing original Model 2 and research signals ${done}/${events.length}`;await new Promise(r=>setTimeout(r,0))}
+  }
+ }
+ const valid=rows.filter(r=>r.model?.probs&&r.mm.eligible),validation=valid.filter(r=>r.split==='validation'),test=valid.filter(r=>r.split==='test');
+ const alphas=[0,.15,.3,.5,.75,1,1.5],filterTypes=['none','agreement','rejectStrongDisagreement','agreeOrWeakMM'];
+ const candidates=[];
+ for(const alpha of alphas)for(const filter of filterTypes){
+  const assess=(set)=>{
+   const prepared=set.map(r=>{const c=fpV10Candidate(r,'enhanced',alpha);return {...r,testPick:c.pick,_c:c}});
+   const select=r=>r.baselineSelected&&(filter==='none'||(filter==='agreement'&&r._c.agree)||(filter==='rejectStrongDisagreement'&&(r._c.agree||r._c.mmConfidence<.48))||(filter==='agreeOrWeakMM'&&(r._c.agree||r._c.mmConfidence<.42)));
+   return {selections:fpV10Metrics(prepared,select),prediction:fpV10Metrics(prepared,()=>true),brier:fpV10Brier(prepared,r=>r._c.prob)};
+  };
+  candidates.push({alpha,filter,validation:assess(validation)});
+ }
+ const baseVolume=validation.filter(r=>r.baselineSelected).length;
+ // Choose on validation only; require >=35% of baseline bet volume, then maximise selection win rate with volume as tie-break.
+ const viable=candidates.filter(c=>c.validation.selections.n>=Math.max(5,Math.floor(baseVolume*.60)));
+ const ranking=(a,b)=>{const A=a.validation.selections,B=b.validation.selections;return (B.accuracy??0)-(A.accuracy??0)||B.n-A.n||a.alpha-b.alpha};
+ const chosen=[...(viable.length?viable:candidates)].sort(ranking)[0];
+ const benchmark=(set,alpha,filter)=>{
+  const enhanced=set.map(r=>({...r,_c:fpV10Candidate(r,'enhanced',alpha)}));
+  const select=r=>r.baselineSelected&&(filter==='none'||(filter==='agreement'&&r._c.agree)||(filter==='rejectStrongDisagreement'&&(r._c.agree||r._c.mmConfidence<.48))||(filter==='agreeOrWeakMM'&&(r._c.agree||r._c.mmConfidence<.42)));
+  const baseline=fpV10Score(set,r=>r.model.prediction,r=>r.baselineSelected);
+  const baselineAll=fpV10Score(set,r=>r.model.prediction,()=>true);
+  const enhancedAll=fpV10Score(enhanced,r=>r._c.pick,()=>true);
+  const enhancedSelected=fpV10Score(enhanced,r=>r._c.pick,select);
+  const filterOriginal=fpV10Score(enhanced,r=>r.model.prediction,select);
+  const ranked=enhanced.filter(r=>r.baselineSelected).sort((a,b)=>Number(b._c.agree)-Number(a._c.agree)||Math.max(...Object.values(b.model.probs))-Math.max(...Object.values(a.model.probs)));
+  const matched=fpV10Score(ranked.slice(0,Math.min(baseline.n,enhancedSelected.n)),r=>r._c.pick,()=>true);
+  return {baselineAll,baselineBets:baseline,enhancedAll,enhancedBets:enhancedSelected,filterOriginalBets:filterOriginal,matchedVolume:matched,
+   baselineBrier:fpV10Brier(set,r=>r.model.probs),enhancedBrier:fpV10Brier(enhanced,r=>r._c.prob)};
+ };
+ const report={version:'FOOTYPICKS-V10-MODEL2-BET-FEASIBILITY',created:new Date().toISOString(),
+  protocol:{split:'Chronological per sampled league: first 60% train, next 20% validation, final 20% test',selection:'Candidate alpha and filter selected using validation only; test used only for final comparison',history:'Model 2 uses all earlier finished league fixtures with 3-hour result-availability buffer; MM uses only sampled earlier valid event summaries',odds:'Not available: NO ROI or profitability claims',limitations:['Previous V8/V9 samples may overlap these periods: final test is not research-independent if reused','Sampling only a few data-rich leagues may bias results','Model 2 settings read from the current app and may have been tuned on historical data','A selected model cannot change original Model 2 or live Bet on Outcome decisions','Selection threshold is fixed at 60% of baseline bet volume to avoid trivially empty filters','MM2 requires historical valid goal timelines; missing fixtures excluded from common-coverage comparisons']},
+  settings:{requested:limit,sampled:sample.length,leagueScope:scope,model2:originalSettings(),model2WindowSets:WINDOW_SETS,form:{windows:[15,10,5],weights:[.15,.25,.60],method:'3-1-0 points normalized to 0..1'},candidateAlphas:alphas,filterTypes},coverage:{allHistorical:all.length,events:events.length,validTimelines:events.filter(e=>e.goalTimelineValid).length,errors,splits,common:{train:valid.filter(r=>r.split==='train').length,validation:validation.length,test:test.length},baselineUnavailable:rows.filter(r=>!r.model?.probs).length,mmUnavailable:rows.filter(r=>!r.mm.eligible).length},
+  selection:{alpha:chosen.alpha,filter:chosen.filter,validation:chosen.validation,validationCandidateGrid:candidates},
+  validation:benchmark(validation,chosen.alpha,chosen.filter),test:benchmark(test,chosen.alpha,chosen.filter),
+  perLeague:Object.keys(splits).map(id=>({league:id,validation:benchmark(validation.filter(r=>r.league===id),chosen.alpha,chosen.filter),test:benchmark(test.filter(r=>r.league===id),chosen.alpha,chosen.filter)})),
+  fixtures:rows.map(r=>{const c=r.model?.probs&&r.mm.eligible?fpV10Candidate(r,'enhanced',chosen.alpha):null;return {...r,experiment:c,selectedByFilter:c? r.baselineSelected&&(chosen.filter==='none'||chosen.filter==='agreement'&&c.agree||chosen.filter==='rejectStrongDisagreement'&&(c.agree||c.mmConfidence<.48)||chosen.filter==='agreeOrWeakMM'&&(c.agree||c.mmConfidence<.42)):false}})};
+ document.getElementById('fpPossReport').value=JSON.stringify(report);
+ const pct=x=>x==null?'—':(100*x).toFixed(1)+'%',t=report.test;
+ document.getElementById('fpPossResults').innerHTML=`<div class="fp-draw-summary"><div><small>Common final test</small><strong>${test.length}</strong></div><div><small>Original Model 2</small><strong>${pct(t.baselineAll.accuracy)}</strong></div><div><small>Experimental probabilities</small><strong>${pct(t.enhancedAll.accuracy)}</strong></div><div><small>Original Bet on Outcome</small><strong>${t.baselineBets.correct}/${t.baselineBets.n} · ${pct(t.baselineBets.accuracy)}</strong></div><div><small>Experimental bets</small><strong>${t.enhancedBets.correct}/${t.enhancedBets.n} · ${pct(t.enhancedBets.accuracy)}</strong></div></div><p class="muted smalltext">Validation-selected adjustment ${chosen.alpha}, filter ${chosen.filter}. Brier original ${t.baselineBrier?.toFixed(4)??'—'}, experimental ${t.enhancedBrier?.toFixed(4)??'—'}. The copied JSON includes candidate grid, matched-volume results, league breakdowns and fixture-level probabilities/decisions. No historical odds: cannot evaluate financial returns. Original Model 2 unchanged.</p>`;
+ status.textContent=`Completed: ${events.length} event summaries; ${test.length} comparable final-test fixtures. Copy test outputs and paste the JSON for analysis.`;
+ }catch(e){status.textContent='V10 test failed: '+String(e.message||e);console.error(e)}finally{fpV10Busy=false;button.disabled=false}
+}
+
 /* V5 independent event-sequence research. No Model 2 modifications. */
 function fpControlGoals(summary,expectedHome,expectedAway){
  const expectedH=Number(expectedHome),expectedA=Number(expectedAway),total=expectedH+expectedA;
