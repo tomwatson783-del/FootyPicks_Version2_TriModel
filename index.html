@@ -1866,7 +1866,7 @@ function fpMatchupFeatures(groups,m){
  const strongest=ranked[0],weakest=ranked[2],spread=scores[strongest]-scores[weakest];
  // A weak or contradictory profile is neutral: historical fitting cannot invent a direction.
  const direction=spread>=.10&&scores[strongest]>=.045?{to:strongest,from:weakest,reason:'Scenario evidence favours '+strongest+' over '+weakest}:null;
- return {eligible:true,homeType:ht,awayType:at,key:ht+' vs '+at,homeN:h.n,awayN:a.n,
+ return {eligible:true,homeType:ht,awayType:at,key:ht+' vs '+at,homeProfile:h,awayProfile:a,homeN:h.n,awayN:a.n,
   direction,opening:opening>.055?'H':opening<-.055?'A':'unclear',scores,
   homeHold,awayHold,homeRecovery,awayRecovery,
   narrative:`${m.home}: ${ht}; ${m.away}: ${at}`};
@@ -1984,71 +1984,103 @@ function fpRiskChoose(validation){
  const selected=best&&best.retainedAccuracy>baseline.retainedAccuracy+1e-9?best:baseline;
  return {threshold:selected.threshold,selected,baseline,trials:trials.sort((a,b)=>b.retainedAccuracy-a.retainedAccuracy).slice(0,30)};
 }
-/* MM2 experimental learned matchup correction. This layer never changes Model 2.
-   Fit each (type pair, scenario direction) independently, with shrinkage. A scenario
-   can strengthen an existing pick or redirect it to Home, Draw, or Away. */
+/* MM2 v2: multidimensional, pre-kickoff matchup residual regression.
+   No predetermined direction. Ridge shrinkage fits residuals for H/D/A jointly;
+   independent original Model 2 probabilities are never overwritten. */
+function fpMM2Vector(f){
+ if(!f?.eligible)return null;
+ const h=f.homeProfile,a=f.awayProfile;
+ if(!h||!a)return null;
+ const z=x=>Math.max(-1,Math.min(1,x));
+ const center=(v,ref)=>z((v-ref)*2);
+ const hf=center(h.firstRate,.45),af=center(a.firstRate,.45),
+       hc=center(h.concedeFirstRate,.45),ac=center(a.concedeFirstRate,.45),
+       hp=center(h.leadWinRate,.65),ap=center(a.leadWinRate,.65),
+       hr=center(h.comebackWinRate,.15),ar=center(a.comebackWinRate,.15),
+       hl=center(h.leadLostRate,.35),al=center(a.leadLostRate,.35),
+       hd=center(h.comebackDrawRate,.25),ad=center(a.comebackDrawRate,.25);
+ return [1,hf-af,hc-ac,hp-ap,hr-ar,hl-al,hd-ad,
+   hf*ac-af*hc, hp*(1-ar)-ap*(1-hr),hl*ar-al*hr,
+   hd*al-ad*hl, hf*ap-af*hp,
+   hf+af,hc+ac,hl+al,hd+ad,
+   center(h.scorelessRate,.1)+center(a.scorelessRate,.1),
+   center(h.leadDrawRate,.23)+center(a.leadDrawRate,.23)];
+}
+function fpMM2Solve(A,b){
+ const n=b.length,M=A.map((row,i)=>[...row,b[i]]);
+ for(let j=0;j<n;j++){
+  let pivot=j;for(let i=j+1;i<n;i++)if(Math.abs(M[i][j])>Math.abs(M[pivot][j]))pivot=i;
+  [M[j],M[pivot]]=[M[pivot],M[j]];
+  if(Math.abs(M[j][j])<1e-12)return Array(n).fill(0);
+  const d=M[j][j];for(let k=j;k<=n;k++)M[j][k]/=d;
+  for(let i=0;i<n;i++)if(i!==j){const c=M[i][j];for(let k=j;k<=n;k++)M[i][k]-=c*M[j][k]}
+ }
+ return M.map(row=>row[n]);
+}
 function fpMM2Learn(rows){
- const buckets={};
- for(const r of rows){const f=r.feature;if(!f?.eligible||!f.direction)continue;
-  const key=f.key+'|'+f.direction.from+'>'+f.direction.to;
-  const b=buckets[key]??={n:0,delta:{H:0,D:0,A:0}};b.n++;
-  for(const k of ['H','D','A'])b.delta[k]+=(r.actual===k?1:0)-r.probs[k];
+ const usable=rows.map(r=>({r,x:fpMM2Vector(r.feature)})).filter(t=>t.x);
+ const d=18,gram=Array.from({length:d},()=>Array(d).fill(0));
+ const rhs={H:Array(d).fill(0),D:Array(d).fill(0),A:Array(d).fill(0)};
+ for(const {r,x} of usable){
+  for(let i=0;i<d;i++){
+   for(let j=0;j<d;j++)gram[i][j]+=x[i]*x[j];
+   for(const k of ['H','D','A'])rhs[k][i]+=x[i]*((r.actual===k?1:0)-r.probs[k]);
+  }
  }
- const fitted={};
- for(const [key,b] of Object.entries(buckets)){
-  const [types,move]=key.split('|'),[from,to]=move.split('>');
-  // Only a transfer supported by both the football scenario and historic residuals.
-  const residualTo=b.delta[to]/b.n,residualFrom=b.delta[from]/b.n;
-  const amount=Math.max(0,Math.min(.30,residualTo,-residualFrom))*b.n/(b.n+30);
-  fitted[key]={types,from,to,n:b.n,amount,residualTo,residualFrom};
- }
- return fitted;
+ // Regularise strongly enough that rare feature combinations cannot dominate.
+ for(let i=0;i<d;i++)gram[i][i]+=i===0?60:160;
+ return {n:usable.length,coeff:{H:fpMM2Solve(gram,rhs.H),D:fpMM2Solve(gram,rhs.D),A:fpMM2Solve(gram,rhs.A)}};
 }
 function fpMM2Apply(r,fit,strength=1){
- const f=r.feature,p={...r.probs},delta={H:0,D:0,A:0};
- if(f?.eligible&&f.direction){const key=f.key+'|'+f.direction.from+'>'+f.direction.to,e=fit[key];
-  if(e){const amount=Math.min(Math.max(0,p[e.from]-.001),e.amount*strength);p[e.from]-=amount;p[e.to]+=amount;delta[e.from]=-amount;delta[e.to]=amount;}
+ const x=fpMM2Vector(r.feature),p={...r.probs},delta={H:0,D:0,A:0};
+ if(x&&fit?.n>=100&&strength){
+  const raw={};for(const k of ['H','D','A'])raw[k]=fit.coeff[k].reduce((sum,c,i)=>sum+c*x[i],0);
+  const mean=(raw.H+raw.D+raw.A)/3;
+  for(const k of ['H','D','A'])p[k]=Math.max(.005,r.probs[k]+Math.max(-.25,Math.min(.25,(raw[k]-mean)*strength)));
+  const total=p.H+p.D+p.A;
+  for(const k of ['H','D','A']){p[k]/=total;delta[k]=p[k]-r.probs[k]}
  }
  return {probs:p,delta,pick:fpMM2Argmax(p)};
 }
-function fpMM2Select(r,probs,margin,mode='adjusted'){
+function fpMM2Select(r,probs,margin){
  const pick=fpMM2Argmax(probs);if(!['H','A'].includes(pick))return false;
- const diff=r.xgDifference;
- // Existing xG-gap rules remain authoritative and are never inferred from MM2 probabilities.
- const cfg=originalSettings(),gap=pick==='H'?cfg.homeGap:cfg.awayGap;
- if(!Number.isFinite(diff)||((pick==='H'?diff:-diff)<gap))return false;
+ // SELECT tests the final outcome's probability lead; it does not choose outcomes.
  const ranked=Object.values(probs).sort((a,b)=>b-a);
- return ranked[0]-ranked[1]>=margin;
+ return ranked[0]-ranked[1]+1e-10>=margin;
 }
-function fpMM2Metrics(rows,fit,strength,margin,riskThreshold=Infinity){
- const out={n:rows.length,baseline:{n:0,correct:0,H:{n:0,correct:0},A:{n:0,correct:0}},adjusted:{n:0,correct:0,H:{n:0,correct:0},A:{n:0,correct:0}},risk:{n:0,correct:0,H:{n:0,correct:0},A:{n:0,correct:0}},changed:0,corrected:0,damaged:0,reinforced:0,applied:0,baselineMismatch:0,detail:[]};
- for(const r of rows){const base=fpMM2Argmax(r.probs),a=fpMM2Apply(r,fit,strength),originalSelected=!!r.originalSelect,selected=fpMM2Select(r,a.probs,margin),risk=fpRiskSignal(r),riskSelected=originalSelected&&!(risk.eligible&&risk.score>=riskThreshold);
+function fpMM2Metrics(rows,fit,strength,margin){
+ const empty=()=>({n:0,correct:0,H:{n:0,correct:0},A:{n:0,correct:0}});
+ const out={n:rows.length,baseline:empty(),adjusted:empty(),changed:0,corrected:0,damaged:0,reinforced:0,applied:0,baselineMismatch:0,zeroInvariantMismatch:0,detail:[]};
+ const add=(bucket,pick,actual)=>{bucket.n++;bucket.correct+=+(pick===actual);bucket[pick].n++;bucket[pick].correct+=+(pick===actual)};
+ for(const r of rows){
+  const base=fpMM2Argmax(r.probs),a=fpMM2Apply(r,fit,strength),baselineSelect=fpMM2Select(r,r.probs,margin),selected=fpMM2Select(r,a.probs,margin);
   if(base!==r.originalPrediction)out.baselineMismatch++;
-  const add=(bucket,pick)=>{bucket.n++;bucket.correct+=+(pick===r.actual);bucket[pick].n++;bucket[pick].correct+=+(pick===r.actual)};
-  if(originalSelected&&['H','A'].includes(base))add(out.baseline,base);
-  if(selected)add(out.adjusted,a.pick);
-  if(riskSelected&&['H','A'].includes(base))add(out.risk,base);
+  if(!strength&&(selected!==baselineSelect||a.pick!==base))out.zeroInvariantMismatch++;
+  if(baselineSelect)add(out.baseline,base,r.actual);
+  if(selected)add(out.adjusted,a.pick,r.actual);
   out.changed+=+(base!==a.pick);out.corrected+=+(base!==r.actual&&a.pick===r.actual);out.damaged+=+(base===r.actual&&a.pick!==r.actual);
   out.reinforced+=+(base===a.pick&&a.probs[base]>r.probs[base]+1e-8);out.applied+=+(Math.max(...Object.values(a.delta).map(Math.abs))>1e-8);
-  out.detail.push({league:r.league,fixture:r.m.home+' vs '+r.m.away,date:r.m.date,actual:r.actual,originalPick:base,originalSelect:originalSelected,originalProbs:r.probs,originalXgGap:r.xgDifference,mm2Pick:a.pick,mm2Probs:a.probs,delta:a.delta,mm2Select:selected,riskSelect:riskSelected,matchup:r.feature.key||null,direction:r.feature.direction||null});
+  out.detail.push({league:r.league,fixture:r.m.home+' vs '+r.m.away,date:r.m.date,actual:r.actual,originalPick:base,originalAppPick:r.originalPrediction,originalAppSelect:!!r.originalSelect,baselineSelect,originalProbs:r.probs,originalXgGap:r.xgDifference,mm2Pick:a.pick,mm2Probs:a.probs,delta:a.delta,mm2Select:selected,matchup:r.feature.key||null,profile:r.feature.eligible?{home:r.feature.homeProfile,away:r.feature.awayProfile}:null});
  }
  return out;
 }
 function fpMM2Rate(b){return b.n?((100*b.correct/b.n).toFixed(1)+'%'):'—'}
-function fpMM2Optimise(fitRows,validation,holdout,riskThreshold){
+function fpMM2Optimise(fitRows,validation,holdout){
  const fit=fpMM2Learn(fitRows),candidates=[];
- for(const strength of [0,.5,1,1.5,2,3])for(const margin of [0,.03,.05,.08,.10,.12,.15,.20]){
-  const m=fpMM2Metrics(validation,fit,strength,margin,riskThreshold),v=m.adjusted;
-  // Minimum validation sample guards against trivially perfect small selections.
-  const minN=Math.max(15,Math.ceil(m.baseline.n*.50));
-  candidates.push({strength,margin,n:v.n,correct:v.correct,accuracy:v.n?v.correct/v.n:null,valid:v.n>=minN});
+ for(const strength of [0,.25,.5,1,1.5,2])for(const margin of [0,.03,.05,.08,.10,.15,.20,.25,.30]){
+  const m=fpMM2Metrics(validation,fit,strength,margin),v=m.adjusted;
+  const minN=Math.max(25,Math.ceil(validation.length*.06));
+  candidates.push({strength,margin,n:v.n,correct:v.correct,accuracy:v.n?v.correct/v.n:null,valid:v.n>=minN,baselineN:m.baseline.n,baselineCorrect:m.baseline.correct});
  }
- const valid=candidates.filter(x=>x.valid).sort((a,b)=>b.accuracy-a.accuracy||b.n-a.n||a.strength-b.strength||a.margin-b.margin);
+ // Do not optimise accuracy alone by eliminating nearly all betting prompts.
+ // Compare to the SAME probability-gap baseline and demand validation improvement.
+ const valid=candidates.filter(x=>x.valid).sort((a,b)=>
+  (b.accuracy-(b.baselineN?b.baselineCorrect/b.baselineN:0))-(a.accuracy-(a.baselineN?a.baselineCorrect/a.baselineN:0))||b.n-a.n||a.strength-b.strength);
  const winner=valid[0]||{strength:0,margin:0,valid:false};
- // Refit only after the validation choice is frozen; holdout is scored once.
  const finalFit=fpMM2Learn([...fitRows,...validation]);
- const result=fpMM2Metrics(holdout,finalFit,winner.strength,winner.margin,riskThreshold);
- return {winner,validationCandidates:candidates,fit:finalFit,holdout:result,validationBaseline:fpMM2Metrics(validation,fit,0,0,riskThreshold).baseline};
+ const result=fpMM2Metrics(holdout,finalFit,winner.strength,winner.margin);
+ const zeroAudit=fpMM2Metrics(holdout,finalFit,0,winner.margin);
+ return {winner,validationCandidates:candidates,fit:finalFit,holdout:result,zeroAudit,validationBaseline:fpMM2Metrics(validation,fit,0,winner.margin).baseline};
 }
 async function fpMatchupCalibrationTest(matches){
  const targets=window.fpFullMMTargets||[],status=document.getElementById('fpFullMMStatus');
@@ -2093,7 +2125,7 @@ async function fpMatchupCalibrationTest(matches){
  const riskFlagged=riskRows.filter(r=>r.risk.eligible&&r.risk.score>=riskSelection.threshold);
  const riskUnflagged=riskRows.filter(r=>!riskFlagged.includes(r));
  const riskByVerdict={};for(const r of riskRows){const k=r.risk.verdict;const v=riskByVerdict[k]??={n:0,errors:0,correct:0};v.n++;v.errors+=+(fpMM2Argmax(r.probs)!==r.actual);v.correct+=+(fpMM2Argmax(r.probs)===r.actual)}
- const selectComparison=fpMM2Optimise(fitRows,validation,holdout,riskSelection.threshold);
+ const selectComparison=fpMM2Optimise(fitRows,validation,holdout);
  const eligible=holdout.filter(r=>r.feature.eligible),missing=holdout.length-eligible.length;
  const pct=x=>x==null?'—':(100*x).toFixed(1)+'%';
  const pp=x=>(x>=0?'+':'')+(x*100).toFixed(2)+' pp';
@@ -2120,13 +2152,15 @@ async function fpMatchupCalibrationTest(matches){
   const p=r.adjustment.probs,rank=['H','D','A'].sort((x,y)=>p[y]-p[x]);return {...r,margin:p[rank[0]]-p[rank[1]]};
  }).sort((a,b)=>a.margin-b.margin).slice(0,20);
  const sc=selectComparison.holdout,sm=selectComparison.winner;
- const selRows=[['Model 2 original SELECT',sc.baseline],['MM2 adjusted probabilities + SELECT',sc.adjusted],['Model 2 SELECT + MM2 risk filter',sc.risk]];
- const selectHtml=`<h3>PRIMARY TEST · Actual HOME / AWAY SELECT decisions</h3>
- <p class="muted smalltext">Model 2 probabilities are unchanged. MM2 learns a shrinkage-adjusted probability transfer separately for each team-type matchup AND permitted scenario direction, using historical outcome residuals. Validation chooses adjustment strength and a minimum top-two probability gap. Original Model 2 xG Home/Away gap settings remain required; MM2 does not fabricate new xG. <strong>These settings were not trained on the holdout.</strong></p>
- <p class="muted smalltext"><strong>Active original xG SELECT gaps:</strong> Home ${esc(originalSettings().homeGap)} · Away ${esc(originalSettings().awayGap)}. <strong>Validation-selected MM2 strength:</strong> ${sm.strength} · <strong>minimum probability lead:</strong> ${(100*sm.margin).toFixed(0)} pp · <strong>validation eligible:</strong> ${sm.valid?'Yes':'No (insufficient sample)'}. <strong>Baseline agreement mismatches:</strong> ${sc.baselineMismatch}.</p>
- <div class="tablewrap"><table><thead><tr><th>Method</th><th>HOME selected</th><th>HOME accuracy</th><th>AWAY selected</th><th>AWAY accuracy</th><th>Combined selected</th><th>Combined correct</th><th>Combined accuracy</th></tr></thead><tbody>${selRows.map(([name,v])=>`<tr><td>${esc(name)}</td><td>${v.H.n}</td><td>${fpMM2Rate(v.H)}</td><td>${v.A.n}</td><td>${fpMM2Rate(v.A)}</td><td>${v.n}</td><td>${v.correct}</td><td>${fpMM2Rate(v)}</td></tr>`).join('')}</tbody></table></div>
- <p class="muted smalltext">MM2: ${sc.changed} changed 1X2 picks, ${sc.corrected} corrected, ${sc.damaged} damaged, ${sc.reinforced} original outcomes strengthened, ${sc.applied} fixtures adjusted. Historical selection coverage and accuracy should be compared together; this is not a profitability test. Model 2 baseline and risk-filter selection counts may differ from the earlier 446-selection experiment because this test includes <strong>all</strong> historically predictable fixtures, including those originally not SELECT-qualified.</p>
- <details class="fp-advanced"><summary>Validation candidate adjustment strengths and SELECT gaps</summary><div class="tablewrap"><table><thead><tr><th>Strength</th><th>Probability gap</th><th>Selections</th><th>Correct</th><th>Accuracy</th><th>Eligible</th></tr></thead><tbody>${selectComparison.validationCandidates.map(x=>`<tr><td>${x.strength}</td><td>${(x.margin*100).toFixed(0)} pp</td><td>${x.n}</td><td>${x.correct}</td><td>${x.accuracy==null?'—':(x.accuracy*100).toFixed(1)+'%'}</td><td>${x.valid?'Yes':'No'}</td></tr>`).join('')}</tbody></table></div></details>`;
+ const zero=selectComparison.zeroAudit, auditPass=zero.zeroInvariantMismatch===0;
+ const selRows=[['Model 2 · same probability-gap SELECT',sc.baseline],['Model 2 + multidimensional MM2 · same SELECT',sc.adjusted]];
+ const selectHtml=`<h3>PRIMARY TEST · Betting prompts after matchup adjustments</h3>
+ <p class="muted smalltext">MM2 learns multidimensional style interactions (opening goals, lead security, recoveries, draws) against historical Home/Draw/Away outcome residuals. Historical learning is free to strengthen or contradict any Model 2 prediction. SELECT only checks the final top-two probability gap. Both methods use the <strong>same gap</strong>; original Model 2 probabilities are preserved.</p>
+ <p class="muted smalltext"><strong>Validation-selected adjustment strength:</strong> ${sm.strength} · <strong>SELECT probability gap:</strong> ${(100*sm.margin).toFixed(0)} pp · <strong>Validation eligible:</strong> ${sm.valid?'Yes':'No'}.</p>
+ <p class="${auditPass?'muted':'error'}"><strong>Zero-adjustment invariant:</strong> ${auditPass?'PASS':'INVALID'} (${zero.zeroInvariantMismatch} discrepancies). <strong>Original application prediction vs stored probability argmax:</strong> ${sc.baselineMismatch} mismatches. ${sc.baselineMismatch?'WARNING: the app’s original displayed prediction and the independent probability argmax differ; this test compares probability-derived predictions and is NOT yet an audited reproduction of live SELECT prompts.':'Prediction agreement PASS.'}</p>
+ <div class="tablewrap"><table><thead><tr><th>Method</th><th>HOME prompted</th><th>HOME accuracy</th><th>AWAY prompted</th><th>AWAY accuracy</th><th>Combined prompted</th><th>Combined correct</th><th>Combined accuracy</th></tr></thead><tbody>${selRows.map(([name,v])=>`<tr><td>${esc(name)}</td><td>${v.H.n}</td><td>${fpMM2Rate(v.H)}</td><td>${v.A.n}</td><td>${fpMM2Rate(v.A)}</td><td>${v.n}</td><td>${v.correct}</td><td>${fpMM2Rate(v)}</td></tr>`).join('')}</tbody></table></div>
+ <p class="muted smalltext">MM2: ${sc.changed} changed predictions, ${sc.corrected} corrected, ${sc.damaged} damaged, ${sc.reinforced} strengthened, ${sc.applied} adjusted. Historical performance is not a profitability test. The app's existing xG SELECT is shown separately in the legacy historical backtest; this experimental table isolates the configurable probability-gap SELECT so its comparisons are internally consistent.</p>
+ <details class="fp-advanced"><summary>Validation candidates</summary><div class="tablewrap"><table><thead><tr><th>Strength</th><th>Probability gap</th><th>Prompts</th><th>Correct</th><th>Accuracy</th><th>Baseline prompts (same gap)</th><th>Eligible</th></tr></thead><tbody>${selectComparison.validationCandidates.map(x=>`<tr><td>${x.strength}</td><td>${(x.margin*100).toFixed(0)} pp</td><td>${x.n}</td><td>${x.correct}</td><td>${x.accuracy==null?'—':(x.accuracy*100).toFixed(1)+'%'}</td><td>${x.baselineN}</td><td>${x.valid?'Yes':'No'}</td></tr>`).join('')}</tbody></table></div></details>`;
  const riskHtml=`<h3>MM2 risk filter · avoid potentially incorrect selections</h3>
  <p class="muted smalltext">Team behaviour is profiled independent of venue; its interaction with the opponent challenges, supports or questions Model 2. The caution threshold is selected on earlier validation fixtures only. <strong>Risk flags are not bets or guarantees.</strong> Unprofiled fixtures remain unflagged and count in coverage.</p>
  <div class="fp-dashboard"><div class="panel fp-scorecard"><span class="fp-scorecard-label">Unfiltered Model 2 accuracy</span><strong>${pct(riskHoldout.baselineAccuracy)}</strong><span class="muted smalltext">${riskHoldout.n} selections</span></div>
