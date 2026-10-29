@@ -2094,6 +2094,8 @@ function fpMM2Decision(m){
  return {approved:mmPick===original,reason:mmPick===original?'MM2 agrees':'MM2 disagrees',basePick:original,mmPick};
 }
 function fpMM2Argmax(p){return p?['H','D','A'].reduce((a,k)=>Number(p[k])>Number(p[a])?k:a,'H'):null}
+// Compatibility alias for legacy MM2 routines that call the earlier helper name.
+function fpPossPick(p){return fpMM2Argmax(p)}
 const fpMM2Memory=new Map();let fpMM2DatabasePromise;
 function fpMM2Database(){return fpMM2DatabasePromise??=new Promise(resolve=>{try{const r=indexedDB.open('footypicks-mm2-timelines-v1',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('timelines'))r.result.createObjectStore('timelines')};r.onsuccess=()=>resolve(r.result);r.onerror=()=>resolve(null)}catch(_){resolve(null)}})}
 async function fpMM2Summary(m){
