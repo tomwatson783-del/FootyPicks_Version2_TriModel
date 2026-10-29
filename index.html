@@ -785,7 +785,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 <section id="test" hidden>
  <h2>Prediction Test</h2>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Model 2 vs matchup-adjusted prediction · MM2 risk filter</h3><p class="muted smalltext">Original Model 2 probabilities are preserved. Goal-event team profiles determine matchup categories and permitted adjustment directions; training fixtures optimise direction-constrained 1X2 adjustments, validation selects strength, and a later chronological holdout measures whether the adjusted 1X2 predictions actually improve. No separate MM2 outcome-probability forecast or agreement gate is used.</p><div id="fpFullMMStatus" class="muted smalltext"></div><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><div id="fpMatchupTables"></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Final experiment · MM2 ON/OFF reliability and SELECT</h3><p class="muted smalltext">Original Model 2 probabilities are preserved. Goal-event team profiles determine matchup categories and permitted adjustment directions; training fixtures optimise direction-constrained 1X2 adjustments, validation selects strength, and a later chronological holdout measures whether the adjusted 1X2 predictions actually improve. No separate MM2 outcome-probability forecast or agreement gate is used.</p><div id="fpFullMMStatus" class="muted smalltext"></div><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><div id="fpMatchupTables"></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced" hidden><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -2082,6 +2082,124 @@ function fpMM2Optimise(fitRows,validation,holdout){
  const zeroAudit=fpMM2Metrics(holdout,finalFit,0,winner.margin);
  return {winner,validationCandidates:candidates,fit:finalFit,holdout:result,zeroAudit,validationBaseline:fpMM2Metrics(validation,fit,0,winner.margin).baseline};
 }
+
+/* FINAL EXPERIMENT: validation-only component gates. No holdout labels are read
+   while fitting gates. Separate tuning and gate-validation periods chronologically. */
+function fpFinalStyleKey(r){
+ const x=fpMM2Vector(r.feature);if(!x)return 'NO_PROFILE';
+ const ids=[7,8,9,10,11,12,13,14,15,16,17];
+ let best=ids[0];for(const i of ids)if(Math.abs(x[i])>Math.abs(x[best]))best=i;
+ return 'interaction_'+best+'_'+(x[best]>=0?'positive':'negative');
+}
+function fpFinalSelect(r,p,margin,mode){
+ const pick=fpMM2Argmax(p);if(pick!=='H'&&pick!=='A')return false;
+ const sorted=Object.values(p).sort((a,b)=>b-a);
+ if(sorted[0]-sorted[1]+1e-10<margin)return false;
+ if(mode==='xg'){
+  const hg=Number(state.homeGap??.9),ag=Number(state.awayGap??.75),g=Number(r.xgDifference);
+  if(!Number.isFinite(g))return false;
+  return pick==='H'?g>=hg:-g>=ag;
+ }
+ return true;
+}
+function fpFinalScore(rows,fit,settings,gates,details=false){
+ const mk=()=>({n:0,w:0,l:0,H:{n:0,w:0},A:{n:0,w:0}});
+ const out={base:mk(),ungated:mk(),final:mk(),changed:0,corrected:0,damaged:0,blocked:0,addedW:0,addedL:0,removedW:0,removedL:0,details:[]};
+ const push=(o,p,a)=>{o.n++;o.w+=+(p===a);o.l+=+(p!==a);o[p].n++;o[p].w+=+(p===a)};
+ for(const r of rows){
+  const bp=fpMM2Argmax(r.probs),a=fpMM2Apply(r,fit,settings.strength);
+  const style=fpFinalStyleKey(r),side=a.pick,lk=String(r.league)+'|'+side;
+  const enabled=!gates||((gates.style[style]===true)&&(gates.leagueSide[lk]!==false));
+  const finalP=enabled?a.probs:r.probs,fp=fpMM2Argmax(finalP);
+  const bs=fpFinalSelect(r,r.probs,settings.margin,settings.mode);
+  const us=fpFinalSelect(r,a.probs,settings.margin,settings.mode);
+  const fs=fpFinalSelect(r,finalP,settings.margin,settings.mode)&&(!gates||gates.leagueSide[String(r.league)+'|'+fp]!==false);
+  if(bs)push(out.base,bp,r.actual);
+  if(us)push(out.ungated,a.pick,r.actual);
+  if(fs)push(out.final,fp,r.actual);
+  out.changed+=+(bp!==fp);out.corrected+=+(bp!==r.actual&&fp===r.actual);out.damaged+=+(bp===r.actual&&fp!==r.actual);
+  out.blocked+=+(!enabled);
+  const bw=bs&&bp===r.actual,fw=fs&&fp===r.actual;
+  out.addedW+=+(!bw&&fw);out.removedW+=+(bw&&!fw);
+  const bl=bs&&bp!==r.actual,fl=fs&&fp!==r.actual;
+  out.addedL+=+(!bl&&fl);out.removedL+=+(bl&&!fl);
+  if(details)out.details.push({fixture:r.m.home+' vs '+r.m.away,league:r.league,date:r.m.date,actual:r.actual,basePick:bp,finalPick:fp,style,enabled,baseSelect:bs,finalSelect:fs});
+ }
+ out.net=(out.addedW+out.removedL)-(out.addedL+out.removedW);
+ return out;
+}
+function fpFinalBuildGates(rows,fit,settings){
+ const style={},leagueSide={},groups={};
+ for(const r of rows){
+  const k=fpFinalStyleKey(r),a=fpMM2Apply(r,fit,settings.strength);
+  (groups[k]??=[]).push(r);
+ }
+ const styleStats=[];
+ for(const [k,rs] of Object.entries(groups)){
+  const m=fpFinalScore(rs,fit,settings,null);
+  // A gate must earn its place on validation, not merely be positive on fitting data.
+  const eligible=rs.length>=35&&m.net>=2&&m.final.n>=12&&m.final.w/Math.max(1,m.final.n)>=m.base.w/Math.max(1,m.base.n);
+  style[k]=eligible;
+  styleStats.push({key:k,n:rs.length,net:m.net,base:m.base,adjusted:m.final,enabled:eligible});
+ }
+ // League + outcome gating: use sufficient actual SELECT samples; don't reject
+ // sparse leagues merely for having no evidence of failure.
+ const leagueGroups={};
+ for(const r of rows){const a=fpMM2Apply(r,fit,settings.strength),key=String(r.league)+'|'+a.pick;
+  if(a.pick==='H'||a.pick==='A')(leagueGroups[key]??=[]).push(r);
+ }
+ const leagueStats=[];
+ for(const [key,rs] of Object.entries(leagueGroups)){
+  const m=fpFinalScore(rs,fit,settings,{style,leagueSide:{}});
+  const n=m.final.n,rate=n?m.final.w/n:null;
+  const disabled=n>=25&&(rate<.5||m.net<0);
+  leagueSide[key]=!disabled;
+  leagueStats.push({key,validationPrompts:n,winRate:rate,net:m.net,enabled:!disabled,insufficient:n<25});
+ }
+ return {style,leagueSide,styleStats,leagueStats};
+}
+function fpFinalExperiment(fitRows,validation,holdout){
+ const tune=[],gate=[];
+ const by={};for(const r of validation)(by[r.league]??=[]).push(r);
+ for(const rs of Object.values(by)){
+  rs.sort((a,b)=>Date.parse(a.m.date)-Date.parse(b.m.date));const cut=Math.floor(rs.length*.55);
+  tune.push(...rs.slice(0,cut));gate.push(...rs.slice(cut));
+ }
+ const fit=fpMM2Learn(fitRows);
+ const candidates=[];
+ for(const mode of ['gap','xg'])for(const strength of [0,.5,1,1.5,2])for(const margin of [0,.03,.08,.15,.25]){
+  const cfg={mode,strength,margin},m=fpFinalScore(tune,fit,cfg,null);
+  const n=m.final.n,acc=n?m.final.w/n:0,baseAcc=m.base.n?m.base.w/m.base.n:0;
+  const eligible=n>=Math.max(35,Math.ceil(tune.length*.10));
+  candidates.push({...cfg,n,w:m.final.w,accuracy:acc,baseAccuracy:baseAcc,net:m.net,eligible});
+ }
+ // Preserve opportunity volume: no optimisation by choosing 5 lucky bets.
+ const valid=candidates.filter(c=>c.eligible);
+ valid.sort((a,b)=>(b.accuracy-b.baseAccuracy)-(a.accuracy-a.baseAccuracy)||b.net-a.net||b.n-a.n);
+ const winner=valid[0]||{mode:'gap',strength:0,margin:0};
+ const gates=fpFinalBuildGates(gate,fit,winner);
+ const frozenFit=fpMM2Learn([...fitRows,...validation]);
+ const results=fpFinalScore(holdout,frozenFit,winner,gates,true);
+ const ungated=fpFinalScore(holdout,frozenFit,winner,null);
+ const zero=fpFinalScore(holdout,frozenFit,{...winner,strength:0},null);
+ return {winner,candidates,gates,results,ungated,zero,validationSplit:{tune:tune.length,gate:gate.length},audit:{zeroEqual:zero.base.n===zero.final.n&&zero.base.w===zero.final.w,appPredictionMismatches:holdout.filter(r=>fpMM2Argmax(r.probs)!==r.originalPrediction).length},assumedDecimalOdds:4/3};
+}
+function fpFinalHtml(v){
+ const pct=x=>x==null?'—':(100*x).toFixed(1)+'%';
+ const row=(label,b)=>`<tr><td>${label}</td><td>${b.H.n}</td><td>${pct(b.H.n?b.H.w/b.H.n:null)}</td><td>${b.A.n}</td><td>${pct(b.A.n?b.A.w/b.A.n:null)}</td><td>${b.n}</td><td>${b.w}</td><td>${b.l}</td><td>${pct(b.n?b.w/b.n:null)}</td><td>${(b.w/3-b.l).toFixed(1)} units</td></tr>`;
+ const r=v.results,g=v.gates;
+ return `<h3>FINAL EXPERIMENT · Validated ON/OFF switches · Betting prompts</h3>
+ <p class="muted smalltext">Training fits MM2; earlier validation tunes adjustment strength and SELECT gap; a later validation slice chooses matchup and league/side ON/OFF gates. All switches are frozen before holdout scoring. Original Model 2 remains unchanged. This is an <strong>experimental probability-derived SELECT</strong>, not an audited reproduction of live prompts.</p>
+ <p><strong>Chosen:</strong> ${v.winner.mode==='xg'?'Existing xG thresholds + probability gap':'Probability gap only'} · MM2 strength ${v.winner.strength} · probability gap ${(100*v.winner.margin).toFixed(0)} pp · validation tune ${v.validationSplit.tune} / gate ${v.validationSplit.gate}.</p>
+ <p class="${v.audit.zeroEqual?'muted':'error'}"><strong>Zero-adjustment check:</strong> ${v.audit.zeroEqual?'PASS':'FAIL'} · <strong>Original displayed prediction mismatches:</strong> ${v.audit.appPredictionMismatches} ${v.audit.appPredictionMismatches?'— live SELECT equivalence NOT established.':''}</p>
+ <div class="tablewrap"><table><thead><tr><th>Holdout strategy</th><th>Home</th><th>Home win %</th><th>Away</th><th>Away win %</th><th>Prompts</th><th>Wins</th><th>Losses</th><th>Precision</th><th>Hypothetical at 1/3</th></tr></thead><tbody>
+ ${row('Model 2 · same SELECT',r.base)}${row('MM2 · all patterns ON',r.ungated)}${row('MM2 · validated switches',r.final)}</tbody></table></div>
+ <p><strong>ON/OFF result:</strong> ${r.addedW} winning prompts added; ${r.removedL} losing prompts avoided; ${r.addedL} losing prompts added; ${r.removedW} winning prompts removed. <strong>Net wins-minus-losses change: ${r.net>0?'+':''}${r.net}</strong>. Prediction changes ${r.changed} · corrected ${r.corrected} · damaged ${r.damaged}.</p>
+ <p class="muted smalltext">Hypothetical returns assume one unit staked at 1/3 fractional odds for every recommendation; no real odds are available. 75% is the break-even rate under this assumption. These figures do NOT demonstrate actual profitability.</p>
+ <details class="fp-advanced"><summary>ON/OFF matchup interactions (${g.styleStats.filter(x=>x.enabled).length} enabled / ${g.styleStats.length})</summary><div class="tablewrap"><table><thead><tr><th>Interaction feature</th><th>Validation fixtures</th><th>Net improvement</th><th>Validated prompts</th><th>Enabled</th></tr></thead><tbody>${g.styleStats.map(x=>`<tr><td>${x.key}</td><td>${x.n}</td><td>${x.net}</td><td>${x.adjusted.n}</td><td>${x.enabled?'ON':'OFF'}</td></tr>`).join('')}</tbody></table></div></details>
+ <details class="fp-advanced"><summary>League + Home/Away eligibility (${g.leagueStats.filter(x=>x.enabled).length} enabled / ${g.leagueStats.length})</summary><div class="tablewrap"><table><thead><tr><th>League ID / outcome</th><th>Validation prompts</th><th>Win rate</th><th>Net</th><th>Decision</th></tr></thead><tbody>${g.leagueStats.map(x=>`<tr><td>${x.key}</td><td>${x.validationPrompts}</td><td>${pct(x.winRate)}</td><td>${x.net}</td><td>${x.insufficient?'INSUFFICIENT — retained':x.enabled?'ON':'OFF'}</td></tr>`).join('')}</tbody></table></div></details>
+ <p class="muted smalltext"><strong>Interpretation:</strong> GO only if frozen switches outperform the same-rule baseline with useful volume. Do not choose further switches from these holdout results.</p>`;
+}
 async function fpMatchupCalibrationTest(matches){
  const targets=window.fpFullMMTargets||[],status=document.getElementById('fpFullMMStatus');
  const leagues=new Set(targets.map(t=>t.league)),needed=new Map();
@@ -2126,6 +2244,7 @@ async function fpMatchupCalibrationTest(matches){
  const riskUnflagged=riskRows.filter(r=>!riskFlagged.includes(r));
  const riskByVerdict={};for(const r of riskRows){const k=r.risk.verdict;const v=riskByVerdict[k]??={n:0,errors:0,correct:0};v.n++;v.errors+=+(fpMM2Argmax(r.probs)!==r.actual);v.correct+=+(fpMM2Argmax(r.probs)===r.actual)}
  const selectComparison=fpMM2Optimise(fitRows,validation,holdout);
+ const finalExperiment=fpFinalExperiment(fitRows,validation,holdout);
  const eligible=holdout.filter(r=>r.feature.eligible),missing=holdout.length-eligible.length;
  const pct=x=>x==null?'—':(100*x).toFixed(1)+'%';
  const pp=x=>(x>=0?'+':'')+(x*100).toFixed(2)+' pp';
@@ -2176,7 +2295,7 @@ async function fpMatchupCalibrationTest(matches){
  <details class="fp-advanced"><summary>Inspect flagged fixtures (${riskFlagged.length})</summary><div class="tablewrap"><table><thead><tr><th>Fixture</th><th>Model 2</th><th>Matchup alternative</th><th>Actual</th><th>Warning result</th><th>Risk score</th></tr></thead><tbody>${riskFlagged.slice(0,150).map(r=>`<tr><td>${esc(r.m.home+' vs '+r.m.away)}</td><td>${fpMM2Argmax(r.probs)}</td><td>${r.risk.alternative||'—'}</td><td>${r.actual}</td><td>${fpMM2Argmax(r.probs)===r.actual?'False warning':'Incorrect selection flagged'}</td><td>${r.risk.score.toFixed(3)}</td></tr>`).join('')||'<tr><td colspan="6">No warnings selected on validation.</td></tr>'}</tbody></table></div></details>
  <details class="fp-advanced"><summary>Validation threshold diagnostics</summary><div class="tablewrap"><table><thead><tr><th>Threshold</th><th>Retained</th><th>Retained accuracy</th><th>Warnings</th><th>Warning precision</th></tr></thead><tbody>${riskSelection.trials.map(t=>`<tr><td>${Number.isFinite(t.threshold)?t.threshold.toFixed(3):'No warnings'}</td><td>${t.retained}</td><td>${pct(t.retainedAccuracy)}</td><td>${t.flagged}</td><td>${pct(t.warningPrecision)}</td></tr>`).join('')}</tbody></table></div></details>`;
  const table=document.getElementById('fpMatchupTables');
- if(table)table.innerHTML=selectHtml+riskHtml+`<h3>Direction-constrained Team Type vs Team Type adjustments</h3>
+ if(table)table.innerHTML=fpFinalHtml(finalExperiment)+selectHtml+riskHtml+`<h3>Direction-constrained Team Type vs Team Type adjustments</h3>
  <p class="muted smalltext">The pre-match scenario sets the only permitted transfer direction. Earlier training optimises the number of correct 1X2 picks; validation selects the scale; a later holdout is scored once. A matchup with conflicting directions or no training benefit receives zero adjustment. Values are percentage-point changes, not an independent MM2 forecast.</p>
  <div class="tablewrap"><table><thead><tr><th>Home type vs away type</th><th>Train n</th><th>Holdout n</th><th>Permitted direction</th><th>Direction consistency</th><th>Home Δ</th><th>Draw Δ</th><th>Away Δ</th><th>Changed</th><th>Corrected</th><th>Damaged</th><th>Net</th><th>Original</th><th>Adjusted</th></tr></thead><tbody>${matchupRows.map(r=>`<tr><td>${esc(r.key)}</td><td>${r.n}</td><td>${r.holdout}</td><td>${esc(r.direction)}</td><td>${pct(r.consistency)}</td><td>${pp(r.delta.H)}</td><td>${pp(r.delta.D)}</td><td>${pp(r.delta.A)}</td><td>${r.changed}</td><td>${r.corrected}</td><td>${r.damaged}</td><td>${r.net>0?'+':''}${r.net}</td><td>${pct(r.original)}</td><td>${pct(r.adjusted)}</td></tr>`).join('')||'<tr><td colspan="14">No eligible matchup training data.</td></tr>'}</tbody></table></div>
  <h3>Prediction changes and quality</h3><div class="tablewrap"><table><thead><tr><th>Metric · same holdout</th><th>Original Model 2</th><th>Adjusted</th></tr></thead><tbody>
@@ -2194,7 +2313,7 @@ async function fpMatchupCalibrationTest(matches){
  <p class="muted smalltext"><strong>Holdout verdict:</strong> ${adjusted.net>0?'More correct 1X2 predictions':adjusted.net<0?'Fewer correct 1X2 predictions':'No net 1X2 improvement'}. Validation-selected scale ${scale}. ${fitRows.length} fitting, ${validation.length} validation, ${holdout.length} holdout. Do not enable live adjustments without a genuinely later out-of-sample confirmation.</p>`;
  fpStageUpdate(5,100,`${holdout.length} untouched holdout predictions evaluated`,'Complete');
  if(status)status.textContent=`Matchup test complete · ${fitRows.length} fit · ${validation.length} validation · ${holdout.length} holdout · ${needed.size} goal summaries · ${missing} holdout profiles unavailable`;
- const report={selectComparison,version:'MATCHUP-SELECT-COMPARISON-V4',method:'Original Model 2; scenario direction constraints; train optimise 1X2 net gain; validation choose scale; untouched per-league chronological holdout',scale,validationTrials,riskSelection,riskHoldout,confidenceControl,riskByVerdict,riskFlaggedFixtures:riskFlagged.map(r=>({fixture:r.m.home+' vs '+r.m.away,date:r.m.date,originalPick:fpMM2Argmax(r.probs),actual:r.actual,risk:r.risk})),original,adjusted,missing,matchupRows,failureCounts,supportedFailures:supportedFailures.length,fixtures:detail.map(r=>({league:r.league,fixture:`${r.m.home} vs ${r.m.away}`,date:r.m.date,actual:r.actual,original:r.probs,originalPick:r.originalPick,homeType:r.feature.homeType||null,awayType:r.feature.awayType||null,eligible:r.feature.eligible,matchup:r.feature.key||null,direction:r.feature.direction||null,opening:r.feature.opening||null,scenarioScores:r.feature.scores||null,adjustments:r.adjustment.delta,adjusted:r.adjustment.probs,adjustedPick:r.adjustedPick,originalCorrect:r.originalCorrect,adjustedCorrect:r.adjustedCorrect,classification:r.classification,risk:fpRiskSignal(r),riskFlagged:fpRiskSignal(r).eligible&&fpRiskSignal(r).score>=riskSelection.threshold}))};
+ const report={finalExperiment,selectComparison,version:'MATCHUP-SELECT-COMPARISON-V4',method:'Original Model 2; scenario direction constraints; train optimise 1X2 net gain; validation choose scale; untouched per-league chronological holdout',scale,validationTrials,riskSelection,riskHoldout,confidenceControl,riskByVerdict,riskFlaggedFixtures:riskFlagged.map(r=>({fixture:r.m.home+' vs '+r.m.away,date:r.m.date,originalPick:fpMM2Argmax(r.probs),actual:r.actual,risk:r.risk})),original,adjusted,missing,matchupRows,failureCounts,supportedFailures:supportedFailures.length,fixtures:detail.map(r=>({league:r.league,fixture:`${r.m.home} vs ${r.m.away}`,date:r.m.date,actual:r.actual,original:r.probs,originalPick:r.originalPick,homeType:r.feature.homeType||null,awayType:r.feature.awayType||null,eligible:r.feature.eligible,matchup:r.feature.key||null,direction:r.feature.direction||null,opening:r.feature.opening||null,scenarioScores:r.feature.scores||null,adjustments:r.adjustment.delta,adjusted:r.adjustment.probs,adjustedPick:r.adjustedPick,originalCorrect:r.originalCorrect,adjustedCorrect:r.adjustedCorrect,classification:r.classification,risk:fpRiskSignal(r),riskFlagged:fpRiskSignal(r).eligible&&fpRiskSignal(r).score>=riskSelection.threshold}))};
  const box=document.getElementById('fpAdaptiveReport');if(box){let old={};try{old=JSON.parse(box.value)}catch(_){}old.matchupCalibration=report;box.value=JSON.stringify(old,null,2)}
  try{localStorage.setItem(FP_MATCHUP_KEY,JSON.stringify({scale,trained,created:new Date().toISOString(),status:'EXPERIMENTAL_NOT_ACTIVE'}))}catch(_){}
  return report;
