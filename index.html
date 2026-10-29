@@ -2034,7 +2034,7 @@ function fpControlForecast(past,m,n){
  const prob={H:first.H*ifHomeFirst.H+first.A*ifAwayFirst.H,
   D:first.H*ifHomeFirst.D+first.A*ifAwayFirst.D+first.none,
   A:first.H*ifHomeFirst.A+first.A*ifAwayFirst.A};
- return {eligible:true,home:h,away:a,homeType:fpControlType(h),awayType:fpControlType(a),first,ifHomeFirst,ifAwayFirst,prob,prediction:fpPossPick(prob)};
+ return {eligible:true,home:h,away:a,homeType:fpControlType(h),awayType:fpControlType(a),first,ifHomeFirst,ifAwayFirst,prob,prediction:fpMM2Argmax(prob)};
 }
 
 function fpMMHistory(past,key,n){
