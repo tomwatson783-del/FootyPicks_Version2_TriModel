@@ -484,6 +484,8 @@ main section details>summary{cursor:pointer}
 #busy .busybar{height:7px}
 .fp-scorecard,.fp-metric,.analytics-card,.panel{min-width:0}
 @media(max-width:600px){.fp-red-item{padding:8px!important}.fp-red-count{font-size:10px}#busy .busybox{padding:20px 14px}}
+
+.fp-fixture-accuracy{display:inline-block;text-align:right;font-size:11px;line-height:1.45;color:var(--text,#e7e7e7);white-space:nowrap;margin-right:7px}.fp-fixture-accuracy b{font-size:12px}.fp-fixture-accuracy small{opacity:.7}.fp-feature-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.fp-feature-right .fp-fixture-accuracy{margin-right:0}@media(max-width:540px){.fp-fixture-accuracy{font-size:10px;white-space:normal}.fp-fixture-accuracy b{font-size:11px}}
 </style>
 <style id="fp-three-model-refresh">
 main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{line-height:1.45;max-width:70ch}
@@ -1091,6 +1093,13 @@ function fpSwitchSave(){try{localStorage.setItem('fp_model_component_switches_v1
 let fpLeagueGate=(()=>{try{return JSON.parse(localStorage.getItem('fp_league_select_gate_v2')||'{}')}catch(_){return {}}})();
 function fpLeagueSelectAllowed(id){return !id||fpLeagueGate[id]!==false}
 function fpLeagueGateSave(){try{localStorage.setItem('fp_league_select_gate_v2',JSON.stringify(fpLeagueGate))}catch(_){}}
+let fpFixtureLeagueStats=(()=>{try{return JSON.parse(localStorage.getItem('fp_fixture_league_accuracy_v1')||'{}')}catch(_){return {}}})();
+function fpFixtureLeagueAccuracy(m){
+ const x=fpFixtureLeagueStats[m.leagueId];
+ const value=(n,d)=>d>0?`${(100*n/d).toFixed(1)}%`:'—';
+ if(!x)return `<span class="fp-fixture-accuracy" title="Run Model Test → All leagues to populate historical league accuracy">League prediction: — · Outcome: —<small>Run Model Test</small></span>`;
+ return `<span class="fp-fixture-accuracy" title="Training period; outcome is historical BET ON OUTCOME accuracy, not today's estimated probability">League prediction: <b>${value(x.correct,x.total)}</b> <small>(${x.correct}/${x.total})</small><br>BET ON outcome: <b>${value(x.selectWins,x.selectBets)}</b> <small>(${x.selectWins}/${x.selectBets})</small></span>`;
+}
 let fpLastManualAudit=null;
 function fpGateButton(kind,key,enabled){return `<button type="button" class="fp-gate-button ${enabled?'on':'off'}" data-fp-manual-kind="${kind}" data-fp-manual-key="${key}" aria-pressed="${enabled}">${enabled?'ON':'OFF'}</button>`}
 function fpManualAuditRefresh(){
@@ -1295,6 +1304,72 @@ function calculateOriginalPrediction(m,previous,model){
 /* MM2 event-aware matchup engine. No future fixture events are used in pre-match profiles.
    A missing timeline means no first-goal, lead, comeback or late-goal adjustment. */
 const FP_MM2_KEYS=['mm2FirstGoal','mm2LeadProtection','mm2Comeback','mm2Draw','mm2LateGoals'];
+/* Detailed ESPN match summaries are separate from monthly scoreboards.
+   Collect a bounded, chronological historical sample per league and report actual coverage. */
+function fpMM2ExtractGoals(d,m){
+ const comps=d?.header?.competitions?.[0]?.competitors||m.competitors||[];
+ const home=String(comps.find(x=>x.homeAway==='home')?.team?.id||m.homeId||'');
+ const away=String(comps.find(x=>x.homeAway==='away')?.team?.id||m.awayId||'');
+ const pools=['keyEvents','commentary','scoringPlays','plays'];let raw=[];
+ for(const k of pools){const v=d?.[k];raw.push(...(Array.isArray(v)?v:Array.isArray(v?.items)?v.items:[]).map(e=>({e,source:k})))}
+ let candidates=0,rejected=0;const goals=[];
+ for(const {e,source} of raw){
+  const type=String(e?.type?.text||e?.type?.name||e?.type?.id||e?.type||'');
+  const desc=String(e?.text||e?.shortText||e?.description||e?.play?.text||'');
+  const combined=(type+' '+desc).toLowerCase();
+  const scoring=e?.scoringPlay===true||e?.isGoal===true||Number(e?.scoreValue)>0||/\bgoal\b|penalty\s*[-–]?\s*scored/.test(type.toLowerCase());
+  if(!scoring||/disallow|ruled out|no goal|goal kick|goalkeeper|goal attempt|goal line clearance|penalty shootout/.test(combined))continue;
+  if(Number(e?.period?.number||e?.period)===5)continue;
+  candidates++;
+  const clock=String(e?.clock?.displayValue||e?.time?.displayValue||e?.time?.text||e?.time||e?.minute||e?.clock?.value||'');
+  const mt=clock.match(/(\d{1,3})(?:\s*['′’]?\s*\+\s*(\d{1,2}))?/);
+  const minute=mt?Number(mt[1])+Number(mt[2]||0):Number(e?.time?.elapsed??e?.elapsed);
+  const tid=String(e?.team?.id||e?.teamId||e?.competitor?.team?.id||e?.competitor?.id||'');
+  let side=tid&&tid===home?'home':tid&&tid===away?'away':String(e?.team?.homeAway||e?.homeAway||e?.side||'').toLowerCase();
+  if(side==='h')side='home';if(side==='a')side='away';
+  if(!Number.isFinite(minute)||minute<0||minute>130||!['home','away'].includes(side)){rejected++;continue}
+  const eventId=String(e?.id||e?.uid||'');
+  goals.push({type:'goal',minute,side,description:desc,source,eventId});
+ }
+ // One goal may appear in commentary and keyEvents. Do not collapse two different
+ // goals merely because they occurred in the same minute for the same team.
+ const unique=new Map();for(const g of goals){const k=g.eventId?'id:'+g.eventId:g.side+':'+g.minute+':'+g.description.trim().toLowerCase();if(!unique.has(k))unique.set(k,g)}
+ let result=[...unique.values()].sort((x,y)=>x.minute-y.minute);
+ // Where duplicated across feeds, prefer keyEvents and collapse matching minute/team
+ // only if one entry comes from a different feed (not two events within one feed).
+ result=result.filter((g,i,arr)=>!arr.slice(0,i).some(x=>x.minute===g.minute&&x.side===g.side&&x.source!==g.source));
+ return {goals:result,rawEvents:raw.length,candidates,rejected,keys:pools.filter(k=>Array.isArray(d?.[k])||Array.isArray(d?.[k]?.items))};
+}
+async function fpMM2EnrichHistorical(matches,signal){
+ const groups={};for(const m of matches.filter(isFinished))(groups[m.leagueId]??=[]).push(m);
+ const tasks=[],leagueStats={};
+ for(const [id,rows] of Object.entries(groups)){
+  leagueStats[id]={requested:0,received:0,withGoals:0,goalless:0,missing:0,httpErrors:0,parseErrors:0,unresolvedGoals:0,rawEvents:0,eligible:rows.length};
+  // Include early fixtures too; chronological evaluation needs historical event coverage.
+  // 120/league is a bounded compromise between API load and temporal coverage.
+  const sorted=[...rows].sort((a,b)=>Date.parse(a.date)-Date.parse(b.date));
+  const chosen=sorted.length<=120?sorted:Array.from({length:120},(_,i)=>sorted[Math.floor(i*(sorted.length-1)/119)]);
+  tasks.push(...chosen);
+ }
+ let next=0,completed=0;
+ async function worker(){while(next<tasks.length){
+  if(signal?.aborted)throw Error('Test cancelled by user.');
+  const m=tasks[next++],stat=leagueStats[m.leagueId];stat.requested++;
+  try{
+   const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${m.leagueId}/summary?event=${encodeURIComponent(m.id)}`,{signal,cache:'no-store'});
+   if(!r.ok){stat.httpErrors++;throw Error('HTTP '+r.status)}
+   const d=await r.json();stat.received++;
+   const parsed=fpMM2ExtractGoals(d,m);stat.rawEvents+=parsed.rawEvents;stat.unresolvedGoals+=parsed.rejected;
+   m.goalEvents=parsed.goals;m.mm2TimelineSource=parsed.keys;m.mm2TimelineChecked=true;
+   if(m.goalEvents.length)stat.withGoals++;
+   else if(parsed.rawEvents>0){stat.goalless++}else stat.missing++;
+  }catch(e){if(signal?.aborted)throw e;if(!String(e).includes('HTTP '))stat.parseErrors++;stat.missing++}
+  completed++;
+  if(completed%24===0){fpPerfUpdate('Retrieving MM2 goal timelines',40+Math.round(completed/tasks.length*7),`${completed}/${tasks.length} summaries`);await new Promise(r=>setTimeout(r,0));}
+ }}
+ await Promise.all(Array.from({length:Math.min(6,tasks.length)},()=>worker()));
+ return {leagues:leagueStats,requested:tasks.length,withGoals:Object.values(leagueStats).reduce((n,x)=>n+x.withGoals,0),note:'Stratified chronological sample up to 120 finished fixtures per league. HTTP, parsing, missing events and observed goalless responses are reported separately. Unfetched fixtures do not count as verified timelines.'};
+}
 function fpMM2Goals(m){
  const src=m?.goalEvents||m?.goals||m?.events||m?.details||m?.scoringPlays||[];
  if(!Array.isArray(src))return [];
@@ -1304,7 +1379,7 @@ function fpMM2Goals(m){
   if(!isGoal||/disallow|own goal cancelled|no goal/.test(kind))return null;
   const minute=Number(e.minute??e.clock?.displayValue?.match(/\d+/)?.[0]??e.clock?.value??e.time?.elapsed??e.elapsed);
   let side=e.side||e.teamSide||e.homeAway||e.team?.homeAway;
-  if(!side&&e.team?.id){side=String(e.team.id)===String(m.homeId||m.homeTeamId||m.competitors?.[0]?.id)?'home':'away'}
+  if(!side&&e.team?.id){const id=String(e.team.id),h=String(m.homeId||m.homeTeamId||'');const a=String(m.awayId||m.awayTeamId||'');side=id===h?'home':id===a?'away':null}
   side=String(side||'').toLowerCase();side=side==='h'||side==='home'?'H':side==='a'||side==='away'?'A':null;
   return Number.isFinite(minute)&&minute>=0&&minute<=130&&side?{minute,side}:null;
  }).filter(Boolean).sort((a,b)=>a.minute-b.minute);
@@ -1582,7 +1657,7 @@ function riskDetailsHtml(m){
 }
 function matchCard(m){
  const id=eventId(m),added=state.acc.some(x=>x.id===id),shownScore=isFinished(m)?resultString(m):"vs";
- return`<article class="match"><div class="row between"><span class="league">${esc(m.league)}</span><div class="row wrap">${Math.min(m.h?.count??0,m.a?.count??0)<5?`<span class="tag">Limited history</span>`:""}</div></div>
+ return`<article class="match"><div class="row between"><span class="league">${esc(m.league)}</span><div class="row wrap">${fpFixtureLeagueAccuracy(m)}${Math.min(m.h?.count??0,m.a?.count??0)<5?`<span class="tag">Limited history</span>`:""}</div></div>
  <div class="meta" style="margin:7px 0">${esc(fmtDate(m.date))}${m.venue?" · "+esc(m.venue):""}</div>
  <div class="row between"><div class="grow teamline">${esc(m.home)}<div class="meta">${m.h.count} prior league matches</div></div><strong style="white-space:nowrap;font-size:19px">${shownScore}</strong><div class="grow teamline" style="text-align:right">${esc(m.away)}<div class="meta">${m.a.count} prior league matches</div></div></div>
  ${comparisonRows(m)}${fpEvidenceLine(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?"Added":"Add pick"}</button><button class="btn small fp-dc-button" data-dc-toggle="${esc(id)}" type="button">Double chance</button><button class="btn small fp-bet-button" data-bet-toggle="${esc(id)}" type="button">Bet on</button></div><details class="fixture-secondary"><summary>Probabilities &amp; calculation breakdown</summary>${fpDrawDecision(m)}${probsHtml(m)}${explainHtml(m)}</details></article>`;
@@ -1615,7 +1690,7 @@ function renderFixtures(){
 }
 function fpCompactFixture(m,heading='',extra=''){
  const id=eventId(m),added=state.acc.some(x=>x.id===id);
- return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="muted smalltext">${esc(fmtDate(m.date))}</span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpEvidenceLine(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-dc-button" data-dc-toggle="${esc(id)}">Double chance</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Calculation breakdown &amp; probabilities</summary>${fpDrawDecision(m)}${probsHtml(m)}${explainHtml(m)}</details></article>`;
+ return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="fp-feature-right">${fpFixtureLeagueAccuracy(m)}<span class="muted smalltext">${esc(fmtDate(m.date))}</span></span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpEvidenceLine(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-dc-button" data-dc-toggle="${esc(id)}">Double chance</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Calculation breakdown &amp; probabilities</summary>${fpDrawDecision(m)}${probsHtml(m)}${explainHtml(m)}</details></article>`;
 }
 function fpDrawDecision(m){
  const gap=Math.abs(Number(m.xgDifference)),prob=Number(m.probs?.D),stability=Number(m.stability??1),messages=[];
@@ -1932,7 +2007,7 @@ async function fpSequentialSwitchAudit(matches){
    const id=x.id,originalRows=original.filter(r=>r.league===id),optimizedRows=optimizedH.filter(r=>r.league===id),filteredRows=gatedH.filter(r=>r.league===id);
    return {...x,appliedSelect:fpLeagueSelectAllowed(id)?'ON':'OFF',validationAfterGate:fpAuditMetric(gatedV.filter(r=>r.league===id)),holdoutOptimized:fpAuditMetric(optimizedRows),holdoutAfterGate:fpAuditMetric(filteredRows),holdoutHome:fpAuditMetric(filteredRows.filter(r=>r.prediction==='H')),holdoutAway:fpAuditMetric(filteredRows.filter(r=>r.prediction==='A')),trainingAll:fpAuditMetric(originalRows.filter(r=>r.phase==='training'))};
   });
-  const result={version:'MANUAL-LEAGUE-MM2-AUDIT-V4',generated:new Date().toISOString(),method:'Per-league chronological 60/20/20. Manual league and MM2 switches; no automatic changes. Training accuracy, validation SELECT and later holdout reported separately. Real SELECT rules.',warning:'This is historical retrospective validation; repeated test reuse can contaminate results. No ROI without bookmaker odds. Accumulator legs are correlated. MM2 event components without timeline coverage are untested, not proven effective.',configurationBefore:saved,individualTests:trials,appliedConfiguration:appliedConfig,leagueGate:{threshold:.5,minTrainingPredictions:30,proposed:proposedGate,applied:{...fpLeagueGate},approvedOnValidation:false,validationBefore:beforeGate,validationAfter:afterGate,validationChanges:fpAuditCompare(bestV,gatedV),excluded:leagueTrials.filter(x=>x.proposedSelect==='OFF').map(x=>x.id)},validation:{original:fpAuditMetric(originalV),predictorOptimized:fpAuditMetric(bestV),final:fpAuditMetric(finalV)},holdout:{original:fpAuditMetric(originalH),predictorOptimized:fpAuditMetric(optimizedH),final:fpAuditMetric(gatedH),changes:fpAuditCompare(originalH,gatedH),home:fpAuditMetric(gatedH.filter(r=>r.prediction==='H')),away:fpAuditMetric(gatedH.filter(r=>r.prediction==='A'))},leagues:leagueResults,integrity:{eligibleFixtures:fixtures.length,originalPredictions:original.length,failedPredictionAttempts:failures,strictlyEarlierFixtureHistory:true,mm2EventCoverage:original.filter(x=>x.mm2TimelineCoverage>0).length,mm2EventCoverageRate:original.length?original.filter(x=>x.mm2TimelineCoverage>0).length/original.length:null,leagueGateFittedOn:'training only',predictorSelectionFittedOn:'validation only',holdoutUsedForTuning:false}};
+  const result={version:'MANUAL-LEAGUE-MM2-AUDIT-V4',generated:new Date().toISOString(),method:'Per-league chronological 60/20/20. Manual league and MM2 switches; no automatic changes. Training accuracy, validation SELECT and later holdout reported separately. Real SELECT rules.',warning:'This is historical retrospective validation; repeated test reuse can contaminate results. No ROI without bookmaker odds. Accumulator legs are correlated. MM2 event components without verified timeline coverage are untested, not proven effective.',configurationBefore:saved,individualTests:trials,appliedConfiguration:appliedConfig,leagueGate:{threshold:.5,minTrainingPredictions:30,proposed:proposedGate,applied:{...fpLeagueGate},approvedOnValidation:false,validationBefore:beforeGate,validationAfter:afterGate,validationChanges:fpAuditCompare(bestV,gatedV),excluded:leagueTrials.filter(x=>x.proposedSelect==='OFF').map(x=>x.id)},validation:{original:fpAuditMetric(originalV),predictorOptimized:fpAuditMetric(bestV),final:fpAuditMetric(finalV)},holdout:{original:fpAuditMetric(originalH),predictorOptimized:fpAuditMetric(optimizedH),final:fpAuditMetric(gatedH),changes:fpAuditCompare(originalH,gatedH),home:fpAuditMetric(gatedH.filter(r=>r.prediction==='H')),away:fpAuditMetric(gatedH.filter(r=>r.prediction==='A'))},leagues:leagueResults,integrity:{eligibleFixtures:fixtures.length,originalPredictions:original.length,failedPredictionAttempts:failures,strictlyEarlierFixtureHistory:true,mm2EventCoverage:original.filter(x=>x.mm2TimelineCoverage>0).length,mm2EventCoverageRate:original.length?original.filter(x=>x.mm2TimelineCoverage>0).length/original.length:null,leagueGateFittedOn:'training only',predictorSelectionFittedOn:'validation only',holdoutUsedForTuning:false}};
   const fmt=x=>`${x.wins}/${x.bets} (${x.precision==null?'—':(100*x.precision).toFixed(1)+'%'}) · W−L ${x.net>=0?'+':''}${x.net}`;
   const pct=x=>x==null?'—':(100*x).toFixed(1)+'%';
   // Trait success rate = actual SELECT wins when the MM2 signal was present; not a causal uplift.
@@ -1944,12 +2019,16 @@ async function fpSequentialSwitchAudit(matches){
    const selected=holdout.filter(r=>r.selected),wins=selected.filter(r=>r.correct).length;
    const eventDependent=key!=='mm2Draw';
    const eventCoverage=active.filter(r=>r.goalEvents.length>0).length;
-   return {key,name:mm2Names[key],activeFixtures:active.length,validationFixtures:validation.length,holdoutFixtures:holdout.length,holdoutSelectBets:selected.length,holdoutSelectWins:wins,holdoutSelectWinRate:selected.length?wins/selected.length:null,eventCoverage,eventAccuracy:eventDependent?null:null,reason:eventDependent&&eventCoverage===0?'No historical goal-event timelines: trait outcome accuracy unavailable':selected.length===0?'No holdout SELECT bets with active trait':'SELECT win rate is conditional on signal, not proof of improvement'};
+   return {key,name:mm2Names[key],activeFixtures:active.length,validationFixtures:validation.length,holdoutFixtures:holdout.length,holdoutSelectBets:selected.length,holdoutSelectWins:wins,holdoutSelectWinRate:selected.length?wins/selected.length:null,eventCoverage,eventAccuracy:null,reason:eventDependent&&eventCoverage===0?'No historical goal-event timelines: trait outcome accuracy unavailable':selected.length===0?'No holdout SELECT bets with active trait':'SELECT win rate is conditional on signal, not proof of improvement'};
   });
   result.mm2Traits=mm2Metrics;
+  result.mm2LeagueAvailability=Object.fromEntries(Object.entries(groups).map(([id,rows])=>{const covered=rows.filter(m=>fpMM2Goals(m).length>0).length;return [id,{goalTimelineMatches:covered,finishedMatches:rows.length,mm2EventTraitsEnabled:covered>=4,reason:covered>=4?'Event traits available when both teams have sufficient past timelines':'Event-dependent MM2 traits automatically omitted; draw tendency remains available'}]}));
+  fpFixtureLeagueStats=Object.fromEntries(leagueResults.map(x=>[x.id,{correct:x.trainingCorrect,total:x.trainingPredictions,selectWins:x.validationAll.wins,selectBets:x.validationAll.bets}]));
+  try{localStorage.setItem('fp_fixture_league_accuracy_v1',JSON.stringify(fpFixtureLeagueStats))}catch(_){}
   fpLastManualAudit={validationRows:bestV,holdoutRows:optimizedH};
+  renderFixtures();
   const html=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">The accuracy column uses chronological training predictions, before the later validation and holdout periods. Every button controls betting eligibility only; league fixtures and predictions stay visible. No automatic league exclusions are applied.</p><div id="fpManualSummary" class="panel"></div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Training prediction accuracy</th><th>Validation SELECT</th><th>Later holdout SELECT</th><th>BET ON</th></tr></thead><tbody>${leagueResults.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.trainingCorrect}/${x.trainingPredictions} · <strong>${pct(x.trainingAccuracy)}</strong>${x.trainingPredictions<30?' <small>(small sample)</small>':''}</td><td>${fmt(x.validationAll)}</td><td>${fmt(x.holdoutOptimized)}</td><td>${fpGateButton('league',x.id,fpLeagueSelectAllowed(x.id))}</td></tr>`).join('')}</tbody></table></div>
-  <h3>MM2 matchup performance &amp; manual ON/OFF</h3><p class="muted smalltext">MM2 SELECT win rate counts actual winning BET ON OUTCOME picks when that matchup trait was active. It is <strong>not</strong> the accuracy of the trait's event forecast or evidence that switching it ON improves results. Event-specific forecast accuracy cannot be calculated without event timelines. OFF disables that MM2 adjustment and its associated signal; rerun the test to measure the changed selections.</p><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>MM2 matchup</th><th>Signal fixtures</th><th>Holdout SELECT wins / bets</th><th>SELECT win rate</th><th>Event accuracy</th><th>MM2</th></tr></thead><tbody>${mm2Metrics.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.activeFixtures} (holdout ${x.holdoutFixtures})</td><td>${x.holdoutSelectWins}/${x.holdoutSelectBets}</td><td>${pct(x.holdoutSelectWinRate)}</td><td>${x.eventAccuracy==null?'Not tested':' '+pct(x.eventAccuracy)}${x.eventCoverage===0&&x.key!=='mm2Draw'?' · no timelines':''}</td><td>${fpGateButton('mm2',x.key,fpSwitches[x.key])}</td></tr>`).join('')}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">Manual choices are saved in this browser. League toggles update combined results immediately. MM2 toggles require a new Model Test.</p><p class="muted smalltext">Full JSON below includes per-league accuracy, SELECT counts, MM2 signal coverage, manually saved switches and chronological validation/holdout metrics.</p>`;
+  <h3>MM2 matchup performance &amp; manual ON/OFF</h3><p class="muted smalltext">Event-dependent MM2 traits are omitted for leagues without sufficient historical goal-event data. MM2 SELECT win rate counts actual winning BET ON OUTCOME picks when that matchup trait was active. It is <strong>not</strong> the accuracy of the trait's event forecast or evidence that switching it ON improves results. Event-specific forecast accuracy cannot be calculated without event timelines. OFF disables that MM2 adjustment and its associated signal; rerun the test to measure the changed selections.</p><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>MM2 matchup</th><th>Signal fixtures</th><th>Holdout SELECT wins / bets</th><th>SELECT win rate</th><th>Event accuracy</th><th>MM2</th></tr></thead><tbody>${mm2Metrics.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.activeFixtures} (holdout ${x.holdoutFixtures})</td><td>${x.holdoutSelectWins}/${x.holdoutSelectBets}</td><td>${pct(x.holdoutSelectWinRate)}</td><td>${x.eventAccuracy==null?'Not tested':' '+pct(x.eventAccuracy)}${x.eventCoverage===0&&x.key!=='mm2Draw'?' · no timelines':''}</td><td>${fpGateButton('mm2',x.key,fpSwitches[x.key])}</td></tr>`).join('')}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">Manual choices are saved in this browser. League toggles update combined results immediately. MM2 toggles require a new Model Test.</p><p class="muted smalltext">Full JSON below includes per-league accuracy, SELECT counts, MM2 signal coverage, manually saved switches and chronological validation/holdout metrics.</p>`;
   const target=document.getElementById('fpSequentialAudit');if(target)target.innerHTML=html;
   fpManualAuditRefresh();
   return result;
@@ -1987,7 +2066,9 @@ async function doTest(){
   // Legacy multi-model grid searches, ranking optimisation and draw research do not run.
   const report=await fpHybridBacktest(result.matches);
   fpPerfUpdate("Sequential predictor switch audit",88,"Testing real SELECT outcomes and component ON/OFF candidates",true);
+  const fpMM2TimelineAudit=await fpMM2EnrichHistorical(result.matches,fpTestDownloadController.signal);
   const fpSequential=await fpSequentialSwitchAudit(result.matches);
+  fpSequential.mm2TimelineDownload=fpMM2TimelineAudit;
   report.sequentialSelectAudit=fpSequential;
   analysisMs=performance.now()-started-downloadMs;
   const timing={downloadSeconds:+(downloadMs/1000).toFixed(2),analysisSeconds:+(analysisMs/1000).toFixed(2),totalSeconds:+((performance.now()-started)/1000).toFixed(2)};
