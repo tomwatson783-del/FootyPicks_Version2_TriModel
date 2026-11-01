@@ -665,6 +665,17 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 @media(max-width:600px){.fp-at-risk{font-size:9px;padding:2px 5px}
 .fp-risk-detail{font-size:10px}.fp-result-counts{gap:5px!important}
 .fp-result-counts .tag{font-size:10px;padding:4px 6px}}
+</style><style id="fp-v68-integrated">
+.fp-draw-purple{background:#39205e!important;border-color:#ae75f5!important;color:#ead3ff!important}
+.fp-backed-tag.fp-backed-winning{background:#164b35!important;border-color:#36ad76!important;color:#b3f7d1!important}
+.fp-backed-tag.fp-backed-losing{background:#572832!important;border-color:#d45a70!important;color:#ffd5da!important}
+.fp-league-evidence{font-size:11px;color:var(--muted);margin:8px 0;padding:9px 11px;border:1px solid var(--border);border-radius:9px;line-height:1.7}
+.fp-league-evidence strong{color:var(--text)}
+.fp-league-switch{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px;border-bottom:1px solid var(--border);font-size:12px}
+.fp-league-switch select{width:135px}
+.fp-backed-tag.fp-alert-backed{animation:fp-bet-flash 1s ease-in-out 2}
+@keyframes fp-bet-flash{50%{filter:brightness(1.6)}}
+@media(prefers-reduced-motion:reduce){.fp-backed-tag.fp-alert-backed{animation:none}}
 </style></head>
 <body>
 <header>
@@ -802,7 +813,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
  <div id="calculationContent" class="panel"><div class="empty">Load fixtures to inspect their calculations.</div></div>
 </section>
 
-<section id="settings" hidden><div class="fp-intro panel"><h3>Prediction settings</h3><div class="fp-model-grid"><label class="fp-model-card"><strong>Retired baseline</strong><span>Draw xG gap</span><input id="fpDrawLeague" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label><label class="fp-model-card"><strong>Draw boundary</strong><span>Draw xG gap</span><input id="fpDrawTeam" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label><label class="fp-model-card" hidden><strong>Retired ranking</strong><span>Draw xG gap</span><input id="fpDrawRank" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label></div><div id="fpDrawRecommendations" hidden></div><button class="btn small secondary" id="fpApplyDrawRecommendations" type="button" hidden>Use recommended draw gaps</button></div><details class="panel fp-advanced"><summary><strong>Prediction configuration and data management</strong></summary>
+<section id="settings" hidden><div class="panel" id="fpLeagueControls"><h3>League SELECT eligibility</h3><p class="muted smalltext">Disable BET ON OUTCOME for a league without hiding predictions. No automatic exclusion from tiny samples. Historical accuracy is shown in fixture cards.</p><div id="fpLeagueControlRows"></div><button type="button" class="btn secondary" id="fpLeagueControlsRefresh">Refresh leagues</button></div><div class="fp-intro panel"><h3>Prediction settings</h3><div class="fp-model-grid"><label class="fp-model-card"><strong>Retired baseline</strong><span>Draw xG gap</span><input id="fpDrawLeague" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label><label class="fp-model-card"><strong>Draw boundary</strong><span>Draw xG gap</span><input id="fpDrawTeam" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label><label class="fp-model-card" hidden><strong>Retired ranking</strong><span>Draw xG gap</span><input id="fpDrawRank" type="number" min="0.05" max="0.60" step="0.05" value="0.20"></label></div><div id="fpDrawRecommendations" hidden></div><button class="btn small secondary" id="fpApplyDrawRecommendations" type="button" hidden>Use recommended draw gaps</button></div><details class="panel fp-advanced"><summary><strong>Prediction configuration and data management</strong></summary>
  <h3>Advanced model controls</h3><div class="panel" style="display:none"><div class="notice"><strong>Active prediction display</strong><p class="muted smalltext">All three models retain independent pre-match predictions.</p><select id="activePredictionView"><option value="both">All three models</option><option value="original">League-adjusted (Poisson) only</option><option value="updated">Team-form (goal difference) only</option></select></div>
 <details class="panel"><summary><strong>League-adjusted · advanced settings</strong></summary><p class="muted smalltext">League-adjusted expected-goals engine. Its form windows, selection gaps and confidence multiplier are independent of the updated engine.</p><div class="controls"><div><label>Form weighting</label><select id="originalModelChoice"><option value="0">A — Stable</option><option value="1">B — Balanced</option><option value="2">C — Recent</option><option value="3">D — Very recent</option></select></div><div><label>Form windows</label><select id="originalWindowChoice"><option value="0">15 / 10 / 5</option><option value="1">10 / 6 / 3</option><option value="2">8 / 5 / 3</option></select></div><div><label>HOME SELECT goal advantage</label><input id="originalHomeGap" type="number" min="0.05" max="2" step="0.05" value="0.5"></div><div><label>AWAY SELECT goal advantage</label><input id="originalAwayGap" type="number" min="0.05" max="2" step="0.05" value="0.5"></div><div><label>Confidence 10 multiplier</label><select id="originalConfidenceMultiplier"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option><option value="4">4×</option><option value="5">5×</option></select></div></div><p class="muted smalltext">Save Settings below activates changes. Existing frozen predictions will not be rewritten.</p></details><div id="winRankSettingsSlot"></div><div id="rankedSettingsSlot" hidden></div><h3>Team-form · advanced configuration</h3>
   <label class="row" style="padding:10px 0"><input type="radio" name="mode" value="manual" id="modeManual"><span><strong>Manual</strong><br><span class="muted smalltext">Choose form weighting.</span></span></label>
@@ -907,9 +918,9 @@ function readStore(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{
 function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
-function confidenceClass(score){const n=Number(score);if(score===null||score===undefined||!Number.isFinite(n))return "";if(n>=9)return "confidence-star";if(n>=7)return "confidence-high";if(n>=5)return "confidence-medium";return "confidence-low"}
-function liveConfidenceText(score){if(score===null||score===undefined||score==="")return "N/A";const n=Number(score);if(!Number.isFinite(n))return "N/A";const label=n>=9?"Exceptional":n>=7?"Strong":n>=5?"Moderate":"Low";return `${n}/10 · ${label}`}
-function confidenceBadge(score){const n=Number(score);if(score===null||score===undefined||!Number.isFinite(n))return `<span class="tag">Confidence unavailable</span>`;const label=n>=9?"EXCEPTIONAL":n>=7?"STRONG":n>=5?"MODERATE":"LOW";return `<span class="confidence-pill ${confidenceClass(n)}" aria-label="Confidence ${n} out of 10, ${label.toLowerCase()}"><span class="confidence-icon" aria-hidden="true">${n>=9?"★":""}</span><strong>${n}/10</strong><span class="confidence-label">${label}</span></span>`}
+function confidenceClass(score){const n=Number(score);if(score===null||score===undefined||!Number.isFinite(n))return "";if(n>=8)return "confidence-star";if(n>=7)return "confidence-high";if(n>=5)return "confidence-medium";return "confidence-low"}
+function liveConfidenceText(score){if(score===null||score===undefined||score==="")return "N/A";const n=Number(score);if(!Number.isFinite(n))return "N/A";const label=n>=8?"Exceptional":n>=7?"Strong":n>=5?"Moderate":"Low";return `${n}/10 · ${label}`}
+function confidenceBadge(score){const n=Number(score);if(score===null||score===undefined||!Number.isFinite(n))return `<span class="tag">Confidence unavailable</span>`;const label=n>=8?"EXCEPTIONAL":n>=7?"STRONG":n>=5?"MODERATE":"LOW";return `<span class="confidence-pill ${confidenceClass(n)}" aria-label="Confidence ${n} out of 10, ${label.toLowerCase()}"><span class="confidence-icon" aria-hidden="true">${n>=8?"★":""}</span><strong>${n}/10</strong><span class="confidence-label">${label}</span></span>`}
 function fmtDate(d){return new Date(d).toLocaleString(undefined,{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
 function eventId(m){return `${m.leagueId}_${m.id}`}
 function getOutcome(h,a){return h>a?"H":h<a?"A":"D"}
@@ -1350,7 +1361,7 @@ function fpAverageConfidence(m){
  return nums.length?nums.reduce((a,b)=>a+b,0)/nums.length:0;
 }
 
-function fpStatusTag(m){const f=fpModelFlags(m);return f.selected?'<span class="fp-status fp-status-green">BET ON OUTCOME</span>':''}
+function fpStatusTag(m){const f=fpModelFlags(m);return f.selected?`<span class="fp-status ${Number(m.confidence)>=8?'fp-status-purple':'fp-status-green'}">BET ON OUTCOME</span>`:''}
 function fpIndependentProbs(v){
  if(!v)return null;
  const raw=v.probs;
@@ -1383,7 +1394,7 @@ function comparisonRows(m){
  const original=m.originalPrediction||frozen?.original;
  const full=fpActiveStrategy(m.leagueId)==='123';
  const cell=(v,label)=>{if(!v)return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Prediction unavailable</div></div>`;const chosen=v.selection===v.prediction;return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${Number(v.xgDifference??(v.homeLambda-v.awayLambda)).toFixed(2)}</div><div class="model-bottom"><span class="${chosen?'model-select':'model-no-select'}">${chosen?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">Confidence ${v.confidence}/10</span></div></div>`};
- return `<div class="fixture-comparison">${fpStatusTag(m)} ${fpDrawBadge(m)}${fpDrawDetail(m)}<div class="model-grid ${full?'':'two-models'}">${full?cell(original,'01 · League-adjusted'):''}${cell(m,'Model 2 · Team form')}</div></div>`;
+ return `<div class="fixture-comparison">${fpStatusTag(m)} ${fpLeagueEvidenceHtml(m)} ${fpDrawBadge(m)}${fpDrawDetail(m)}<div class="model-grid ${full?'':'two-models'}">${full?cell(original,'01 · League-adjusted'):''}${cell(m,'Model 2 · Team form')}</div></div>`;
 }
 
 function fpRate(h,n){return n?`${(100*h/n).toFixed(1)}%`:'—'}
@@ -1509,11 +1520,26 @@ function upcoming(){
  if(league!=="all")list=list.filter(m=>m.leagueId===league);
  return list.sort($("sort").value==="confidence"?(a,b)=>fpAverageConfidence(b)-fpAverageConfidence(a):(a,b)=>new Date(a.date)-new Date(b.date));
 }
+const FP_LEAGUE_GATES_KEY='fp_league_gates_v68';
+let fpLeagueGates=readStore(FP_LEAGUE_GATES_KEY,{});
+function fpLeagueEvidence(m){
+ const date=new Date(m.date).getTime();
+ const rows=(state.history||[]).filter(x=>(x.leagueId||x.league)===(m.leagueId||m.league)&&['H','D','A'].includes(x.actualOutcome)&&['H','D','A'].includes(x.prediction)&&new Date(x.date).getTime()<date);
+ const bets=rows.filter(x=>['H','A'].includes(x.prediction)&&x.selection===x.prediction);
+ const hit=a=>a.filter(x=>x.actualOutcome===x.prediction).length;
+ const home=bets.filter(x=>x.prediction==='H'),away=bets.filter(x=>x.prediction==='A');
+ return {all:{n:rows.length,w:hit(rows)},bets:{n:bets.length,w:hit(bets)},home:{n:home.length,w:hit(home)},away:{n:away.length,w:hit(away)}};
+}
+function fpLeagueBetAllowed(m){return fpLeagueGates[m.leagueId||m.league]!==false}
+function fpLeagueEvidenceHtml(m){
+ const e=fpLeagueEvidence(m),rate=x=>x.n?`${(100*x.w/x.n).toFixed(1)}% (${x.w}/${x.n})`:'— (0)';
+ return `<div class="fp-league-evidence"><strong>League reliability · prior results only</strong><div>All outcomes: ${rate(e.all)} · BET ON OUTCOME: ${rate(e.bets)}</div><div>Home bets: ${rate(e.home)} · Away bets: ${rate(e.away)}</div><div class="muted smalltext">${fpLeagueBetAllowed(m)?'SELECT eligible':'League SELECT disabled'} · Browser-local history may be incomplete.</div></div>`;
+}
 function fpModelFlags(m){
  const strategy='2',single=true;
  const teamSelected=['H','A'].includes(m.prediction)&&m.selection===m.prediction;
- const selected=teamSelected;
- return {valid:['H','D','A'].includes(m.prediction),matching:teamSelected,count:1,selected,consensus:selected,disagree:false,strategy,outcome:selected?m.prediction:'N'};
+ const selected=teamSelected&&fpLeagueBetAllowed(m);
+ return {valid:['H','D','A'].includes(m.prediction),matching:selected,count:1,selected,consensus:selected,disagree:false,strategy,outcome:selected?m.prediction:'N'};
 }
 let fpFixtureFilter='all',fpResultFilter='all',fpWeeklyFilter='all';
 function renderFixtures(){
@@ -1834,7 +1860,7 @@ function fpActiveStrategy(id){return '2'}
 const FP_DRAW_KEY='fp_draw_specialist_v2';
 let fpDrawResearch=readStore(FP_DRAW_KEY,{});
 const fpDrawThresholds=[.20,.23,.26,.29,.32,.35];
-function fpDrawBadge(m){const f=fpModelFlags(m),p=fpIndependentProbs(m);if(!f.selected||!p)return '';const prob=p[f.outcome]+p.D;return `<span class="fp-draw-tag ${prob>=.78?'fp-draw-warn':'fp-draw-ok'}">DOUBLE CHANCE · ${(prob*100).toFixed(1)}%</span>`}
+function fpDrawBadge(m){const f=fpModelFlags(m),p=fpIndependentProbs(m);if(!f.selected||!p)return '';const prob=p[f.outcome]+p.D;return `<span class="fp-draw-tag ${prob>.85?'fp-draw-purple':prob>=.80?'fp-draw-warn':'fp-draw-ok'}">DOUBLE CHANCE · ${(prob*100).toFixed(1)}%</span>`}
 
 function fpDrawDetail(m){return ''}
 
@@ -2349,7 +2375,7 @@ function renderRecentGoals(matches){
  const rows=(matches||[]).map(m=>{const goal=state.liveStats[eventId(m)]?.lastGoal;if(!goal||goal.minute===null||!validScore(m))return null;const current=getElapsedLiveMinute(m);const age=Number.isFinite(goal.timestamp)?Math.max(0,(Date.now()-goal.timestamp)/60000):(current===null?null:Math.max(0,current-goal.minute));return{m,goal,age}}).filter(Boolean).sort((a,b)=>{const aa=a.age===null?999:a.age,bb=b.age===null?999:b.age;return aa-bb}).slice(0,5);
  if(!rows.length){root.innerHTML=`<div class="recent-goals-panel"><div class="row between wrap"><strong>⚽ Latest goals</strong><span class="muted smalltext">Up to 5 live matches</span></div><p class="muted smalltext" style="margin:7px 0 0">Recent goal events aren’t available from the feed for the current live matches.</p></div>`;return;}
  root.innerHTML=`<div class="recent-goals-panel"><div class="row between wrap" style="margin-bottom:5px"><strong>⚽ Latest goals</strong><span class="muted smalltext">Most recent first · max 5</span></div>${rows.map(({m,goal,age})=>{const cls=age!==null&&age<=1?'goal-now':age!==null&&age<=2?'goal-two':age!==null&&age<=5?'goal-five':'';const label=age===null?`${goal.minute}′`:age<=1?'JUST NOW':age<=2?'LAST 2 MIN':age<=5?'LAST 5 MIN':`${Math.round(age)} MIN AGO`;const side=goal.side==='home'?'home':goal.side==='away'?'away':null;const scorer=goal.scorer?` · ${esc(goal.scorer)}`:'';
- const backed=fpFixtureBets(eventId(m));const badge=backed.length?`<span class="fp-backed-tag fp-alert-backed" title="Backed: ${esc(backed.map(fpBetLabel).join(", "))}">✓ Bet</span>`:'' ;return`<div class="recent-goal-row ${cls}"><span class="goal-age">${label}</span><div><strong>${esc(m.home)} ${m.homeScore}–${m.awayScore} ${esc(m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${goal.minute}′${scorer}</div></div><span class="row wrap" style="gap:5px">${badge}<span class="tag">${side==='home'?'HOME GOAL':side==='away'?'AWAY GOAL':'GOAL'}</span></span></div>`}).join('')}</div>`;
+ const backed=fpFixtureBets(eventId(m));const badge=backed.length?`<span class="fp-backed-tag fp-alert-backed ${validScore(m)&&backed.every(b=>fpBetCurrent(b,m)==="winning")?"fp-backed-winning":"fp-backed-losing"}" title="Backed: ${esc(backed.map(fpBetLabel).join(", "))}">✓ Bet</span>`:'' ;return`<div class="recent-goal-row ${cls}"><span class="goal-age">${label}</span><div><strong>${esc(m.home)} ${m.homeScore}–${m.awayScore} ${esc(m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${goal.minute}′${scorer}</div></div><span class="row wrap" style="gap:5px">${badge}<span class="tag">${side==='home'?'HOME GOAL':side==='away'?'AWAY GOAL':'GOAL'}</span></span></div>`}).join('')}</div>`;
 }
 function renderRecentRedCards(matches){
  const root=$('recentRedCards');if(!root)return;const rows=[];
@@ -2361,7 +2387,7 @@ function renderRecentRedCards(matches){
   }
  }
  if(!rows.length){root.innerHTML='';return}
- root.innerHTML=`<div class="recent-reds-panel fp-red-alert"><div class="row between wrap fp-red-heading"><strong>🟥 Red cards</strong></div>${rows.map(({m,side,count})=>`<div class="recent-red-row fp-red-item"><div class="fp-red-copy"><strong>${esc(side==='home'?m.home:m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${esc(m.home)} ${validScore(m)?m.homeScore+'–'+m.awayScore:'vs'} ${esc(m.away)}</div></div><span class="row wrap" style="gap:6px">${fpFixtureBets(eventId(m)).length?`<span class="fp-backed-tag fp-alert-backed" title="Backed: ${esc(fpFixtureBets(eventId(m)).map(fpBetLabel).join(", "))}">✓ Bet</span>`:''}<span class="fp-red-count">${count} red card${count===1?'':'s'}</span></span></div>`).join('')}</div>`;
+ root.innerHTML=`<div class="recent-reds-panel fp-red-alert"><div class="row between wrap fp-red-heading"><strong>🟥 Red cards</strong></div>${rows.map(({m,side,count})=>`<div class="recent-red-row fp-red-item"><div class="fp-red-copy"><strong>${esc(side==='home'?m.home:m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${esc(m.home)} ${validScore(m)?m.homeScore+'–'+m.awayScore:'vs'} ${esc(m.away)}</div></div><span class="row wrap" style="gap:6px">${fpFixtureBets(eventId(m)).length?`<span class="fp-backed-tag fp-alert-backed ${fpFixtureBets(eventId(m)).every(b=>fpBetCurrent(b,m)==="winning")?"fp-backed-winning":"fp-backed-losing"}" title="Backed: ${esc(fpFixtureBets(eventId(m)).map(fpBetLabel).join(", "))}">✓ Bet</span>`:''}<span class="fp-red-count">${count} red card${count===1?'':'s'}</span></span></div>`).join('')}</div>`;
 }
 
 function ukParts(date){
@@ -2619,7 +2645,7 @@ function fpOutcomeSupported(outcome,pred){return outcome==="1X"?pred==="H"||pred
 function fpBetCurrent(b,m){
  if(!m||!validScore(m))return "pending";
  const actual=getOutcome(m.homeScore,m.awayScore);
- return fpOutcomeSupported(b.outcome,actual)?"winning":actual==="D"?"drawing":"losing";
+ return fpOutcomeSupported(b.outcome,actual)?"winning":"losing";
 }
 function fpBetLiveProjection(m){
  const a=liveOpportunityAssessment(m,state.liveStats[eventId(m)]);
@@ -2676,7 +2702,8 @@ function fpBetDecorate(){
  });
  document.querySelectorAll("[data-bet-live-badge]").forEach(slot=>{
   const bets=fpFixtureBets(slot.dataset.betLiveBadge);
-  slot.innerHTML=bets.map(b=>`<span class="fp-backed-tag">✓ ${b.market==="doubleChance"?"DC":"Bet"} · ${esc(fpBetLabel(b))}</span>`).join(" ");
+  const match=state.liveMatches.find(x=>eventId(x)===slot.dataset.betLiveBadge);
+  slot.innerHTML=bets.map(b=>`<span class="fp-backed-tag ${match&&validScore(match)?fpBetCurrent(b,match)==="winning"?"fp-backed-winning":"fp-backed-losing":""}">✓ ${b.market==="doubleChance"?"DC":"Bet"} · ${esc(fpBetLabel(b))}</span>`).join(" ");
   slot.closest(".live-card")?.classList.toggle("fp-backed-match",!!bets.length);
  });
  document.querySelectorAll("[data-bet-schedule-badge]").forEach(slot=>{
@@ -2875,5 +2902,14 @@ window.addEventListener('load',()=>setTimeout(fpInitThreeModelUI,50));
 
 
 </script>
-</body>
+<script id="fp-v68-controls">
+function fpRenderLeagueControls(){
+ const target=document.getElementById('fpLeagueControlRows');if(!target)return;
+ const actual=[...new Map((state.matches||[]).concat(state.history||[]).map(m=>[m.leagueId||m.league,{id:m.leagueId||m.league,name:m.league||m.leagueId}])).values()];
+ target.innerHTML=actual.filter(l=>l.id).map(l=>`<label class="fp-league-switch"><span>${esc(l.name||l.id)}</span><select data-fp-league="${esc(l.id)}"><option value="on" ${fpLeagueGates[l.id]===false?'':'selected'}>SELECT ON</option><option value="off" ${fpLeagueGates[l.id]===false?'selected':''}>SELECT OFF</option></select></label>`).join('');
+}
+document.addEventListener('change',e=>{const key=e.target?.dataset?.fpLeague;if(!key)return;fpLeagueGates[key]=e.target.value!=='off';store(FP_LEAGUE_GATES_KEY,fpLeagueGates);renderFixtures();});
+document.addEventListener('click',e=>{if(e.target?.id==='fpLeagueControlsRefresh')fpRenderLeagueControls()});
+document.addEventListener('DOMContentLoaded',fpRenderLeagueControls);
+</script></body>
 </html>
