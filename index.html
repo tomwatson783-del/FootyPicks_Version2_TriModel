@@ -785,7 +785,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 <section id="test" hidden>
  <h2>Prediction Test</h2>
  
- <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><div id="fpSequentialAudit" class="panel">Sequential SELECT predictor audit will run automatically after the prediction test.</div><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <label class="fp-test-scope" for="fpTestLeague">Test competitions <select id="fpTestLeague"><option value="all">All leagues</option></select></label> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><div id="fpSequentialAudit" class="panel">Sequential SELECT + weak-league elimination audit will run automatically after the prediction test.</div><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced" hidden><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -1082,6 +1082,11 @@ function oppositionAdjustedHistory(hist,teamRatings,unused,previous=null,rankCon
 const FP_SWITCH_DEFAULTS={opposition:true,venue:true,risk:true,formShort:true,formMedium:true,formLong:true,confidenceProbability:true,confidenceGoals:true,confidenceHistory:true,confidenceSupport:true,mm2FirstGoal:true,mm2LeadProtection:true,mm2Comeback:true,mm2Draw:true,mm2LateGoals:true};
 let fpSwitches=(()=>{try{return {...FP_SWITCH_DEFAULTS,...JSON.parse(localStorage.getItem('fp_model_component_switches_v1')||'{}')}}catch(_){return {...FP_SWITCH_DEFAULTS}}})();
 function fpSwitchSave(){try{localStorage.setItem('fp_model_component_switches_v1',JSON.stringify(fpSwitches))}catch(_){}}
+// League SELECT gating is independent of fixture prediction visibility.
+let fpLeagueGate=(()=>{try{return JSON.parse(localStorage.getItem('fp_league_select_gate_v2')||'{}')}catch(_){return {}}})();
+function fpLeagueSelectAllowed(id){return !id||fpLeagueGate[id]!==false}
+function fpLeagueGateSave(){try{localStorage.setItem('fp_league_select_gate_v2',JSON.stringify(fpLeagueGate))}catch(_){}}
+
 function fpModel2WindowWeights(weights){const enabled=[fpSwitches.formLong,fpSwitches.formMedium,fpSwitches.formShort];const v=weights.map((x,i)=>enabled[i]?x:0),sum=v.reduce((a,b)=>a+b,0);return sum>0?v.map(x=>x/sum):weights.slice()}
 function fpModel2SwitchHtml(){const labels={opposition:'Opposition strength adjustment',venue:'Home/away venue adjustment',risk:'Risk-based probability softening',formLong:'Long form window',formMedium:'Medium form window',formShort:'Short form window',confidenceProbability:'Confidence: probability contribution',confidenceGoals:'Confidence: expected-goal gap',confidenceHistory:'Confidence: sample/history contribution',confidenceSupport:'Confidence: supporting evidence',mm2FirstGoal:'MM2: first-goal matchup',mm2LeadProtection:'MM2: lead protection',mm2Comeback:'MM2: comeback / equalisation',mm2Draw:'MM2: draw tendency',mm2LateGoals:'MM2: late-goal timing'};return Object.entries(labels).map(([key,name])=>`<label class="fp-component-switch"><input type="checkbox" data-fp-switch="${key}" ${fpSwitches[key]?'checked':''}><span>${name}</span></label>`).join('')}
 function fpSwitchSync(){const target=document.getElementById('fpComponentSwitches');if(target)target.innerHTML=fpModel2SwitchHtml()}
@@ -1570,7 +1575,7 @@ function upcoming(){
 function fpModelFlags(m){
  const strategy='2',single=true;
  const teamSelected=['H','A'].includes(m.prediction)&&m.selection===m.prediction;
- const selected=teamSelected;
+ const selected=teamSelected && fpLeagueSelectAllowed(m.leagueId);
  return {valid:['H','D','A'].includes(m.prediction),matching:teamSelected,count:1,selected,consensus:selected,disagree:false,strategy,outcome:selected?m.prediction:'N'};
 }
 let fpFixtureFilter='all',fpResultFilter='all',fpWeeklyFilter='all';
@@ -1855,50 +1860,66 @@ async function fpSequentialSwitchAudit(matches){
  for(const [league,group] of Object.entries(groups)){
   const rows=group.sort((a,b)=>Date.parse(a.date)-Date.parse(b.date)),n=rows.length;
   for(let i=0;i<n;i++){
-   const m=rows[i],kick=Date.parse(m.date);
-   if(!Number.isFinite(kick))continue;
-   const past=rows.filter(x=>Date.parse(x.date)<kick);
-   if(past.length<8)continue;
+   const m=rows[i],kick=Date.parse(m.date);if(!Number.isFinite(kick))continue;
+   const past=rows.filter(x=>Date.parse(x.date)<kick);if(past.length<8)continue;
    fixtures.push({id:league+':'+eventId(m),league,m,past,actual:getOutcome(m.homeScore,m.awayScore),phase:i<Math.floor(n*.60)?'training':i<Math.floor(n*.80)?'validation':'holdout'});
   }
  }
- const saved={...fpSwitches},model={...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]};
- async function replay(phase){
-  const result=[];let i=0;
+ const saved={...fpSwitches},previousGate={...fpLeagueGate},model={...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]};
+ let failures=0;
+ async function replay(phase,config){
+  fpSwitches={...config};const result=[];let i=0;
   for(const x of fixtures){if(phase&&x.phase!==phase)continue;
    try{const p=calculatePrediction(x.m,x.past,model),selected=['H','A'].includes(p.prediction)&&p.selection===p.prediction;
-    result.push({id:x.id,league:x.league,phase:x.phase,actual:x.actual,prediction:p.prediction,selected,correct:selected&&p.prediction===x.actual,confidence:p.confidence,mm2TimelineCoverage:(p.mm2?.coverage?.homeTimeline||0)+(p.mm2?.coverage?.awayTimeline||0),mm2Evidence:p.mm2?.evidence||[]});
-   }catch(e){/* failed predictions excluded and counted by integrity diagnostics */}
+    result.push({id:x.id,league:x.league,phase:x.phase,actual:x.actual,prediction:p.prediction,selected,correct:selected&&p.prediction===x.actual,confidence:p.confidence,mm2TimelineCoverage:(p.mm2?.coverage?.homeTimeline||0)+(p.mm2?.coverage?.awayTimeline||0)});
+   }catch(e){failures++;}
    if(++i%80===0){testCheckpoint();await new Promise(r=>setTimeout(r,0));}
-  }
-  return result;
+  }return result;
  }
+ const byPhase=(rows,p)=>rows.filter(x=>x.phase===p);
+ const gateRows=(rows,gate)=>rows.map(r=>gate[r.league]===false?{...r,selected:false,correct:false}:r);
+ const acceptable=(a,b,min=.8)=>b.bets>=20&&b.precision!==null&&a.precision!==null&&b.precision>a.precision&&b.net>=a.net&&b.bets>=a.bets*min;
  try{
-  const baseline=await replay();const baselineValidation=baseline.filter(x=>x.phase==='validation'),baselineHold=baseline.filter(x=>x.phase==='holdout');
-  const candidates=[],proposed={...saved};
+  const original=await replay(null,saved),originalV=byPhase(original,'validation'),originalH=byPhase(original,'holdout');
+  let current={...saved},bestV=originalV;
+  const trials=[];
+  // True forward greedy selection: each trial compares against the accepted configuration.
   for(const key of FP_AUTO_KEYS){
-   if(!saved[key]){candidates.push({key,status:'SKIP: currently OFF; test starts from existing configuration'});continue;}
-   fpSwitches={...saved,[key]:false};
-   const changed=await replay('validation'),bm=fpAuditMetric(baselineValidation),cm=fpAuditMetric(changed),diff=fpAuditCompare(baselineValidation,changed);
-   const sufficient=bm.bets>=20&&cm.bets>=20&&diff.addedBets+diff.removedBets>=5;
-   const improves=sufficient&&cm.net>bm.net&&cm.precision>bm.precision&&cm.bets>=bm.bets*.80;
-   candidates.push({key,validationBaseline:bm,validationOff:cm,changes:diff,sufficient,validationRecommendation:improves?'OFF':'ON',reason:!sufficient?'Insufficient changed selections or samples':improves?'Higher net and precision, >=80% bet retention':'No simultaneous improvement in net and precision'});
-   if(improves)proposed[key]=false;
+   const alternate={...current,[key]:!current[key]};
+   const changed=await replay('validation',alternate),before=fpAuditMetric(bestV),after=fpAuditMetric(changed),diff=fpAuditCompare(bestV,changed);
+   const sufficient=before.bets>=20&&after.bets>=20&&diff.addedBets+diff.removedBets>=5;
+   const accept=sufficient&&acceptable(before,after);
+   trials.push({key,from:current[key]?'ON':'OFF',trial:alternate[key]?'ON':'OFF',accepted:accept,validationBefore:before,validationTrial:after,changes:diff,reason:!sufficient?'Insufficient changed selections':accept?'Precision and net improved sequentially':'Rejected: precision/net/retention criterion not met'});
+   if(accept){current=alternate;bestV=changed;}
   }
-  fpSwitches={...proposed};const combinedValidation=await replay('validation'),combinedHold=await replay('holdout');
-  const combinedMetrics=fpAuditMetric(combinedValidation),baseMetrics=fpAuditMetric(baselineValidation);
-  const qualifies=combinedMetrics.bets>=20&&combinedMetrics.net>baseMetrics.net&&combinedMetrics.precision>baseMetrics.precision&&combinedMetrics.bets>=baseMetrics.bets*.8;
-  const approved=qualifies?proposed:saved;
-  fpSwitches={...approved};fpSwitchSave();fpSwitchSync();
-  const result={version:'SEQUENTIAL-SELECT-MM2-EVENT-AUDIT-V2',method:'Chronological league 60/20/20; actual selectionWithDraw; one Model 2 or MM2 switch OFF at a time; validation selects, final 20% audit only',
-   warning:'Repeated historical testing or previously tuned settings may contaminate validation. No actual ROI without odds. MM2 event-dependent switches require historical goal-event coverage; missing events produce zero adjustment. Coefficients are provisional and require out-of-sample evaluation.',
-   configurationBefore:saved,individualTests:candidates,proposedConfiguration:proposed,appliedConfiguration:approved,approvedOnValidation:qualifies,
-   validation:{baseline:baseMetrics,combined:combinedMetrics,changes:fpAuditCompare(baselineValidation,combinedValidation)},
-   holdout:{baseline:fpAuditMetric(baselineHold),combined:fpAuditMetric(combinedHold),changes:fpAuditCompare(baselineHold,combinedHold)},
-   leagues:Object.entries(groups).map(([id,group])=>{const rows=baseline.filter(x=>x.league===id),h=rows.filter(x=>x.phase==='holdout');return {id,name:group[0]?.league,all:fpAuditMetric(h),home:fpAuditMetric(h.filter(x=>x.prediction==='H')),away:fpAuditMetric(h.filter(x=>x.prediction==='A'))}}),
-   integrity:{eligibleFixtures:fixtures.length,baselinePredictions:baseline.length,excludedOrFailed:fixtures.length-baseline.length,strictlyEarlierFixtureHistory:true,autoSwitchedKeys:FP_AUTO_KEYS,mm2Fitted:true,mm2EventCoverage:baseline.filter(x=>x.mm2TimelineCoverage>0).length}};
-  const fmt=x=>`${x.wins}/${x.bets} (${x.precision==null?'—':(100*x.precision).toFixed(1)+'%'}) · W−L ${x.net>=0?'+':''}${x.net} · ${x.bets} bets`;
-  const html=`<h3>Sequential SELECT predictor audit</h3><p class="notice">${qualifies?'Validation accepted proposed Model 2 switches.':'Validation did not approve a combined change; existing switches retained.'} MM2 uses prior event timelines where present and prior final scores for draw tendency. See JSON for coverage and switch-level results.</p><p><strong>Validation baseline:</strong> ${fmt(result.validation.baseline)}<br><strong>Validation candidate:</strong> ${fmt(result.validation.combined)}<br><strong>Holdout baseline:</strong> ${fmt(result.holdout.baseline)}<br><strong>Holdout candidate:</strong> ${fmt(result.holdout.combined)}</p><div class="tablewrap"><table><thead><tr><th>Predictor</th><th>OFF validation</th><th>Decision</th><th>Changed bets</th></tr></thead><tbody>${candidates.map(c=>`<tr><td>${esc(c.key)}</td><td>${c.validationOff?fmt(c.validationOff):'—'}</td><td>${esc(c.validationRecommendation||c.status)}</td><td>${c.changes?`+${c.changes.addedBets} / −${c.changes.removedBets}`:'—'}</td></tr>`).join('')}</tbody></table></div><p class="muted smalltext">Paste the entire JSON report below. It includes every tested switch, sample counts, wins, losses, W−L, opportunity retention, league/home/away results and integrity warnings.</p>`;
+  // All league gates are decided ONLY from earlier training results, never holdout.
+  const fittedTraining=await replay('training',current);
+  const leagueTrials=Object.entries(groups).map(([id,group])=>{
+   const training=fittedTraining.filter(x=>x.league===id),v=bestV.filter(x=>x.league===id),h=originalH.filter(x=>x.league===id);
+   const n=training.length,w=training.filter(x=>x.prediction===x.actual).length,accuracy=n?w/n:null;
+   const eligible=n>=30,off=eligible&&accuracy<.5;
+   return {id,name:LEAGUES[id]||id,trainingPredictions:n,trainingCorrect:w,trainingAccuracy:accuracy,minimumSample:30,eligibleForDecision:eligible,proposedSelect:off?'OFF':'ON',reason:!eligible?'Insufficient training predictions':off?'Training overall prediction accuracy below 50%':'Training overall prediction accuracy at least 50%',validationAll:fpAuditMetric(v),validationHome:fpAuditMetric(v.filter(x=>x.prediction==='H')),validationAway:fpAuditMetric(v.filter(x=>x.prediction==='A')),holdoutBaseline:fpAuditMetric(h)};
+  });
+  const proposedGate=Object.fromEntries(leagueTrials.map(x=>[x.id,x.proposedSelect==='ON']));
+  const gatedV=gateRows(bestV,proposedGate),beforeGate=fpAuditMetric(bestV),afterGate=fpAuditMetric(gatedV);
+  // A league gate is adopted when precision improves and enough opportunities remain.
+  // Net W-L may decline when removing bets: report this explicitly, never conceal it.
+  const gateAccepted=afterGate.bets>=20&&afterGate.bets>=beforeGate.bets*.5&&afterGate.precision!==null&&beforeGate.precision!==null&&afterGate.precision>beforeGate.precision;
+  const appliedGate=gateAccepted?proposedGate:previousGate;
+  const appliedConfig=current;
+  const finalV=gateRows(bestV,appliedGate);
+  const optimizedH=await replay('holdout',appliedConfig);
+  const gatedH=gateRows(optimizedH,appliedGate);
+  fpSwitches={...appliedConfig};fpSwitchSave();fpSwitchSync();
+  if(gateAccepted){fpLeagueGate={...proposedGate};fpLeagueGateSave();}
+  const leagueResults=leagueTrials.map(x=>{
+   const id=x.id,originalRows=original.filter(r=>r.league===id),optimizedRows=optimizedH.filter(r=>r.league===id),filteredRows=gatedH.filter(r=>r.league===id);
+   return {...x,appliedSelect:fpLeagueSelectAllowed(id)?'ON':'OFF',validationAfterGate:fpAuditMetric(gatedV.filter(r=>r.league===id)),holdoutOptimized:fpAuditMetric(optimizedRows),holdoutAfterGate:fpAuditMetric(filteredRows),holdoutHome:fpAuditMetric(filteredRows.filter(r=>r.prediction==='H')),holdoutAway:fpAuditMetric(filteredRows.filter(r=>r.prediction==='A')),trainingAll:fpAuditMetric(originalRows.filter(r=>r.phase==='training'))};
+  });
+  const result={version:'SEQUENTIAL-SELECT-LEAGUE-GATE-V3',generated:new Date().toISOString(),method:'Per-league chronological 60/20/20. Training chooses league gates (<50% overall prediction accuracy, minimum 30); validation chooses sequential global predictor switches and whether to adopt the league gate; final 20% is evaluation only. Real SELECT rules.',warning:'This is historical retrospective validation; repeated test reuse can contaminate results. No ROI without bookmaker odds. Accumulator legs are correlated. MM2 event components without timeline coverage are untested, not proven effective.',configurationBefore:saved,individualTests:trials,appliedConfiguration:appliedConfig,leagueGate:{threshold:.5,minTrainingPredictions:30,proposed:proposedGate,applied:{...fpLeagueGate},approvedOnValidation:gateAccepted,validationBefore:beforeGate,validationAfter:afterGate,validationChanges:fpAuditCompare(bestV,gatedV),excluded:leagueTrials.filter(x=>x.proposedSelect==='OFF').map(x=>x.id)},validation:{original:fpAuditMetric(originalV),predictorOptimized:fpAuditMetric(bestV),final:fpAuditMetric(finalV)},holdout:{original:fpAuditMetric(originalH),predictorOptimized:fpAuditMetric(optimizedH),final:fpAuditMetric(gatedH),changes:fpAuditCompare(originalH,gatedH),home:fpAuditMetric(gatedH.filter(r=>r.prediction==='H')),away:fpAuditMetric(gatedH.filter(r=>r.prediction==='A'))},leagues:leagueResults,integrity:{eligibleFixtures:fixtures.length,originalPredictions:original.length,failedPredictionAttempts:failures,strictlyEarlierFixtureHistory:true,mm2EventCoverage:original.filter(x=>x.mm2TimelineCoverage>0).length,mm2EventCoverageRate:original.length?original.filter(x=>x.mm2TimelineCoverage>0).length/original.length:null,leagueGateFittedOn:'training only',predictorSelectionFittedOn:'validation only',holdoutUsedForTuning:false}};
+  const fmt=x=>`${x.wins}/${x.bets} (${x.precision==null?'—':(100*x.precision).toFixed(1)+'%'}) · W−L ${x.net>=0?'+':''}${x.net}`;
+  const pct=x=>x==null?'—':(100*x).toFixed(1)+'%';
+  const html=`<h3>SELECT precision &amp; league elimination audit</h3><p class="notice">${gateAccepted?'Training-based weak-league filter ACCEPTED on validation.':'Training-based weak-league filter REJECTED on validation; previous gate retained.'} Global predictor switches were evaluated one at a time against the current best configuration. Holdout was not used for decisions.</p><table><thead><tr><th>Stage</th><th>SELECT wins / bets · precision · net</th></tr></thead><tbody><tr><td>Validation original</td><td>${fmt(result.validation.original)}</td></tr><tr><td>Validation after predictor tuning</td><td>${fmt(result.validation.predictorOptimized)}</td></tr><tr><td>Validation after league filter</td><td>${fmt(result.leagueGate.validationAfter)}</td></tr><tr><td>Holdout original</td><td>${fmt(result.holdout.original)}</td></tr><tr><td>Holdout final (unseen during selection)</td><td>${fmt(result.holdout.final)}</td></tr></tbody></table><p><strong>Leagues proposed OFF:</strong> ${result.leagueGate.excluded.length?result.leagueGate.excluded.map(x=>esc(LEAGUES[x]||x)).join(', '):'None'} · <strong>Gate adopted:</strong> ${gateAccepted?'YES':'NO'}</p><div class="tablewrap"><table><thead><tr><th>League</th><th>Training prediction accuracy</th><th>Proposed</th><th>Applied</th><th>Holdout SELECT original</th><th>Holdout SELECT filtered</th></tr></thead><tbody>${leagueResults.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.trainingCorrect}/${x.trainingPredictions} (${pct(x.trainingAccuracy)})</td><td>${x.proposedSelect}</td><td>${x.appliedSelect}</td><td>${fmt(x.holdoutBaseline)}</td><td>${fmt(x.holdoutAfterGate)}</td></tr>`).join('')}</tbody></table></div><h4>Sequential predictor decisions</h4><div class="tablewrap"><table><thead><tr><th>Component</th><th>Trial</th><th>Accepted?</th><th>Validation precision</th><th>Changed bets</th></tr></thead><tbody>${trials.map(x=>`<tr><td>${esc(x.key)}</td><td>${x.from} → ${x.trial}</td><td>${x.accepted?'YES':'NO'}</td><td>${fmt(x.validationTrial)}</td><td>+${x.changes.addedBets} / −${x.changes.removedBets}</td></tr>`).join('')}</tbody></table></div><p class="muted smalltext">Full copyable JSON below includes all 29 leagues, Home/Away breakdowns, predictor trials, training sample counts, gate decisions, baseline/final comparisons and MM2 coverage warnings.</p>`;
   const target=document.getElementById('fpSequentialAudit');if(target)target.innerHTML=html;
   return result;
  }finally{fpSwitches={...fpSwitches};}
