@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101827">
-<title>Footy Picks · Consolidated</title>
+<title>Footy Picks 10.0 · · Consolidated</title>
 <style>
 :root{
  color-scheme:dark;
@@ -602,6 +602,18 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 #busy.fp-test-busy #fpTestElapsed,#busy.fp-test-busy #fpTestCurrent{line-height:1.5}
 @media(max-width:540px){#busy.fp-test-busy .busybox{padding:20px 16px!important}
 #busy.fp-test-busy #fpTestModelRows{grid-template-columns:1fr}}
+
+/* 10.0: fixed geometry for variable-length league names and stage text. */
+#busy.fp-test-busy .busybox{height:min(620px,88dvh)!important;min-height:0!important;overflow:hidden!important;display:flex;flex-direction:column;contain:layout paint}
+#busy.fp-test-busy #busyTitle,#busy.fp-test-busy #busyDetail,#busy.fp-test-busy #fpTestCurrent,#busy.fp-test-busy #fpTestOverallLabel{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-width:0}
+#busy.fp-test-busy #busyTitle{font-size:23px!important;min-height:30px}
+#busy.fp-test-busy #busyDetail{min-height:20px;margin-bottom:10px!important}
+#busy.fp-test-busy #fpTestProgressRows{width:100%;flex:1;min-height:0;overflow:auto}
+#busy.fp-test-busy #fpTestModelRows{min-height:115px}
+#busy.fp-test-busy .fp-progress-item{min-width:0;overflow:hidden}
+#busy.fp-test-busy .fp-progress-detail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#busy.fp-test-busy #fpTestCurrent{min-height:19px}
+@media(max-width:540px){#busy.fp-test-busy .busybox{height:min(570px,90dvh)!important}}
 </style>
 <style>
 /* Mobile-first refinement: preserve desktop design and existing information. */
@@ -710,8 +722,8 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 
 <section id="fixtures">
  <div class="controls">
-  <div><label for="league">Competition</label><select id="league" data-default="eng.2"></select></div>
-  <div><label for="days">Fixture window</label><select id="days"><option value="today">Today</option><option value="tomorrow">Tomorrow</option><option value="3">Next 3 days</option><option value="7">Next 7 days</option><option value="14" selected>Next 14 days</option><option value="30">Next 30 days</option></select></div>
+  <div><label for="league">Competition</label><select id="league" data-default="all"></select></div>
+  <div><label for="days">Fixture window</label><select id="days"><option value="today" selected>Today</option><option value="tomorrow">Tomorrow</option><option value="3">Next 3 days</option><option value="7">Next 7 days</option><option value="14">Next 14 days</option><option value="30">Next 30 days</option></select></div>
   <div><label for="sort">Sort by</label><select id="sort"><option value="date">Kick-off date</option><option value="confidence">Confidence</option></select></div>
  </div>
  <div class="row wrap" style="margin-bottom:12px"><button class="btn" id="load">Load / refresh predictions</button><button class="btn secondary" id="top10">Show Top 10 picks</button><button class="btn secondary" id="goalThreats">Show Goal Threats</button></div>
@@ -1117,7 +1129,7 @@ document.addEventListener('click',e=>{const b=e.target.closest?.('[data-fp-manua
  const enabled=kind==='league'?fpLeagueSelectAllowed(key):fpSwitches[key];b.classList.toggle('on',enabled);b.classList.toggle('off',!enabled);b.textContent=enabled?'ON':'OFF';b.setAttribute('aria-pressed',String(enabled));
  document.querySelectorAll(`[data-fp-manual-kind="${kind}"][data-fp-manual-key="${key}"]`).forEach(x=>{x.classList.toggle('on',enabled);x.classList.toggle('off',!enabled);x.textContent=enabled?'ON':'OFF';x.setAttribute('aria-pressed',String(enabled))});
  fpManualAuditRefresh();
- if(kind==='league'){document.querySelectorAll('[data-fp-manual-kind="league"]').forEach(btn=>{const row=btn.closest('tr');if(row)row.style.opacity=fpLeagueSelectAllowed(btn.dataset.fpManualKey)?'1':'.7';});renderFixtures();}
+ if(kind==='league'){document.querySelectorAll('[data-fp-manual-kind="league"]').forEach(btn=>{const row=btn.closest('tr');if(row)row.style.opacity=fpLeagueSelectAllowed(btn.dataset.fpManualKey)?'1':'.7';});renderFixtures();if(state.liveMatches?.length)renderLive();}
  const notice=document.getElementById('fpManualNotice');if(notice)notice.textContent=kind==='mm2'?'MM2 preference saved. Run Model Test again to calculate the effect on predictions and selected bets.':'League SELECT eligibility saved. Current combined betting results updated above; refresh fixtures for live eligibility.';
 });
 
@@ -1546,7 +1558,7 @@ function comparisonRows(m){
  const frozen=state.history?.find(x=>x.id===eventId(m));
  const original=m.originalPrediction||frozen?.original;
  const full=false;
- const cell=(v,label)=>{if(!v)return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Prediction unavailable</div></div>`;const chosen=v.selection===v.prediction;return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${Number(v.xgDifference??(v.homeLambda-v.awayLambda)).toFixed(2)}</div><div class="model-bottom"><span class="${chosen?'model-select':'model-no-select'}">${chosen?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">Confidence ${v.confidence}/10</span></div></div>`};
+ const cell=(v,label)=>{if(!v)return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Prediction unavailable</div></div>`;const chosen=v.selection===v.prediction&&fpLeagueSelectAllowed(m.leagueId);return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${Number(v.xgDifference??(v.homeLambda-v.awayLambda)).toFixed(2)}</div><div class="model-bottom"><span class="${chosen?'model-select':'model-no-select'}">${chosen?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">Confidence ${v.confidence}/10</span></div></div>`};
  return `<div class="fixture-comparison">${fpStatusTag(m)} ${fpDrawBadge(m)}${fpDrawDetail(m)}<div class="model-grid ${full?'':'two-models'}">${full?cell(original,'01 · League-adjusted'):''}${cell(m,'Model 2 · Team form')}</div>${probsHtml(m)}</div>`;
 }
 
@@ -1562,6 +1574,23 @@ function comparisonSummary(list){
  return `<div class="row wrap fp-result-counts" style="gap:7px;margin-bottom:12px"><span class="tag">Recorded ${list.length}</span><span class="tag">Settled ${settled.length}</span><span class="tag">Pending ${list.length-settled.length}</span><span class="tag">Leagues ${Object.keys(leagues).length}</span></div><div class="fp-metrics"><div class="fp-metric"><span class="fp-label">Prediction accuracy</span><strong>${rate(settled)}</strong><span class="fp-count">${hit(settled)}/${settled.length}</span></div><div class="fp-metric fp-bet-summary"><span class="fp-label">Bet on Outcome</span><strong>${rate(selected)}</strong><span class="fp-count">${hit(selected)}/${selected.length} correct</span></div></div><div class="panel"><h3 class="fp-section-title">League accuracy</h3><div class="tablewrap"><table><thead><tr><th>League</th><th>Predictions</th><th>Accuracy</th><th>Bet on Outcome</th></tr></thead><tbody>${Object.entries(leagues).sort((a,b)=>a[0].localeCompare(b[0])).map(([id,a])=>{const picks=a.filter(x=>fpHistoryFlags(x).consensus);return `<tr><td>${esc(a[0].league||id)}</td><td>${hit(a)}/${a.length} · ${rate(a)}</td><td>${rate(a)}</td><td>${hit(picks)}/${picks.length} · ${rate(picks)}</td></tr>` }).join('')||'<tr><td colspan="4">No settled predictions in this period.</td></tr>'}</tbody></table></div><p class="muted smalltext">Breakdowns use predictions saved before kick-off; they cannot reconstruct predictions for matches that were never recorded.</p></div>`;
 }
 
+// Per-league Model 2 parameters fitted on earlier matches and approved on validation.
+// Same prediction and MM2 code path; no new selection conditions are introduced.
+const FP_LEAGUE_MODEL_KEY='fp_model2_validated_league_profiles_v2';
+let fpLeagueModelProfiles={};
+try{const saved=JSON.parse(localStorage.getItem(FP_LEAGUE_MODEL_KEY)||'{}');if(saved&&typeof saved==='object')fpLeagueModelProfiles=saved;}catch(_){ }
+function fpModelForLeague(id,base){
+ const profile=fpLeagueModelProfiles[String(id)];
+ if(!profile||profile.approved!==true||!Array.isArray(profile.weights)||profile.weights.length!==base.weights.length||!Array.isArray(profile.windows)||profile.windows.length!==base.weights.length)return base;
+ const weights=profile.weights.map(Number),windows=profile.windows.map(Number);
+ if(weights.some(x=>!Number.isFinite(x)||x<0)||windows.some(x=>!Number.isInteger(x)||x<1)||weights.reduce((a,b)=>a+b,0)<=0)return base;
+ const total=weights.reduce((a,b)=>a+b,0);
+ const next={...base,weights:weights.map(x=>x/total),windows};
+ // These are existing selection-gap parameters, not additional gates.
+ if(Number.isFinite(profile.homeGap)&&profile.homeGap>=0)next.homeGap=profile.homeGap;
+ if(Number.isFinite(profile.awayGap)&&profile.awayGap>=0)next.awayGap=profile.awayGap;
+ return next;
+}
 function updatePredictions(matches,index=state.activeIndex){
  attachHistoricalXg(matches);const by={};for(const m of matches)(by[m.leagueId]??=[]).push(m);
  for(const id of Object.keys(by)){
@@ -1569,7 +1598,7 @@ function updatePredictions(matches,index=state.activeIndex){
   let i=0;
   while(i<rows.length){const kickoff=new Date(rows[i].date).getTime();let end=i+1;
    while(end<rows.length&&new Date(rows[end].date).getTime()===kickoff)end++;
-   for(let j=i;j<end;j++){const m=rows[j];Object.assign(m,calculatePrediction(m,previous,{...MODELS[index],windows:WINDOW_SETS[state.activeWindow]}));m.originalPrediction=calculateOriginalIndependent(m,previous);m.rankedPrediction=null;m.drawRisk=null;/* retired experimental Model 1 */}
+   for(let j=i;j<end;j++){const m=rows[j];Object.assign(m,calculatePrediction(m,previous,fpModelForLeague(id,{...MODELS[index],windows:WINDOW_SETS[state.activeWindow]})));m.originalPrediction=calculateOriginalIndependent(m,previous);m.rankedPrediction=null;m.drawRisk=null;/* retired experimental Model 1 */}
    for(let j=i;j<end;j++)if(isFinished(rows[j]))previous.push(rows[j]);
    i=end;
   }
@@ -1645,7 +1674,7 @@ function confidenceAuditHtml(m){
  </div>`;
 }
 function insidePredictionHtml(m){return `<div class="inside-prediction"><div class="analytics-grid"><div class="analytics-card"><h4>Recent form</h4>${formTracker(m.home,m.h)}${formTracker(m.away,m.a)}</div><div class="analytics-card"><h4>Supporting evidence and risks</h4>${riskDetailsHtml(m)}</div></div></div>`}
-function explainHtml(m){return `<details><summary>Recent form and evidence</summary><div class="explain">${insidePredictionHtml(m)}</div></details>`}
+function explainHtml(m){return `<div class="explain">${insidePredictionHtml(m)}</div>`}
 function riskDetailsHtml(m){
  const risk=m.risk;
  if(!risk||risk.level==="low"){const support=(risk?.supportFlags||[]).map(f=>`<li><strong>${esc(f.name)}:</strong> ${esc(f.text)}.</li>`).join("");return `<div class="notice">${support?`<strong>Evidence supporting the prediction</strong><ul style="margin:6px 0 0;padding-left:19px">${support}</ul>`:"No strong recent-form evidence contradicts this prediction."}<p class="analytics-note">Only signals that conflict with the predicted outcome are treated as risks and reduce confidence. The available history is based on league scores; historical shots and xG are not consistently available in this feed.</p></div>`;}
@@ -1657,7 +1686,7 @@ function matchCard(m){
  return`<article class="match"><div class="row between"><span class="league">${esc(m.league)}</span><div class="row wrap">${fpFixtureLeagueAccuracy(m)}${Math.min(m.h?.count??0,m.a?.count??0)<5?`<span class="tag">Limited history</span>`:""}</div></div>
  <div class="meta" style="margin:7px 0">${esc(fmtDate(m.date))}${m.venue?" · "+esc(m.venue):""}</div>
  <div class="row between"><div class="grow teamline">${esc(m.home)}<div class="meta">${m.h.count} prior league matches</div></div><strong style="white-space:nowrap;font-size:19px">${shownScore}</strong><div class="grow teamline" style="text-align:right">${esc(m.away)}<div class="meta">${m.a.count} prior league matches</div></div></div>
- ${comparisonRows(m)}${fpMM2FlowHtml(m)}${fpEvidenceLine(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?"Added":"Add pick"}</button><button class="btn small fp-dc-button" data-dc-toggle="${esc(id)}" type="button">Double chance</button><button class="btn small fp-bet-button" data-bet-toggle="${esc(id)}" type="button">Bet on</button></div><details class="fixture-secondary"><summary>Additional form and risk details</summary>${fpDrawDecision(m)}${explainHtml(m)}</details></article>`;
+ ${comparisonRows(m)}${fpMM2FlowHtml(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?"Added":"Add pick"}</button><button class="btn small fp-dc-button" data-dc-toggle="${esc(id)}" type="button">Double chance</button><button class="btn small fp-bet-button" data-bet-toggle="${esc(id)}" type="button">Bet on</button></div><details class="fixture-secondary"><summary>Additional form and risk details</summary>${fpDrawDecision(m)}${explainHtml(m)}</details></article>`;
 }
 function upcoming(){
  const now=new Date(),v=$("days").value,league=$("league").value,todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
@@ -1687,7 +1716,7 @@ function renderFixtures(){
 }
 function fpCompactFixture(m,heading='',extra=''){
  const id=eventId(m),added=state.acc.some(x=>x.id===id);
- return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="fp-feature-right">${fpFixtureLeagueAccuracy(m)}<span class="muted smalltext">${esc(fmtDate(m.date))}</span></span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpMM2FlowHtml(m)}${fpEvidenceLine(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-dc-button" data-dc-toggle="${esc(id)}">Double chance</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Additional form and risk details</summary>${fpDrawDecision(m)}${explainHtml(m)}</details></article>`;
+ return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="fp-feature-right">${fpFixtureLeagueAccuracy(m)}<span class="muted smalltext">${esc(fmtDate(m.date))}</span></span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpMM2FlowHtml(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-dc-button" data-dc-toggle="${esc(id)}">Double chance</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Additional form and risk details</summary>${fpDrawDecision(m)}${explainHtml(m)}</details></article>`;
 }
 function fpMM2Rate(n,d){return d>=4&&n!=null?`${Math.round(n*100)}% (${Math.round(n*d)}/${d})`:null}
 function fpMM2PreVerdict(m){
@@ -1708,9 +1737,42 @@ function fpMM2PreVerdict(m){
 }
 function fpMM2FlowHtml(m){
  const v=fpMM2PreVerdict(m);
- return `<details class="fp-mm2-flow"><summary><strong>MM2 · Predicted match flow</strong> <span class="muted smalltext">${esc(v.headline)}</span></summary><div class="notice smalltext">${v.detail}<p class="muted smalltext">Profile-based scenario; historical event forecasts have not been independently validated.</p></div></details>`;
+ if(!m?.mm2||!m.mm2.home||!m.mm2.away||m.mm2.home.counts.first<4||m.mm2.away.counts.first<4)return '';
+ return `<details class="fp-mm2-flow"><summary><strong>MM2 · Predicted match flow</strong> <span class="muted smalltext">${esc(v.headline)}</span></summary><div class="notice smalltext">${v.detail}</div></details>`;
+}
+// Snapshots are in-memory and only cover periods while the Live Centre is receiving data.
+const fpLiveStatHistory=new Map();
+function fpLiveStatSnapshot(m,a,stats){
+ const id=eventId(m),minute=Number(a.minute);
+ if(!Number.isFinite(minute)||!a.hasScore)return null;
+ const num=(v)=>{const x=statNum(v);return x==null?null:x};
+ const snapshot={minute,hs:a.hs,as:a.as,at:Date.now(),
+  H:{shots:num(stats?.home?.shots),target:num(stats?.home?.shotsOnTarget),xg:num(stats?.home?.xg),pos:num(stats?.home?.possession)},
+  A:{shots:num(stats?.away?.shots),target:num(stats?.away?.shotsOnTarget),xg:num(stats?.away?.xg),pos:num(stats?.away?.possession)}};
+ let history=fpLiveStatHistory.get(id)||[];
+ if(history.length&&minute<history[history.length-1].minute-2)history=[];
+ if(!history.length||minute>history[history.length-1].minute||snapshot.hs!==history[history.length-1].hs||snapshot.as!==history[history.length-1].as)history.push(snapshot);
+ else if(minute===history[history.length-1].minute)history[history.length-1]=snapshot;
+ if(history.length>150)history=history.slice(-150);
+ fpLiveStatHistory.set(id,history);
+ return history;
+}
+function fpLiveSinceGoal(history,side){
+ if(!history||history.length<2)return null;
+ const now=history[history.length-1];let change=-1;
+ for(let i=history.length-1;i>0;i--){if(history[i].hs!==history[i-1].hs||history[i].as!==history[i-1].as){change=i;break}}
+ if(change<1)return null;
+ const base=history[change-1],mins=now.minute-base.minute;
+ if(mins<3)return null;
+ const delta=(team,k)=>{const x=now[team][k],y=base[team][k];return x==null||y==null||x<y?null:x-y};
+ const other=side==='H'?'A':'H';
+ const recent={mins,shots:delta(side,'shots'),oppShots:delta(other,'shots'),target:delta(side,'target'),oppTarget:delta(other,'target'),xg:delta(side,'xg'),oppXg:delta(other,'xg')};
+ const first=history[0],beforeMins=base.minute-first.minute;
+ if(beforeMins>=5){recent.beforeShots=first[side].shots!=null&&base[side].shots!=null?Math.max(0,base[side].shots-first[side].shots):null;recent.beforeMins=beforeMins}
+ return recent;
 }
 function fpLiveMM2Html(m,a,pre,stats){
+ const history=fpLiveStatSnapshot(m,a,stats);
  const mm=pre?.mm2,minute=a.minute,remaining=minute==null?null:Math.max(0,96-minute);
  const hs=a.hs,as=a.as,has=a.hasScore,preCall=pre?.prediction&&['H','D','A'].includes(pre.prediction)?outcomeName(pre.prediction):'Unavailable';
  const h=mm?.home,away=mm?.away,trail=has&&hs!==as?(hs<as?'H':'A'):null;
@@ -1720,6 +1782,7 @@ function fpLiveMM2Html(m,a,pre,stats){
  const sh=statNum(stats?.home?.shots),sa=statNum(stats?.away?.shots),th=statNum(stats?.home?.shotsOnTarget),ta=statNum(stats?.away?.shotsOnTarget);
  const xh=statNum(stats?.home?.xg),xa=statNum(stats?.away?.xg);
  const redh=statNum(stats?.home?.redCards),reda=statNum(stats?.away?.redCards);
+ const since=trail?fpLiveSinceGoal(history,trail):null;
  const pressure=trail==='H'?a.pressure:-a.pressure;
  const shots=trail==='H'?sh:sa,oppShots=trail==='H'?sa:sh;
  const onTarget=trail==='H'?th:ta,oppTarget=trail==='H'?ta:th;
@@ -1732,6 +1795,17 @@ function fpLiveMM2Html(m,a,pre,stats){
  if(xh!=null&&xa!=null){attack+=xg>oppXg+.3?1:xg+.3<oppXg?-1:0;observed++}
  if(observed===0&&a.available){attack+=pressure>.15?1:pressure<-.15?-1:0;observed++}
  if(red!=null&&oppRed!=null&&red!==oppRed){attack+=red>oppRed?-2:2;observed++}
+ // Since-goal chance creation supersedes whole-match totals when snapshots exist.
+ if(since){
+  attack=0;observed=0;
+  if(since.shots!=null&&since.oppShots!=null){attack+=since.shots>since.oppShots+1?1:since.shots+1<since.oppShots?-1:0;observed++}
+  if(since.target!=null&&since.oppTarget!=null){attack+=since.target>since.oppTarget?1:since.target<since.oppTarget?-1:0;observed++}
+  if(since.xg!=null&&since.oppXg!=null){attack+=since.xg>since.oppXg+.2?1:since.xg+.2<since.oppXg?-1:0;observed++}
+  if(since.beforeShots!=null&&since.beforeMins>=5&&since.shots!=null){
+   const rateNow=since.shots/since.mins,rateBefore=since.beforeShots/since.beforeMins;
+   attack+=rateNow>rateBefore*1.7&&rateNow>.08?1:rateNow<rateBefore*.6&&rateBefore>.08?-1:0;observed++;
+  }
+ }
  const comeback=tr?.counts?.comeback>=4?tr.comeback:null,protect=ld?.counts?.protect>=4?ld.protect:null;
  const recoveryProfile=comeback!=null&&protect!=null&&comeback>=.5&&protect<.65;
  const shutoutProfile=protect!=null&&protect>=.7&&(comeback==null||comeback<.45);
@@ -1754,8 +1828,10 @@ function fpLiveMM2Html(m,a,pre,stats){
  const liveWinner=a.live?Object.entries(a.live).sort((x,y)=>y[1]-x[1])[0]?.[0]:null;
  const ft=liveWinner?outcomeName(liveWinner):'Insufficient evidence';
  const line=`Next goal: ${next} · Full-time: ${ft}`;
- const evidenceText=evidence.length?evidence.join(' · '):'Detailed shot/xG statistics unavailable';
- return `<details class="fp-mm2-flow fp-live-mm2" data-mm2-panel="${esc(eventId(m))}"><summary><strong>MM2 · Updated match flow</strong> <span class="muted smalltext">${esc(line)}</span></summary><div class="notice smalltext"><strong>${esc(line)}</strong><p>${esc(reason)}</p><p class="muted smalltext">${esc(evidenceText)} · ${minute==null?'Minute unavailable':`${minute}′ · approximately ${Math.round(remaining)} minutes remaining`} · Pre-match: ${esc(preCall)}.</p><p class="muted smalltext">Refreshes with the live feed. Scenario is heuristic, not historically validated as a next-goal model.</p></div></details>`;
+ const interval=since?`Since last goal (${since.mins} min): shots ${since.shots??'—'}–${since.oppShots??'—'}, on target ${since.target??'—'}–${since.oppTarget??'—'}${since.beforeShots!=null?' · shots/min '+(since.shots/since.mins).toFixed(2)+' vs '+(since.beforeShots/since.beforeMins).toFixed(2)+' before goal':''}`:null;
+ const evidenceText=interval|| (evidence.length?evidence.join(' · '):'Since-goal statistics unavailable; waiting for snapshots');
+ if(!mm||!h||!away||(!since&&observed===0)||minute==null||((h.counts?.first||0)<4&&(h.counts?.comeback||0)<4)||((away.counts?.first||0)<4&&(away.counts?.protect||0)<4))return '';
+ return `<details class="fp-mm2-flow fp-live-mm2" data-mm2-panel="${esc(eventId(m))}"><summary><strong>MM2 · Updated match flow</strong> <span class="muted smalltext">${esc(line)}</span></summary><div class="notice smalltext"><strong>${esc(line)}</strong><p>${esc(reason)}</p><p class="muted smalltext">${esc(evidenceText)} · ${minute==null?'Minute unavailable':`${minute}′ · approximately ${Math.round(remaining)} minutes remaining`} · Pre-match: ${esc(preCall)}.</p></div></details>`;
 }
 function fpDrawDecision(m){
  const gap=Math.abs(Number(m.xgDifference)),prob=Number(m.probs?.D),stability=Number(m.stability??1),messages=[];
@@ -1980,7 +2056,7 @@ async function refreshHistoryScoresFromLoaded(){
  store("fp_prediction_history",state.history);renderHistory();
 }
 
-const fpTestStages=["Download fixtures","Prepare league histories","Run historical predictions","Calculate results"];
+const fpTestStages=["Download fixtures","Prepare league histories","Model 2 + MM2 baseline","Tune windows, weights & xG gaps by league"];
 const fpTestStageState=Array.from({length:4},()=>({pct:0,detail:"Waiting",status:"Waiting"}));
 function fpStageUpdate(index,pct,detail,status){
  const item=fpTestStageState[index];if(!item)return;
@@ -2000,7 +2076,7 @@ const fpPerf={started:0,last:0,timer:null,lines:[]};
 function fpPerfUpdate(stage,percent,detail='',log=false){
  const st=document.getElementById('fpPerfStage'),bar=document.getElementById('fpPerfBar'),counts=document.getElementById('fpPerfCounts');
  if(st)st.textContent=stage;const cur=document.getElementById('fpTestCurrent');if(cur)cur.textContent=stage+(detail?' · '+detail:'');const overall=document.getElementById('fpTestOverallLabel');if(overall)overall.textContent='Overall test: '+Math.round(percent)+'%';if(bar)bar.style.width=Math.max(0,Math.min(100,percent))+'%';if(counts&&detail)counts.textContent=detail;
- if(fpPerf.started){setBusy(stage+ (detail?" · "+detail:""),Math.max(0,Math.min(100,Math.round(percent))));}
+ if(fpPerf.started){setBusy(stage,Math.max(0,Math.min(100,Math.round(percent))));}
  fpPerf.last=Date.now();if(log){fpPerf.lines.push(new Date().toLocaleTimeString()+' — '+stage+(detail?' · '+detail:''));fpPerf.lines=fpPerf.lines.slice(-18);const el=document.getElementById('fpPerfLog');if(el)el.textContent=fpPerf.lines.join('\n')}
 }
 function fpPerfStart(){fpPerf.started=Date.now();fpPerf.last=Date.now();fpPerf.lines=[];clearInterval(fpPerf.timer);fpPerf.timer=setInterval(()=>{const el=document.getElementById('fpPerfClock');if(el)el.textContent='Elapsed '+Math.floor((Date.now()-fpPerf.started)/1000)+'s · Last activity '+Math.floor((Date.now()-fpPerf.last)/1000)+'s ago';const visible=document.getElementById('fpTestElapsed');if(visible)visible.textContent='Elapsed '+Math.floor((Date.now()-fpPerf.started)/1000)+'s · Last completed activity '+Math.floor((Date.now()-fpPerf.last)/1000)+'s ago'},1000)}
@@ -2036,7 +2112,7 @@ async function fpSequentialSwitchAudit(matches){
   fpSwitches={...config};const result=[];let i=0;
   for(const x of fixtures){if(phase&&x.phase!==phase)continue;
    try{const p=calculatePrediction(x.m,x.past,model),selected=['H','A'].includes(p.prediction)&&p.selection===p.prediction;
-    result.push({id:x.id,league:x.league,phase:x.phase,actual:x.actual,prediction:p.prediction,selected,correct:selected&&p.prediction===x.actual,confidence:p.confidence,mm2TimelineCoverage:(p.mm2?.coverage?.homeTimeline||0)+(p.mm2?.coverage?.awayTimeline||0),mm2Evidence:(p.mm2?.evidence||[]).map(e=>({key:e.key,delta:e.delta,count:e.count})),goalEvents:fpMM2Goals(x.m)});
+    result.push({id:x.id,league:x.league,phase:x.phase,actual:x.actual,prediction:p.prediction,selected,correct:selected&&p.prediction===x.actual,confidence:p.confidence,mm2TimelineCoverage:(p.mm2?.coverage?.homeTimeline||0)+(p.mm2?.coverage?.awayTimeline||0),mm2Evidence:(p.mm2?.evidence||[]).map(e=>({key:e.key,delta:e.delta,count:e.count})),goalEvents:[]});
    }catch(e){failures++;}
    if(++i%80===0){testCheckpoint();await new Promise(r=>setTimeout(r,0));}
   }return result;
@@ -2094,9 +2170,10 @@ async function fpSequentialSwitchAudit(matches){
   // This is an experimental audit, NOT an automatic change to live predictions.
   const fpPrecisionStart=Date.now();
   const fpWeightCandidates=[
-   {id:'global',weights:model.weights.slice()},
-   {id:'recent-heavy',weights:model.weights.map((_,i)=>i===model.weights.length-1?.65:.35/Math.max(1,model.weights.length-1))},
-   {id:'long-heavy',weights:model.weights.map((_,i)=>i===0?.65:.35/Math.max(1,model.weights.length-1))}
+   {id:'global',weights:model.weights.slice(),windows:model.windows},
+   {id:'recent-heavy',weights:model.weights.map((_,i)=>i===model.weights.length-1?.65:.35/Math.max(1,model.weights.length-1)),windows:model.windows},
+   {id:'long-heavy',weights:model.weights.map((_,i)=>i===0?.65:.35/Math.max(1,model.weights.length-1)),windows:model.windows},
+   ...WINDOW_SETS.filter(w=>Array.isArray(w)&&w.length===model.weights.length).map((w,i)=>({id:'window-'+i,weights:model.weights.slice(),windows:w}))
   ];
   const fpBrier=r=>r.reduce((a,x)=>a+['H','D','A'].reduce((b,k)=>b+(x.probs[k]-(x.actual===k?1:0))**2,0),0)/Math.max(1,r.length);
   const fpAdapted=[];const fpLeagueFit={};let fpAdaptiveFailures=0;
@@ -2107,12 +2184,12 @@ async function fpSequentialSwitchAudit(matches){
    const candidates=[];
    for(const candidate of fpWeightCandidates){
     const training=[];
-    const candidateModel={...model,weights:candidate.weights};
+    const candidateModel={...model,weights:candidate.weights,windows:candidate.windows};
     for(const x of leagueFixtures.filter(x=>x.phase==='training')){
      try{const p=calculatePrediction(x.m,x.past,candidateModel);training.push({actual:x.actual,probs:p.probs});}
      catch(_){fpAdaptiveFailures++}
     }
-    candidates.push({id:candidate.id,weights:candidate.weights,trainingBrier:training.length?fpBrier(training):null,n:training.length});
+    candidates.push({id:candidate.id,weights:candidate.weights,windows:candidate.windows,trainingBrier:training.length?fpBrier(training):null,n:training.length});
    }
    const eligible=candidates[0].n>=100;
    const best=eligible?candidates.filter(x=>x.trainingBrier!==null).sort((a,b)=>a.trainingBrier-b.trainingBrier)[0]:candidates[0];
@@ -2120,12 +2197,12 @@ async function fpSequentialSwitchAudit(matches){
    const blended=model.weights.map((v,i)=>v*(1-shrink)+best.weights[i]*shrink);
    const norm=blended.reduce((a,b)=>a+b,0)||1;
    const fittedWeights=blended.map(v=>v/norm);
-   fpLeagueFit[league]={league:LEAGUES[league]||league,trainingFixtures:candidates[0].n,candidates,chosenCandidate:best.id,shrinkage:shrink,weights:fittedWeights,globalFallback:!eligible};
-   const candidateModel={...model,weights:fittedWeights};
+   fpLeagueFit[league]={league:LEAGUES[league]||league,trainingFixtures:candidates[0].n,candidates,chosenCandidate:best.id,shrinkage:shrink,weights:fittedWeights,windows:best.windows,globalFallback:!eligible};
+   const candidateModel={...model,weights:fittedWeights,windows:best.windows};
    for(const x of leagueFixtures){
     try{
      const p=calculatePrediction(x.m,x.past,candidateModel);
-     fpAdapted.push({id:x.id,league,phase:x.phase,actual:x.actual,prediction:p.prediction,probs:p.probs,baseSelected:['H','A'].includes(p.prediction)&&p.selection===p.prediction,correct:p.prediction===x.actual});
+     fpAdapted.push({id:x.id,league,phase:x.phase,actual:x.actual,prediction:p.prediction,probs:p.probs,baseSelected:['H','A'].includes(p.prediction)&&p.selection===p.prediction,xgGap:Math.abs(Number(p.xgDifference??(p.homeLambda-p.awayLambda))),correct:p.prediction===x.actual});
     }catch(_){fpAdaptiveFailures++}
    }
    testCheckpoint();await new Promise(r=>setTimeout(r,0));
@@ -2164,6 +2241,7 @@ async function fpSequentialSwitchAudit(matches){
   // Local threshold may deviate only if >=30 validation baseline SELECT bets.
   // Compare a tiny candidate grid and shrink decisions to the global choice.
   const fpLocalThresholds={};
+  const fpLocalGapCandidates=[.30,.40,.50,.60,.75,.90];
   for(const league of Object.keys(groups)){
    const rows=fpValidation.filter(x=>x.league===league),base=rows.filter(x=>x.baseSelected);
    const enough=base.length>=30;
@@ -2171,31 +2249,77 @@ async function fpSequentialSwitchAudit(matches){
     const m=fpAuditMetric(fpFilter(rows,{probThreshold,drawCap:fpChosen.drawCap},'combined'));
     return {probThreshold,metric:m,eligible:m.bets>=Math.max(15,Math.ceil(base.length*.60))};
    }).filter(x=>x.eligible).sort((a,b)=>(b.metric.precision??0)-(a.metric.precision??0)||b.metric.bets-a.metric.bets)[0]:null;
-   fpLocalThresholds[league]={validationBaselineBets:base.length,globalFallback:!local,probThreshold:local?(.75*fpChosen.probThreshold+.25*local.probThreshold):fpChosen.probThreshold,drawCap:fpChosen.drawCap};
+   const gapChoices=base.length>=30?fpLocalGapCandidates.map(gap=>{const picks=rows.filter(x=>x.baseSelected&&x.xgGap>=gap);const wins=picks.filter(x=>x.correct).length;return {gap,bets:picks.length,precision:picks.length?wins/picks.length:0}}).filter(x=>x.bets>=Math.max(15,Math.ceil(base.length*.60))).sort((a,b)=>b.precision-a.precision||b.bets-a.bets):[];
+   const bestGap=gapChoices[0];
+   fpLocalThresholds[league]={validationBaselineBets:base.length,globalFallback:!local,probThreshold:local?(.75*fpChosen.probThreshold+.25*local.probThreshold):fpChosen.probThreshold,drawCap:fpChosen.drawCap,xgGap:bestGap?.gap??null,gapValidation:bestGap||null};
   }
   function fpEvaluateVariant(rows,variant){return rows.map(x=>{
    const cfg=variant==='combined'?fpLocalThresholds[x.league]:fpChosen;
    const p=x.probs[x.prediction]||0,d=fpDrawRisk(x);
-   const selected=x.baseSelected&&(variant==='weights'||variant==='draw'&&d<=fpChosen.drawCap||variant==='threshold'&&p>=cfg.probThreshold||variant==='combined'&&p>=cfg.probThreshold&&d<=cfg.drawCap);
+   const selected=x.baseSelected&&(variant==='weights'||variant==='draw'&&d<=fpChosen.drawCap||variant==='threshold'&&p>=cfg.probThreshold||variant==='combined'&&p>=cfg.probThreshold&&d<=cfg.drawCap&&(cfg.xgGap==null||x.xgGap>=cfg.xgGap));
    return {...x,selected:!!selected,correct:!!selected&&x.correct,drawRisk:d,selectedProbability:p};
   });}
   const fpVariants={baseline:{validation:fpAuditMetric(originalV),holdout:fpAuditMetric(originalH)}};
   for(const variant of ['weights','draw','threshold','combined']){
    fpVariants[variant]={validation:fpAuditMetric(fpEvaluateVariant(fpValidation,variant)),holdout:fpAuditMetric(fpEvaluateVariant(fpAdapted.filter(x=>x.phase==='holdout'),variant))};
   }
+  // Validate each league's complete existing-criteria SELECT path against its
+  // unmodified baseline. Never choose profiles from final holdout results.
+  const fpApprovedProfiles={};
+  const fpLeagueDecisions={};
+  for(const [league,group] of Object.entries(groups)){
+   const fit=fpLeagueFit[league],local=fpLocalThresholds[league];
+   const v=fpValidation.filter(x=>x.league===league);
+   const originalVLeague=originalV.filter(x=>x.league===league);
+   const baseline=fpAuditMetric(originalVLeague);
+   const proposedGap=local?.xgGap;
+   const baseHomeGap=Number(model.homeGap??state.homeGap??0),baseAwayGap=Number(model.awayGap??state.awayGap??0);
+   const tunedModel={...model,weights:fit.weights,windows:fit.windows,
+     homeGap:proposedGap==null?baseHomeGap:Math.max(baseHomeGap,proposedGap),
+     awayGap:proposedGap==null?baseAwayGap:Math.max(baseAwayGap,proposedGap)};
+   const validationRows=[];
+   for(const x of fixtures.filter(x=>x.league===league&&x.phase==='validation')){
+    try{const p=calculatePrediction(x.m,x.past,tunedModel);
+     const selected=['H','A'].includes(p.prediction)&&p.selection===p.prediction;
+     validationRows.push({prediction:p.prediction,actual:x.actual,selected,correct:selected&&p.prediction===x.actual});
+    }catch(_){fpAdaptiveFailures++}
+   }
+   const tuned=fpAuditMetric(validationRows);
+   const baseN=baseline.bets||0,tunedN=tuned.bets||0;
+   // Conservative: require substantial validation coverage and a real gain.
+   const enough=fit.trainingFixtures>=100&&baseN>=15&&tunedN>=Math.max(12,Math.ceil(baseN*.65));
+   const approved=!!(enough&&tuned.precision!=null&&baseline.precision!=null&&tuned.precision>baseline.precision+.015);
+   fpLeagueDecisions[league]={approved,trainingFixtures:fit.trainingFixtures,baselineValidation:baseline,tunedValidation:tuned,reason:!enough?'Insufficient training or validation SELECT sample':approved?'Validation SELECT precision improved':'No convincing validation improvement; shared Model 2 retained'};
+   if(approved){
+    const originalHomeGap=Number(model.homeGap??state.homeGap??0);
+    const originalAwayGap=Number(model.awayGap??state.awayGap??0);
+    // Existing xG-gap criterion tuned to the validation-selected league gap.
+    const chosenGap=proposedGap;
+    fpApprovedProfiles[league]={approved:true,weights:fit.weights,windows:fit.windows,
+      homeGap:chosenGap==null?originalHomeGap:Math.max(originalHomeGap,chosenGap),
+      awayGap:chosenGap==null?originalAwayGap:Math.max(originalAwayGap,chosenGap),
+      trainingFixtures:fit.trainingFixtures,validationBets:tunedN,validationPrecision:tuned.precision,
+      baselineValidationPrecision:baseline.precision,chosenWeightProfile:fit.chosenCandidate};
+   }
+  }
+  fpLeagueModelProfiles=fpApprovedProfiles;
+  try{localStorage.setItem(FP_LEAGUE_MODEL_KEY,JSON.stringify(fpApprovedProfiles));}catch(_){ }
+  // Predictions for upcoming fixtures use the validated league profile on next refresh.
+  // The test's final holdout metrics remain a separate retrospective audit.
+  fpStageUpdate(3,97,`${Object.keys(fpApprovedProfiles).length}/${Object.keys(groups).length} leagues validated for live use`,'Running');
   const fpHoldout=fpAdapted.filter(x=>x.phase==='holdout');
   const fpPerLeague=Object.fromEntries(Object.keys(groups).map(id=>[id,{
    name:LEAGUES[id]||id,weights:fpLeagueFit[id],drawRisk:fpDrawFit[id],threshold:fpLocalThresholds[id],
    validation:fpAuditMetric(fpEvaluateVariant(fpValidation.filter(x=>x.league===id),'combined')),
    holdout:fpAuditMetric(fpEvaluateVariant(fpHoldout.filter(x=>x.league===id),'combined'))
   }]));
-  result.precisionExperiment={version:'LEAGUE-ADAPTIVE-PRECISION-V1',status:'EXPERIMENTAL_NOT_APPLIED_TO_LIVE_PICKS',generated:new Date().toISOString(),
-   method:'Per-league chronological 60/20/20, same fixture histories as manual audit. Three candidate form-weight profiles selected on training multiclass Brier, regularised toward global weights. Separate draw-rate calibration trained on training. Thresholds chosen on validation; holdout evaluation only.',
-   limitations:['Per-league 60/20/20 boundaries are not globally calendar-aligned.','Repeated historical holdout inspection means results are retrospective, not a pristine prospective test.','Draw calibration is a frequency-offset baseline, not a full independent multivariate draw classifier.','Threshold grid and small samples can overfit validation.','No automatic live settings changed.','No bookmaker odds or profitability estimates.'],
+  result.precisionExperiment={version:'LEAGUE-ADAPTIVE-PRECISION-V2',status:'VALIDATED_LEAGUE_PROFILES_APPLIED_TO_NEW_PREDICTIONS',approvedProfiles:fpApprovedProfiles,leagueDecisions:fpLeagueDecisions,generated:new Date().toISOString(),
+   method:'Per-league chronological 60/20/20, same fixture histories as manual audit. Per-league form-window and weighting profiles selected on training multiclass Brier, regularised toward global weights. Separate draw-rate calibration trained on training. Thresholds chosen on validation; holdout evaluation only.',
+   limitations:['Per-league 60/20/20 boundaries are not globally calendar-aligned.','Repeated historical holdout inspection means results are retrospective, not a pristine prospective test.','Draw calibration is a frequency-offset baseline, not a full independent multivariate draw classifier.','Threshold grid and small samples can overfit validation.','Validated per-league window/weight and existing xG-gap settings are used for future fixture calculations; previously saved predictions are not retroactively rewritten.','No bookmaker odds or profitability estimates.'],
    configuration:{baseModel:model.name||model.short||'Model 2',globalWeights:model.weights,weightCandidates:fpWeightCandidates,minimumTrainingFixturesForLocalWeights:100,minimumValidationBetsForLocalThreshold:30,minimumGlobalValidationRetention:.60,globalMinimumValidationBets:fpMinBets,probabilityThresholdGrid:fpThresholds,drawRiskCapGrid:fpDrawCaps,selectedGlobal:fpChosen,selectedLocal:fpLocalThresholds},
    variants:fpVariants,perLeague:fpPerLeague,integrity:{trainingRows:fpTrain.length,validationRows:fpValidation.length,holdoutRows:fpHoldout.length,predictionFailures:fpAdaptiveFailures,holdoutUsedForParameterSelection:false,elapsedSeconds:+((Date.now()-fpPrecisionStart)/1000).toFixed(2)}};
   const fpFmtMetric=m=>m.precision===null?'—':`${(100*m.precision).toFixed(1)}% (${m.wins}/${m.bets})`;
-  const fpPrecisionHtml=`<h3>Model 2 precision experiment — league weights, draw risk &amp; BET ON thresholds</h3><p class="muted smalltext">Experimental historical comparison only. Current live predictions and manual league switches remain unchanged. Weight profiles fit on training, thresholds chosen on validation, final period evaluated separately. Previously inspected holdout is not an untouched future test.</p><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>Variant</th><th>Validation SELECT</th><th>Holdout SELECT</th><th>Holdout bets</th><th>Holdout net W−L</th></tr></thead><tbody>${Object.entries(fpVariants).map(([key,v])=>`<tr><td>${esc(key)}</td><td>${fpFmtMetric(v.validation)}</td><td>${fpFmtMetric(v.holdout)}</td><td>${v.holdout.bets}</td><td>${v.holdout.net}</td></tr>`).join('')}</tbody></table></div><p class="muted smalltext">Global chosen probability threshold: ${(100*fpChosen.probThreshold).toFixed(0)}% · draw-risk cap: ${(100*fpChosen.drawCap).toFixed(0)}%. These are experimental, not applied to live fixtures.</p><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Weight profile</th><th>BET ON threshold</th><th>Draw offset</th><th>Validation SELECT</th><th>Holdout SELECT</th></tr></thead><tbody>${Object.entries(fpPerLeague).map(([id,x])=>`<tr><td>${esc(x.name)}</td><td>${esc(x.weights.chosenCandidate)}${x.weights.globalFallback?' (global fallback)':''}</td><td>${(x.threshold.probThreshold*100).toFixed(1)}%${x.threshold.globalFallback?' (global fallback)':''}</td><td>${(x.drawRisk.calibrationOffset*100).toFixed(1)}pp</td><td>${fpFmtMetric(x.validation)}</td><td>${fpFmtMetric(x.holdout)}</td></tr>`).join('')}</tbody></table></div><p class="muted smalltext">The full JSON includes candidate weights, Brier scores, shrinkage, draw calibration, threshold search, all variant metrics and per-league diagnostics.</p>`;
+  const fpPrecisionHtml=`<h3>Model 2 league optimisation — windows, weights, xG gaps &amp; SELECT validation</h3><p class="muted smalltext">League profiles are selected from training and validation, with fallback to shared Model 2 where improvement is unproven. Existing MM2 and SELECT rules are preserved. Weight profiles fit on training, thresholds chosen on validation, final period evaluated separately. Previously inspected holdout is not an untouched future test.</p><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>Variant</th><th>Validation SELECT</th><th>Holdout SELECT</th><th>Holdout bets</th><th>Holdout net W−L</th></tr></thead><tbody>${Object.entries(fpVariants).map(([key,v])=>`<tr><td>${esc(key)}</td><td>${fpFmtMetric(v.validation)}</td><td>${fpFmtMetric(v.holdout)}</td><td>${v.holdout.bets}</td><td>${v.holdout.net}</td></tr>`).join('')}</tbody></table></div><p class="muted smalltext">Global chosen probability threshold: ${(100*fpChosen.probThreshold).toFixed(0)}% · draw-risk cap: ${(100*fpChosen.drawCap).toFixed(0)}%. Only validation-approved profiles apply to future fixture predictions.</p><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Window / weight profile</th><th>BET ON threshold / xG gap</th><th>Draw offset</th><th>Validation SELECT</th><th>Holdout SELECT</th></tr></thead><tbody>${Object.entries(fpPerLeague).map(([id,x])=>`<tr><td>${esc(x.name)}</td><td>${esc(x.weights.chosenCandidate)} · ${esc((x.weights.windows||[]).join('/'))}${x.weights.globalFallback?' (global fallback)':''}</td><td>${(x.threshold.probThreshold*100).toFixed(1)}% · gap ${x.threshold.xgGap==null?'shared':x.threshold.xgGap.toFixed(2)}${x.threshold.globalFallback?' (global fallback)':''}</td><td>${(x.drawRisk.calibrationOffset*100).toFixed(1)}pp</td><td>${fpFmtMetric(x.validation)}</td><td>${fpFmtMetric(x.holdout)}</td></tr>`).join('')}</tbody></table></div><p class="muted smalltext">The full JSON includes candidate weights, Brier scores, shrinkage, draw calibration, threshold search, all variant metrics and per-league diagnostics.</p>`;
   // Render after the manual tables are rebuilt below.
 
   result.mm2LeagueAvailability=Object.fromEntries(Object.entries(groups).map(([id,rows])=>{const covered=rows.filter(m=>fpMM2Goals(m).length>0).length;return [id,{goalTimelineMatches:covered,finishedMatches:rows.length,mm2EventTraitsEnabled:covered>=4,reason:covered>=4?'Event traits available when both teams have sufficient past timelines':'Event-dependent MM2 traits automatically omitted; draw tendency remains available'}]}));
@@ -2203,8 +2327,8 @@ async function fpSequentialSwitchAudit(matches){
   try{localStorage.setItem('fp_fixture_league_accuracy_v1',JSON.stringify(fpFixtureLeagueStats))}catch(_){}
   fpLastManualAudit={validationRows:bestV,holdoutRows:optimizedH};
   renderFixtures();
-  const html=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">Accuracy is measured on the final chronological holdout BET ON OUTCOME decisions, not training predictions. Every button controls betting eligibility only; league fixtures and predictions stay visible. No automatic league exclusions are applied.</p><div id="fpManualSummary" class="panel"></div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Final holdout general accuracy</th><th>Final holdout SELECT accuracy</th><th>Validation SELECT</th><th>Later holdout SELECT</th><th>BET ON</th></tr></thead><tbody>${leagueResults.map(x=>`<tr><td>${esc(x.name)}</td><td>${fpFixtureLeagueStats[x.id]?.predictionCount?`${fpFixtureLeagueStats[x.id].predictionWins}/${fpFixtureLeagueStats[x.id].predictionCount} (${(100*fpFixtureLeagueStats[x.id].predictionWins/fpFixtureLeagueStats[x.id].predictionCount).toFixed(1)}%)`:'Not tested'}</td><td>${fmt(x.holdoutOptimized)}${x.holdoutOptimized.bets<15?' <small>(small sample)</small>':''}</td><td>${fmt(x.validationAll)}</td><td>${fmt(x.holdoutOptimized)}</td><td>${fpGateButton('league',x.id,fpLeagueSelectAllowed(x.id))}</td></tr>`).join('')}</tbody></table></div>
-  <h3>MM2 matchup performance &amp; manual ON/OFF</h3><p class="muted smalltext">Event-dependent MM2 traits are omitted for leagues without sufficient historical goal-event data. MM2 SELECT win rate counts actual winning BET ON OUTCOME picks when that matchup trait was active. It is <strong>not</strong> the accuracy of the trait's event forecast or evidence that switching it ON improves results. Event-specific forecast accuracy cannot be calculated without event timelines. OFF disables that MM2 adjustment and its associated signal; rerun the test to measure the changed selections.</p><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>MM2 matchup</th><th>Signal fixtures</th><th>Holdout SELECT wins / bets</th><th>SELECT win rate</th><th>Event accuracy</th><th>MM2</th></tr></thead><tbody>${mm2Metrics.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.activeFixtures} (holdout ${x.holdoutFixtures})</td><td>${x.holdoutSelectWins}/${x.holdoutSelectBets}</td><td>${pct(x.holdoutSelectWinRate)}</td><td>${x.eventAccuracy==null?'Not tested':' '+pct(x.eventAccuracy)}${x.eventCoverage===0&&x.key!=='mm2Draw'?' · no timelines':''}</td><td>${fpGateButton('mm2',x.key,fpSwitches[x.key])}</td></tr>`).join('')}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">Manual choices are saved in this browser. League toggles update combined results immediately. MM2 toggles require a new Model Test.</p><p class="muted smalltext">Full JSON below includes per-league accuracy, SELECT counts, MM2 signal coverage, manually saved switches and chronological validation/holdout metrics.</p>`;
+  const html=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">Accuracy is measured on the final chronological holdout BET ON OUTCOME decisions, not training predictions. Every button controls betting eligibility only; league fixtures and predictions stay visible. No automatic league exclusions are applied. MM2 currently influences Model 2 predicted goals and must remain in the historical audit for valid SELECT results.</p><div id="fpManualSummary" class="panel"></div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Final holdout general accuracy</th><th>Final holdout SELECT accuracy</th><th>Validation SELECT</th><th>Later holdout SELECT</th><th>BET ON</th></tr></thead><tbody>${leagueResults.map(x=>`<tr><td>${esc(x.name)}</td><td>${fpFixtureLeagueStats[x.id]?.predictionCount?`${fpFixtureLeagueStats[x.id].predictionWins}/${fpFixtureLeagueStats[x.id].predictionCount} (${(100*fpFixtureLeagueStats[x.id].predictionWins/fpFixtureLeagueStats[x.id].predictionCount).toFixed(1)}%)`:'Not tested'}</td><td>${fmt(x.holdoutOptimized)}${x.holdoutOptimized.bets<15?' <small>(small sample)</small>':''}</td><td>${fmt(x.validationAll)}</td><td>${fmt(x.holdoutOptimized)}</td><td>${fpGateButton('league',x.id,fpLeagueSelectAllowed(x.id))}</td></tr>`).join('')}</tbody></table></div>
+<p id="fpManualNotice" class="muted smalltext">Manual choices are saved in this browser. League toggles update combined results immediately. MM2 toggles require a new Model Test.</p><p class="muted smalltext">Full JSON below includes per-league accuracy, SELECT counts, manually saved switches and chronological validation/holdout metrics.</p>`;
   const target=document.getElementById('fpSequentialAudit');if(target)target.innerHTML=html+fpPrecisionHtml;
   fpManualAuditRefresh();
   return result;
@@ -2241,7 +2365,9 @@ async function doTest(){
   // The single pass below produces predictions and all downstream DC statistics.
   // Legacy multi-model grid searches, ranking optimisation and draw research do not run.
   const report=await fpHybridBacktest(result.matches);
-  fpPerfUpdate("Sequential predictor switch audit",88,"Testing real SELECT outcomes and component ON/OFF candidates",true);
+  fpPerfUpdate("League-specific SELECT validation",88,"Evaluating final selections, including existing MM2 adjustments",true);
+  // MM2 currently modifies Model 2 goal estimates and SELECT, so its historical inputs
+  // cannot be dropped without changing the live model. Retain parity with fixtures.
   const fpMM2TimelineAudit=await fpMM2EnrichHistorical(result.matches,fpTestDownloadController.signal);
   const fpSequential=await fpSequentialSwitchAudit(result.matches);
   fpSequential.mm2TimelineDownload=fpMM2TimelineAudit;
@@ -2430,7 +2556,7 @@ function attachLivePredictions(matches){
   if(!Number.isFinite(kickoff)||kickoff<=Date.now())continue;
   // For upcoming fixtures only, compute an explicitly provisional forecast.
   const previous=state.matches.filter(row=>row.leagueId===match.leagueId&&isFinished(row)&&new Date(row.date).getTime()<kickoff);
-  const forecast=calculatePrediction(match,previous,model);
+  const forecast=calculatePrediction(match,previous,fpModelForLeague(match.leagueId,model));
   match.preGameProbs={...forecast.probs};
   match.probs={...forecast.probs};
   match.prediction=forecast.prediction;
@@ -2868,7 +2994,7 @@ function renderWeeklyTop6(){
  <div class="stat"><span class="muted smalltext">Correct picks</span><strong>${correctPicks.length} / ${settledPicks.length}</strong><span class="muted smalltext">Settled selections only</span></div>
  </div><p class="muted smalltext" style="margin:8px 2px 0">Current week: ${shown}/6 credible selections. Weeks with fewer than six saved picks are excluded from the all-six accumulator rate. Pending or incomplete matches are excluded from settled rates.</p>`;
  if(!rows.length){root.innerHTML=`<div class="empty">${state.matches.length?"No Saturday 3:00 pm English-league fixtures currently meet the minimum selection standard. This list will not force weak picks.":"Load / refresh predictions on the Fixtures tab, then return here."}</div>`}
- else root.innerHTML=rows.map(({m,pick,risk},i)=>`<article class="match"><div class="row between wrap"><span class="league">#${i+1} · ${esc(m.league)}</span><span class="muted smalltext">${esc(weeklyWeekLabel(m.date))}</span></div><div class="row between" style="margin-top:9px"><strong class="grow">${esc(m.home)}</strong><strong>vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpMM2FlowHtml(m)}${fpEvidenceLine(m)}<details class="fixture-secondary"><summary>Additional form and risk details</summary>${explainHtml(m)}</details></article>`).join("");
+ else root.innerHTML=rows.map(({m,pick,risk},i)=>`<article class="match"><div class="row between wrap"><span class="league">#${i+1} · ${esc(m.league)}</span><span class="muted smalltext">${esc(weeklyWeekLabel(m.date))}</span></div><div class="row between" style="margin-top:9px"><strong class="grow">${esc(m.home)}</strong><strong>vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpMM2FlowHtml(m)}<details class="fixture-secondary"><summary>Additional form and risk details</summary>${explainHtml(m)}</details></article>`).join("");
  const weeklyModels=[['League-adjusted',x=>x.original],['Team-form',x=>x],['Opposition-ranked Goals',x=>x.ranked]];
  const weeklyModelRows=weeklyModels.map(([name,get])=>{const available=settledPicks.filter(x=>{const v=get(x);return v&&['H','D','A'].includes(v.prediction)}),hits=available.filter(x=>get(x).prediction===x.actualOutcome).length,selected=available.filter(x=>get(x).selection===get(x).prediction),selectedHits=selected.filter(x=>get(x).prediction===x.actualOutcome).length;return `<tr><td>${name}</td><td>${hits}/${available.length} (${fpRate(hits,available.length)})</td><td>${selectedHits}/${selected.length} (${fpRate(selectedHits,selected.length)})</td></tr>`}).join('');
  const weeklyModelPanel=`<h3>Weekly picks · all-model accuracy</h3><p class="muted smalltext">Only saved pre-kickoff predictions count. Older records without a model snapshot are excluded.</p><div class="tablewrap"><table><thead><tr><th>Model</th><th>Outcome correct</th><th>SELECT correct</th></tr></thead><tbody>${weeklyModelRows}</tbody></table></div>`;
@@ -2923,7 +3049,7 @@ function liveModelComparison(m){
  if(!data)return '<div class="model-sub" style="margin-top:10px">Pre-match predictions unavailable · fixture remains listed</div>';
  const a=data.original||data.originalPrediction;
  const b=data;
- const cell=(v,label)=>v&&['H','D','A'].includes(v.prediction)?`<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">${Number.isFinite(Number(v.homeLambda))&&Number.isFinite(Number(v.awayLambda))&&v.homeLambda!=null&&v.awayLambda!=null?`Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${(Number(v.homeLambda)-Number(v.awayLambda)).toFixed(2)}`:("Expected goals unavailable")}</div><div class="model-bottom"><span class="${v.selection===v.prediction?'model-select':'model-no-select'}">${v.selection===v.prediction?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">${Number.isFinite(+v.confidence)?v.confidence+'/10':'—'}</span></div></div>`:`<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Prediction unavailable</div></div>`;
+ const cell=(v,label)=>v&&['H','D','A'].includes(v.prediction)?`<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">${Number.isFinite(Number(v.homeLambda))&&Number.isFinite(Number(v.awayLambda))&&v.homeLambda!=null&&v.awayLambda!=null?`Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${(Number(v.homeLambda)-Number(v.awayLambda)).toFixed(2)}`:("Expected goals unavailable")}</div><div class="model-bottom"><span class="${v.selection===v.prediction&&fpLeagueSelectAllowed(m.leagueId)?'model-select':'model-no-select'}">${v.selection===v.prediction&&fpLeagueSelectAllowed(m.leagueId)?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">${Number.isFinite(+v.confidence)?v.confidence+'/10':'—'}</span></div></div>`:`<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Prediction unavailable</div></div>`;
  const full=false;
  return `<div class="fixture-comparison">${fpDrawBadge({...data,leagueId:m.leagueId})}${fpStatusTag({...b,leagueId:m.leagueId})}<div class="model-grid">${cell(b,'Prediction')}</div></div>`;
 }
@@ -3276,7 +3402,7 @@ fpBetRefresh();
 
 initLeagueSelects();
 for(const [id,name] of Object.entries(LEAGUES))$("fpTestLeague").add(new Option(name,id));
-$("fpTestLeague").value=$("league").value;
+$("fpTestLeague").value="all";$("league").value="all";$("days").value="today";
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{
  showTab(b.dataset.tab);
  if(b.dataset.tab==="previous")fetchLiveSchedule();
