@@ -863,29 +863,40 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 "use strict";
 
 const LEAGUES={
- "eng.1":"Premier League","eng.2":"Championship","eng.3":"League One",
- "esp.1":"La Liga","ita.1":"Serie A","fra.1":"Ligue 1",
- "ned.1":"Eredivisie","por.1":"Primeira Liga","bel.1":"Belgian Pro League",
- "tur.1":"Turkish Süper Lig","aut.1":"Austrian Bundesliga",
- "bra.1":"Brazilian Série A","mex.1":"Liga MX","uefa.champions":"Champions League",
- "den.1":"Danish Superliga","nor.1":"Norwegian Eliteserien",
- "swe.1":"Swedish Allsvenskan","gre.1":"Greek Super League",
- "sco.2":"Scottish Championship","ned.2":"Dutch Eerste Divisie",
- "sui.1":"Swiss Super League","cze.1":"Czech First League",
- "pol.1":"Polish Ekstraklasa","cro.1":"Croatian HNL","srb.1":"Serbian SuperLiga",
- "jpn.1":"Japanese J1 League","arg.1":"Argentine Primera División",
- "ksa.1":"Saudi Pro League","col.1":"Colombian Primera A",
- "eng.w.1":"WOMEN · English Women’s Super League","esp.w.1":"WOMEN · Spanish Liga F",
- "usa.nwsl":"WOMEN · National Women’s Soccer League","ger.frauen.1":"WOMEN · Frauen-Bundesliga",
+ "eng.1":"Premier League",
+ "eng.2":"Championship",
+ "eng.3":"League One",
+ "esp.1":"La Liga",
+ "ita.1":"Serie A",
+ "fra.1":"Ligue 1",
+ "ned.1":"Eredivisie",
+ "por.1":"Primeira Liga",
+ "bel.1":"Belgian Pro League",
+ "tur.1":"Turkish Süper Lig",
+ "aut.1":"Austrian Bundesliga",
+ "bra.1":"Brazilian Série A",
+ "mex.1":"Liga MX",
+ "uefa.champions":"Champions League",
+ "den.1":"Danish Superliga",
+ "nor.1":"Norwegian Eliteserien",
+ "swe.1":"Swedish Allsvenskan",
+ "gre.1":"Greek Super League",
+ "sco.2":"Scottish Championship",
+ "ned.2":"Dutch Eerste Divisie",
+ "jpn.1":"Japanese J1 League",
+ "arg.1":"Argentine Primera División",
+ "ksa.1":"Saudi Pro League",
+ "col.1":"Colombian Primera A",
+ "eng.w.1":"WOMEN · English Women’s Super League",
+ "esp.w.1":"WOMEN · Spanish Liga F",
+ "usa.nwsl":"WOMEN · National Women’s Soccer League",
  "fra.w.1":"WOMEN · French Première Ligue"
 };
 const FP_ACTIVE_LEAGUES=new Set(Object.keys(LEAGUES));
-// The November 2026 export reported no usable historical data for these feeds.
-// Keep them visible for manual review, but avoid repeating failed historical downloads.
-// These feeds are candidates: test each rather than silently excluding it.
-const FP_UNVERIFIED_TEST_LEAGUES=new Set();
-const FP_WOMENS_LEAGUES=new Set(['eng.w.1','esp.w.1','usa.nwsl','ger.frauen.1','fra.w.1']);
-const FP_NEW_LEAGUES=new Set(['sui.1','cze.1','pol.1','cro.1','srb.1','jpn.1','arg.1','ksa.1','col.1',...FP_WOMENS_LEAGUES]);
+// Unsupported historical feeds have been removed from the active league registry.
+// All remaining competitions are tested independently of their manual BET ON/OFF state.
+const FP_WOMENS_LEAGUES=new Set(['eng.w.1','esp.w.1','usa.nwsl','fra.w.1']);
+const FP_NEW_LEAGUES=new Set(['jpn.1','arg.1','ksa.1','col.1',...FP_WOMENS_LEAGUES]);
 let fpShowWomensFixtures=(()=>{try{return localStorage.getItem('fp_show_womens_fixtures_v1')!=='false'}catch(_){return true}})();
 function fpWomenLabel(id){return FP_WOMENS_LEAGUES.has(id)?'<span class="fp-women-label">WOMEN</span> ':'';}
 
@@ -1214,6 +1225,7 @@ for(const id of Object.keys(fpLeagueGate))if(!FP_ACTIVE_LEAGUES.has(id))delete f
 function fpLeagueSelectAllowed(id){return !id||fpLeagueGate[id]!==false}
 function fpLeagueGateSave(){try{localStorage.setItem('fp_league_select_gate_v2',JSON.stringify(fpLeagueGate))}catch(_){}}
 let fpFixtureLeagueStats=(()=>{try{return JSON.parse(localStorage.getItem('fp_fixture_league_accuracy_v1')||'{}')}catch(_){return {}}})();
+for(const id of Object.keys(fpFixtureLeagueStats))if(!FP_ACTIVE_LEAGUES.has(id))delete fpFixtureLeagueStats[id];
 function fpFixtureLeagueAccuracy(m){
  const x=fpFixtureLeagueStats[m.leagueId];
  const pct=(w,n)=>n>0?`${(100*w/n).toFixed(1)}%`:'Not tested';
@@ -1692,6 +1704,7 @@ function comparisonSummary(list){
 const FP_LEAGUE_MODEL_KEY='fp_model2_validated_league_profiles_v2';
 let fpLeagueModelProfiles={};
 try{const saved=JSON.parse(localStorage.getItem(FP_LEAGUE_MODEL_KEY)||'{}');if(saved&&typeof saved==='object')fpLeagueModelProfiles=saved;}catch(_){ }
+for(const id of Object.keys(fpLeagueModelProfiles))if(!FP_ACTIVE_LEAGUES.has(id))delete fpLeagueModelProfiles[id];
 function fpModelForLeague(id,base){
  const profile=fpLeagueModelProfiles[String(id)];
  if(!profile||profile.approved!==true||!Array.isArray(profile.weights)||profile.weights.length!==base.weights.length||!Array.isArray(profile.windows)||profile.windows.length!==base.weights.length)return base;
@@ -2427,8 +2440,14 @@ async function fpSequentialSwitchAudit(matches){
       baselineValidationPrecision:baseline.precision,chosenWeightProfile:fit.chosenCandidate};
    }
   }
-  fpLeagueModelProfiles=fpApprovedProfiles;
-  try{localStorage.setItem(FP_LEAGUE_MODEL_KEY,JSON.stringify(fpApprovedProfiles));}catch(_){ }
+  // Preserve validated profiles for retained leagues outside a partial test.
+  // Tested leagues are always replaced by the current validation decision, including fallback.
+  const fpMergedProfiles={...fpLeagueModelProfiles};
+  for(const league of Object.keys(groups))delete fpMergedProfiles[league];
+  Object.assign(fpMergedProfiles,fpApprovedProfiles);
+  for(const id of Object.keys(fpMergedProfiles))if(!FP_ACTIVE_LEAGUES.has(id))delete fpMergedProfiles[id];
+  fpLeagueModelProfiles=fpMergedProfiles;
+  try{localStorage.setItem(FP_LEAGUE_MODEL_KEY,JSON.stringify(fpMergedProfiles));}catch(_){ }
   // Predictions for upcoming fixtures use the validated league profile on next refresh.
   // The test's final holdout metrics remain a separate retrospective audit.
   fpStageUpdate(4,97,`${Object.keys(fpApprovedProfiles).length}/${Object.keys(groups).length} leagues validated for live use`,'Running');
@@ -2438,7 +2457,7 @@ async function fpSequentialSwitchAudit(matches){
    validation:fpAuditMetric(fpEvaluateVariant(fpValidation.filter(x=>x.league===id),'combined')),
    holdout:fpAuditMetric(fpEvaluateVariant(fpHoldout.filter(x=>x.league===id),'combined'))
   }]));
-  result.precisionExperiment={version:'LEAGUE-ADAPTIVE-PRECISION-V2',status:'VALIDATED_LEAGUE_PROFILES_APPLIED_TO_NEW_PREDICTIONS',approvedProfiles:fpApprovedProfiles,leagueDecisions:fpLeagueDecisions,generated:new Date().toISOString(),
+  result.precisionExperiment={effectiveSavedProfiles:fpLeagueModelProfiles,perLeagueProfileStatus:Object.fromEntries(Object.keys(groups).map(id=>[id,{approved:!!fpApprovedProfiles[id],mode:fpApprovedProfiles[id]?'validated_league_refinement':'shared_model_2_fallback',decision:fpLeagueDecisions[id]?.reason||'Not evaluated'}])),version:'LEAGUE-ADAPTIVE-PRECISION-V2',status:'VALIDATED_LEAGUE_PROFILES_APPLIED_TO_NEW_PREDICTIONS',approvedProfiles:fpApprovedProfiles,leagueDecisions:fpLeagueDecisions,generated:new Date().toISOString(),
    method:'Per-league chronological 60/20/20, same fixture histories as manual audit. Per-league form-window and weighting profiles selected on training multiclass Brier, regularised toward global weights. Separate draw-rate calibration trained on training. Thresholds chosen on validation; holdout evaluation only.',
    limitations:['Per-league 60/20/20 boundaries are not globally calendar-aligned.','Repeated historical holdout inspection means results are retrospective, not a pristine prospective test.','Draw calibration is a frequency-offset baseline, not a full independent multivariate draw classifier.','Threshold grid and small samples can overfit validation.','Validated per-league window/weight and existing xG-gap settings are used for future fixture calculations; previously saved predictions are not retroactively rewritten.','No bookmaker odds or profitability estimates.'],
    configuration:{baseModel:model.name||model.short||'Model 2',globalWeights:model.weights,weightCandidates:fpWeightCandidates,minimumTrainingFixturesForLocalWeights:100,minimumValidationBetsForLocalThreshold:30,minimumGlobalValidationRetention:.60,globalMinimumValidationBets:fpMinBets,probabilityThresholdGrid:fpThresholds,drawRiskCapGrid:fpDrawCaps,selectedGlobal:fpChosen,selectedLocal:fpLocalThresholds},
@@ -3538,7 +3557,7 @@ function fpRenderInitialLeagueControls(){
   const status=pct;
   return `<tr><td>${esc(name)}</td><td>${esc(status)}</td><td>${fpGateButton('league',id,fpLeagueSelectAllowed(id))}</td></tr>`;
  }).join('');
- target.innerHTML=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">All active competitions are listed, including unverified leagues. Only you change the ON/OFF switches. Saved manual settings are retained. All 15 new competitions are included in Model Test, whether BET ON or OFF. Unavailable feeds will be reported as unavailable, not assigned 0% accuracy.</p><div id="fpManualSummary" class="panel">Run Model Test to calculate current combined metrics.</div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Last saved SELECT accuracy</th><th>BET ON</th></tr></thead><tbody>${rows}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">Your switches are saved locally. The Model Test Optimiser is unchanged.</p>`;
+ target.innerHTML=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">All retained competitions are listed. Only you change the ON/OFF switches. Saved manual settings are retained. All retained new competitions are included in Model Test, whether BET ON or OFF. Unavailable feeds will be reported as unavailable, not assigned 0% accuracy.</p><div id="fpManualSummary" class="panel">Run Model Test to calculate current combined metrics.</div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Last saved SELECT accuracy</th><th>BET ON</th></tr></thead><tbody>${rows}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">Your switches are saved locally. The Model Test Optimiser is unchanged.</p>`;
 }
 initLeagueSelects();
 fpRenderInitialLeagueControls();
