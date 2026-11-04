@@ -874,7 +874,7 @@ const LEAGUES={
  "sui.1":"Swiss Super League","cze.1":"Czech First League",
  "pol.1":"Polish Ekstraklasa","cro.1":"Croatian HNL","srb.1":"Serbian SuperLiga",
  "jpn.1":"Japanese J1 League","arg.1":"Argentine Primera División",
- "ksa.1":"Saudi Pro League","col.1":"Colombian Primera A","aus.1":"Australian A-League Men",
+ "ksa.1":"Saudi Pro League","col.1":"Colombian Primera A",
  "eng.w.1":"WOMEN · English Women’s Super League","esp.w.1":"WOMEN · Spanish Liga F",
  "usa.nwsl":"WOMEN · National Women’s Soccer League","ger.frauen.1":"WOMEN · Frauen-Bundesliga",
  "fra.w.1":"WOMEN · French Première Ligue"
@@ -885,7 +885,7 @@ const FP_ACTIVE_LEAGUES=new Set(Object.keys(LEAGUES));
 // These feeds are candidates: test each rather than silently excluding it.
 const FP_UNVERIFIED_TEST_LEAGUES=new Set();
 const FP_WOMENS_LEAGUES=new Set(['eng.w.1','esp.w.1','usa.nwsl','ger.frauen.1','fra.w.1']);
-const FP_NEW_LEAGUES=new Set(['sui.1','cze.1','pol.1','cro.1','srb.1','jpn.1','arg.1','ksa.1','col.1','aus.1',...FP_WOMENS_LEAGUES]);
+const FP_NEW_LEAGUES=new Set(['sui.1','cze.1','pol.1','cro.1','srb.1','jpn.1','arg.1','ksa.1','col.1',...FP_WOMENS_LEAGUES]);
 let fpShowWomensFixtures=(()=>{try{return localStorage.getItem('fp_show_womens_fixtures_v1')!=='false'}catch(_){return true}})();
 function fpWomenLabel(id){return FP_WOMENS_LEAGUES.has(id)?'<span class="fp-women-label">WOMEN</span> ':'';}
 
@@ -1048,6 +1048,10 @@ function normaliseEvent(e,leagueId){
   venue:c.venue?.fullName||"",competitors:cs};
 }
 const fpMonthRequests=new Map();
+const fpInvalidLeagueFeeds=new Map();
+const fpMM2SummaryCache=new Map();
+function fpFeedDiagnostic(id){return fpInvalidLeagueFeeds.get(id)||null;}
+
 let fpTestDownloadController=null;
 async function fetchMonth(id,month,signal=null){
  if(signal)return fpFetchMonthUncached(id,month,signal);
@@ -1060,12 +1064,16 @@ async function fetchMonth(id,month,signal=null){
  return promise;
 }
 async function fpFetchMonthUncached(id,month,externalSignal=null){
+ if(fpInvalidLeagueFeeds.has(id))throw Error('Feed unavailable: '+fpInvalidLeagueFeeds.get(id));
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000);
  const onAbort=()=>controller.abort();
  if(externalSignal){if(externalSignal.aborted)controller.abort();else externalSignal.addEventListener("abort",onAbort,{once:true});}
  try{
   const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${id}/scoreboard?dates=${month}&limit=300`,{signal:controller.signal,cache:"no-store"});
-  if(!r.ok)throw Error("ESPN HTTP "+r.status);
+  if(!r.ok){
+   if([400,404,410].includes(r.status))fpInvalidLeagueFeeds.set(id,'ESPN HTTP '+r.status+' — no valid scoreboard at this identifier');
+   throw Error('ESPN HTTP '+r.status);
+  }
   const d=await r.json();return(d.events||[]).map(e=>normaliseEvent(e,id)).filter(Boolean);
  }finally{clearTimeout(timer);if(externalSignal)externalSignal.removeEventListener("abort",onAbort)}
 }
@@ -1076,13 +1084,14 @@ async function fetchLeague(id,n=6,progress=()=>{},options={}){
  async function getMonthWithRetry(month){
   let lastError;
   for(let attempt=0;attempt<3;attempt++){
+   if(fpInvalidLeagueFeeds.has(id))throw Error('Feed unavailable: '+fpInvalidLeagueFeeds.get(id));
    if(signal?.aborted)throw Error("Test cancelled by user.");
    try{return await fetchMonth(id,month,signal)}
    catch(e){
     if(signal?.aborted)throw Error("Test cancelled by user.");
     lastError=e;
     progress({league:id,month,attempt:attempt+1,state:attempt<2?'retry':'failed',error:String(e?.message||e)});
-    if(attempt<2)await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)));
+    if(attempt<2&&!fpInvalidLeagueFeeds.has(id))await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)));
    }
   }
   throw lastError||new Error("ESPN request failed");
@@ -1090,7 +1099,12 @@ async function fetchLeague(id,n=6,progress=()=>{},options={}){
  async function worker(){
   while(next<months.length){
    if(signal?.aborted)throw Error("Test cancelled by user.");
-   const month=months[next++];progress({league:id,month,state:'start'});
+   const month=months[next++];
+   if(fpInvalidLeagueFeeds.has(id)){
+    failed.push({league:id,month,error:fpInvalidLeagueFeeds.get(id)});
+    done++;progress({league:id,month,state:'done',failed:true,skipped:true});continue;
+   }
+   progress({league:id,month,state:'start'});
    try{all.push(...await getMonthWithRetry(month))}
    catch(e){if(signal?.aborted)throw Error("Test cancelled by user.");failed.push({league:id,month,error:String(e?.message||e)});console.warn("ESPN month request failed",id,month,e?.message||e)}
    finally{done++;progress({league:id,month,state:'done',failed:failed.some(f=>f.month===month)})}
@@ -1112,7 +1126,7 @@ async function fetchAllLeagues(n=6,progress=()=>{},requestedIds=null,options={})
    try{
     const result=await fetchLeague(id,n,event=>{
      if(event.state==='done')monthsDone++;
-     if(event.state==='done'&&event.failed)failedMonths.push({league:id,month:event.month});
+     if(event.state==='done'&&event.failed)failedMonths.push({league:id,month:event.month,reason:fpFeedDiagnostic(id)||(event.skipped?'Unsupported feed':'Download failed')});
      emit(event);
     },options);
     if(result.matches.length)all.push(...result.matches);
@@ -1463,9 +1477,14 @@ async function fpMM2EnrichHistorical(matches,signal){
   if(signal?.aborted)throw Error('Test cancelled by user.');
   const m=tasks[next++],stat=leagueStats[m.leagueId];stat.requested++;
   try{
-   const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${m.leagueId}/summary?event=${encodeURIComponent(m.id)}`,{signal,cache:'no-store'});
-   if(!r.ok){stat.httpErrors++;throw Error('HTTP '+r.status)}
-   const d=await r.json();stat.received++;
+   const cacheKey=m.leagueId+':'+m.id;
+   let d=fpMM2SummaryCache.get(cacheKey);
+   if(!d){
+    const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${m.leagueId}/summary?event=${encodeURIComponent(m.id)}`,{signal,cache:'default'});
+    if(!r.ok){stat.httpErrors++;throw Error('HTTP '+r.status)}
+    d=await r.json();fpMM2SummaryCache.set(cacheKey,d);
+   }
+   stat.received++;
    const parsed=fpMM2ExtractGoals(d,m);stat.rawEvents+=parsed.rawEvents;stat.unresolvedGoals+=parsed.rejected;
    m.goalEvents=parsed.goals;m.mm2TimelineSource=parsed.keys;m.mm2TimelineChecked=true;
    if(m.goalEvents.length)stat.withGoals++;
@@ -2178,7 +2197,11 @@ const fpPerf={started:0,last:0,timer:null,lines:[]};
 function fpPerfUpdate(stage,percent,detail='',log=false){
  const st=document.getElementById('fpPerfStage'),bar=document.getElementById('fpPerfBar'),counts=document.getElementById('fpPerfCounts');
  if(st)st.textContent=stage;const cur=document.getElementById('fpTestCurrent');if(cur)cur.textContent=stage+(detail?' · '+detail:'');const overall=document.getElementById('fpTestOverallLabel');if(overall)overall.textContent='Overall test: '+Math.round(percent)+'%';if(bar)bar.style.width=Math.max(0,Math.min(100,percent))+'%';if(counts&&detail)counts.textContent=detail;
- if(fpPerf.started){setBusy(stage,Math.max(0,Math.min(100,Math.round(percent))));}
+ if(fpPerf.started){
+  const measured=fpTestStageState.reduce((sum,x)=>sum+x.pct,0)/fpTestStageState.length;
+  setBusy(stage,Math.max(0,Math.min(100,Math.round(measured))));
+  if(overall)overall.textContent='Completed work stages: '+measured.toFixed(1)+'% · '+stage;
+}
  fpPerf.last=Date.now();if(log){fpPerf.lines.push(new Date().toLocaleTimeString()+' — '+stage+(detail?' · '+detail:''));fpPerf.lines=fpPerf.lines.slice(-18);const el=document.getElementById('fpPerfLog');if(el)el.textContent=fpPerf.lines.join('\n')}
 }
 function fpPerfStart(){fpPerf.started=Date.now();fpPerf.last=Date.now();fpPerf.lines=[];clearInterval(fpPerf.timer);fpPerf.timer=setInterval(()=>{const el=document.getElementById('fpPerfClock');if(el)el.textContent='Elapsed '+Math.floor((Date.now()-fpPerf.started)/1000)+'s · Last activity '+Math.floor((Date.now()-fpPerf.last)/1000)+'s ago';const visible=document.getElementById('fpTestElapsed');if(visible)visible.textContent='Elapsed '+Math.floor((Date.now()-fpPerf.started)/1000)+'s · Last completed activity '+Math.floor((Date.now()-fpPerf.last)/1000)+'s ago'},1000)}
@@ -2430,7 +2453,7 @@ async function fpSequentialSwitchAudit(matches){
   fpLastManualAudit={validationRows:bestV,holdoutRows:optimizedH};
   renderFixtures();
   const tableLeagues=Object.entries(LEAGUES).map(([id,name])=>leagueResults.find(x=>x.id===id)||{id,name,holdoutOptimized:{bets:0,wins:0,losses:0,net:0,precision:null},validationAll:{bets:0,wins:0,losses:0,net:0,precision:null}});
-  const html=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">Accuracy is measured on the final chronological holdout BET ON OUTCOME decisions, not training predictions. Every button controls betting eligibility only; league fixtures and predictions stay visible. No automatic league exclusions are applied. MM2 currently influences Model 2 predicted goals and must remain in the historical audit for valid SELECT results.</p><div id="fpManualSummary" class="panel"></div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Final holdout general accuracy</th><th>Final holdout SELECT accuracy</th><th>Validation SELECT</th><th>Later holdout SELECT</th><th>BET ON</th></tr></thead><tbody>${tableLeagues.map(x=>`<tr><td>${esc(x.name)}</td><td>${fpFixtureLeagueStats[x.id]?.predictionCount?`${fpFixtureLeagueStats[x.id].predictionWins}/${fpFixtureLeagueStats[x.id].predictionCount} (${(100*fpFixtureLeagueStats[x.id].predictionWins/fpFixtureLeagueStats[x.id].predictionCount).toFixed(1)}%)`:'Not tested'}</td><td>${fmt(x.holdoutOptimized)}${x.holdoutOptimized.bets<15?' <small>(small sample)</small>':''}</td><td>${fmt(x.validationAll)}</td><td>${fmt(x.holdoutOptimized)}</td><td>${fpGateButton('league',x.id,fpLeagueSelectAllowed(x.id))}</td></tr>`).join('')}</tbody></table></div>
+  const html=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">Accuracy is measured on the final chronological holdout BET ON OUTCOME decisions, not training predictions. Every button controls betting eligibility only; league fixtures and predictions stay visible. No automatic league exclusions are applied. MM2 currently influences Model 2 predicted goals and must remain in the historical audit for valid SELECT results.</p><div id="fpManualSummary" class="panel"></div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Final holdout general accuracy</th><th>Final holdout SELECT accuracy</th><th>Validation SELECT</th><th>Later holdout SELECT</th><th>BET ON</th></tr></thead><tbody>${tableLeagues.map(x=>`<tr><td>${esc(x.name)}</td><td>${fpFixtureLeagueStats[x.id]?.predictionCount?`${fpFixtureLeagueStats[x.id].predictionWins}/${fpFixtureLeagueStats[x.id].predictionCount} (${(100*fpFixtureLeagueStats[x.id].predictionWins/fpFixtureLeagueStats[x.id].predictionCount).toFixed(1)}%)`:(fpFeedDiagnostic(x.id)?'Feed unavailable: '+esc(fpFeedDiagnostic(x.id)):'Not tested')}</td><td>${fmt(x.holdoutOptimized)}${x.holdoutOptimized.bets<15?' <small>(small sample)</small>':''}</td><td>${fmt(x.validationAll)}</td><td>${fmt(x.holdoutOptimized)}</td><td>${fpGateButton('league',x.id,fpLeagueSelectAllowed(x.id))}</td></tr>`).join('')}</tbody></table></div>
 <p id="fpManualNotice" class="muted smalltext">Manual choices are saved in this browser. League toggles update combined results immediately. MM2 toggles require a new Model Test.</p><p class="muted smalltext">Full JSON below includes per-league accuracy, SELECT counts, manually saved switches and chronological validation/holdout metrics.</p>`;
   const target=document.getElementById('fpSequentialAudit');if(target)target.innerHTML=html+fpPrecisionHtml;
   fpManualAuditRefresh();
@@ -2458,7 +2481,7 @@ async function doTest(){
   },ids,{signal:fpTestDownloadController.signal});
   downloadMs=performance.now()-started;
   testCheckpoint();
-  if(!result.matches.length)throw Error("No historical matches were returned.");
+  if(!result.matches.length)throw Error('No historical matches were returned. Check feed diagnostics and network access.');
   fpStageUpdate(0,100,`${result.matches.length} fixtures loaded · ${result.failedMonths.length} failed months`);
   if(result.failedMonths.length){
    const missing=result.failedMonths.map(x=>`${LEAGUES[x.league]||x.league} ${x.month}`);
@@ -2483,9 +2506,10 @@ async function doTest(){
   analysisMs=performance.now()-started-downloadMs;
   const timing={downloadSeconds:+(downloadMs/1000).toFixed(2),analysisSeconds:+(analysisMs/1000).toFixed(2),totalSeconds:+((performance.now()-started)/1000).toFixed(2)};
   report.timings=timing;
+  report.feedDiagnostics=Object.fromEntries(fpInvalidLeagueFeeds);
   report.downloadIntegrity={complete:result.failedMonths.length===0&&!result.errors.length,failedMonths:result.failedMonths,unavailableLeagues:result.errors,monthsCompleted:result.monthsDone,monthsRequested:result.totalMonths};
   const reportBox=document.getElementById('fpAdaptiveReport');
-  if(reportBox){try{const json=JSON.parse(reportBox.value);json.timings=timing;json.downloadIntegrity=report.downloadIntegrity;json.sequentialSelectAudit=fpSequential;json.precisionExperiment=fpSequential.precisionExperiment||json.precisionExperiment||null;reportBox.value=JSON.stringify(json,null,2);const exportStatus=document.getElementById('fpJsonExportStatus');if(exportStatus)exportStatus.textContent=json.precisionExperiment?'Complete JSON includes precisionExperiment · '+reportBox.value.length.toLocaleString()+' characters':'Warning: precisionExperiment missing';fpManualAuditRefresh()}catch(_){}}
+  if(reportBox){try{const json=JSON.parse(reportBox.value);json.timings=timing;json.downloadIntegrity=report.downloadIntegrity;json.feedDiagnostics=report.feedDiagnostics;json.sequentialSelectAudit=fpSequential;json.precisionExperiment=fpSequential.precisionExperiment||json.precisionExperiment||null;reportBox.value=JSON.stringify(json,null,2);const exportStatus=document.getElementById('fpJsonExportStatus');if(exportStatus)exportStatus.textContent=json.precisionExperiment?'Complete JSON includes precisionExperiment · '+reportBox.value.length.toLocaleString()+' characters':'Warning: precisionExperiment missing';fpManualAuditRefresh()}catch(_){}}
   fpPerfUpdate("Validation complete",95,`Download ${timing.downloadSeconds}s · analysis ${timing.analysisSeconds}s`,true);
 
   const secs=((performance.now()-started)/1000).toFixed(1);
@@ -2548,7 +2572,7 @@ async function fpHybridBacktest(matches){
  }
  fpStageUpdate(1,100,`${totalLeagues} leagues prepared`,"Complete");
  fpStageUpdate(2,100,`${processedFixtures} fixtures analysed`,"Complete");
- fpStageUpdate(3,88,"Calculating overall accuracy and confidence","Running");
+ fpStageUpdate(2,99,"Calculating overall accuracy and confidence","Running");
  await new Promise(r=>setTimeout(r,0));
  const metric=a=>({n:a.length,wins:a.filter(x=>x.win).length,draws:a.filter(x=>x.draw).length,losses:a.filter(x=>x.loss).length,straightAccuracy:a.length?a.filter(x=>x.win).length/a.length:null,doubleChanceHit:a.length?a.filter(x=>!x.loss).length/a.length:null});
  const confidence=Array.from({length:10},(_,i)=>i+1).map(score=>{const a=all.filter(x=>x.confidence===score);return {score,...metric(a)}});const summary={leagues:Object.keys(report).length,holdout:metric(all),flagged78:metric(all.filter(x=>x.dc>=.78)),threshold:.78};
