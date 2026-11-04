@@ -832,7 +832,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 <section id="test" hidden>
  <h2>Prediction Test</h2>
  
- <span class="fp-test-scope">Test scope: <strong>All 26 leagues</strong> (including BET OFF)</span><select id="fpTestLeague" hidden aria-hidden="true"><option value="all">All leagues</option></select> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><div id="fpSequentialAudit" class="panel">Run the historical test to review league and MM2 accuracy and manually set ON/OFF.</div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><button class="btn secondary" type="button" id="fpCopyFullReport" onclick="(async()=>{const t=document.getElementById('fpAdaptiveReport');const b=document.getElementById('fpCopyFullReport');try{await navigator.clipboard.writeText(t.value);b.textContent='Copied full JSON ✓'}catch(e){t.focus();t.select();b.textContent='Select JSON and copy manually'}})()">Copy complete JSON</button> <span class="muted smalltext" id="fpJsonExportStatus">Full report appears after test completes</span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <span class="fp-test-scope">Test scope: <strong>All 26 leagues</strong> (including BET OFF)</span><select id="fpTestLeague" hidden aria-hidden="true"><option value="all">All leagues</option></select> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><div id="fpSequentialAudit" class="panel">Run the historical test to review league and MM2 accuracy and manually set ON/OFF.</div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><div class="panel" style="margin:10px 0"><strong>Restore previous Model Test JSON</strong><p class="muted smalltext">Import a completed report without rerunning history. This restores accuracy results only — never BET ON/OFF or MM2 controls.</p><input type="file" id="fpImportModelJson" accept=".json,.txt,application/json,text/plain"/><p id="fpRestoreStatus" class="muted smalltext">Prior audited results are included as a reference in this HTML.</p></div><button class="btn secondary" type="button" id="fpCopyFullReport" onclick="(async()=>{const t=document.getElementById('fpAdaptiveReport');const b=document.getElementById('fpCopyFullReport');try{await navigator.clipboard.writeText(t.value);b.textContent='Copied full JSON ✓'}catch(e){t.focus();t.select();b.textContent='Select JSON and copy manually'}})()">Copy complete JSON</button> <span class="muted smalltext" id="fpJsonExportStatus">Full report appears after test completes</span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced" hidden><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -1271,8 +1271,83 @@ for(const id of Object.keys(fpFixtureLeagueStats))if(!FP_ACTIVE_LEAGUES.has(id))
 function fpFixtureLeagueAccuracy(m){
  const x=fpFixtureLeagueStats[m.leagueId];
  const pct=(w,n)=>n>0?`${(100*w/n).toFixed(1)}%`:'—';
- if(!x||x.predictionCount==null)return `<span class="fp-fixture-accuracy" title="Run Model Test for league-specific final holdout results">League accuracy: Awaiting full test · BET ON: Awaiting full test</span>`;
+ if(!x||x.predictionCount==null)return `<span class="fp-fixture-accuracy" title="Run Model Test for league-specific final holdout results">League accuracy: No saved test · BET ON: No saved test</span>`;
  return `<span class="fp-fixture-accuracy" title="Model 2 final chronological holdout for this league; separate from this fixture's probability">League accuracy <b>${pct(x.predictionWins,x.predictionCount)}</b> <small>(${x.predictionWins??0}/${x.predictionCount??0})</small> · BET ON <b>${pct(x.selectWins,x.selectBets)}</b> <small>(${x.selectWins??0}/${x.selectBets??0})</small></span>`;
+}
+/* Portable reference: real audited results supplied by the user on 2026-11-04.
+   These are NOT a new 26-league test; provenance remains visible. */
+const FP_BUNDLED_AUDIT={"generated":"2026-11-04T13:12:45.094Z","version":"PREDICTION-DC-V6","leagues":{"uefa.champions":{"predictionWins":21,"predictionCount":45,"selectWins":9,"selectBets":16,"historyFixtures":225,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"nor.1":{"predictionWins":21,"predictionCount":52,"selectWins":10,"selectBets":15,"historyFixtures":259,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"eng.2":{"predictionWins":60,"predictionCount":127,"selectWins":7,"selectBets":13,"historyFixtures":631,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"bra.1":{"predictionWins":40,"predictionCount":95,"selectWins":7,"selectBets":7,"historyFixtures":472,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"eng.3":{"predictionWins":45,"predictionCount":121,"selectWins":11,"selectBets":16,"historyFixtures":602,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"jpn.1":{"predictionWins":41,"predictionCount":78,"selectWins":12,"selectBets":19,"historyFixtures":390,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"tur.1":{"predictionWins":33,"predictionCount":67,"selectWins":8,"selectBets":12,"historyFixtures":335,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"den.1":{"predictionWins":17,"predictionCount":43,"selectWins":6,"selectBets":9,"historyFixtures":211,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"fra.w.1":{"predictionWins":20,"predictionCount":32,"selectWins":11,"selectBets":14,"historyFixtures":158,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"ned.1":{"predictionWins":40,"predictionCount":69,"selectWins":14,"selectBets":23,"historyFixtures":345,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"ned.2":{"predictionWins":36,"predictionCount":85,"selectWins":10,"selectBets":15,"historyFixtures":424,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"eng.w.1":{"predictionWins":19,"predictionCount":33,"selectWins":9,"selectBets":12,"historyFixtures":165,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"fra.1":{"predictionWins":29,"predictionCount":67,"selectWins":4,"selectBets":6,"historyFixtures":333,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"ita.1":{"predictionWins":44,"predictionCount":86,"selectWins":15,"selectBets":17,"historyFixtures":430,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"bel.1":{"predictionWins":32,"predictionCount":66,"selectWins":17,"selectBets":23,"historyFixtures":330,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"eng.1":{"predictionWins":32,"predictionCount":82,"selectWins":9,"selectBets":16,"historyFixtures":410,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"esp.1":{"predictionWins":44,"predictionCount":84,"selectWins":10,"selectBets":12,"historyFixtures":419,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"por.1":{"predictionWins":34,"predictionCount":67,"selectWins":14,"selectBets":14,"historyFixtures":333,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"arg.1":{"predictionWins":47,"predictionCount":118,"selectWins":3,"selectBets":3,"historyFixtures":587,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"usa.nwsl":{"predictionWins":21,"predictionCount":55,"selectWins":7,"selectBets":8,"historyFixtures":275,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"col.1":{"predictionWins":40,"predictionCount":94,"selectWins":10,"selectBets":14,"historyFixtures":469,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"esp.w.1":{"predictionWins":26,"predictionCount":55,"selectWins":12,"selectBets":15,"historyFixtures":272,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"swe.1":{"predictionWins":30,"predictionCount":52,"selectWins":9,"selectBets":12,"historyFixtures":256,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"sco.2":{"predictionWins":23,"predictionCount":42,"selectWins":6,"selectBets":8,"historyFixtures":206,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"aut.1":{"predictionWins":17,"predictionCount":43,"selectWins":10,"selectBets":13,"historyFixtures":214,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"},"gre.1":{"predictionWins":28,"predictionCount":53,"selectWins":6,"selectBets":9,"historyFixtures":264,"status":"tested","phase":"final_holdout","selectionBasis":"finalized_model_2_select","source":"bundled_prior_audit"}},"profiles":{"esp.w.1":{"approved":true,"weights":[0.6000000000000001,0.30000000000000004,0.10000000000000002],"windows":[8,5,3],"homeGap":0.65,"awayGap":0.9,"trainingFixtures":155,"validationBets":19,"validationPrecision":0.7368421052631579,"baselineValidationPrecision":0.7058823529411765,"chosenWeightProfile":"window-2"}}};
+const FP_COMPLETE_REPORT_KEY='fp_complete_model_test_report_v1';
+let fpRestoredReport=null;
+let fpResultsProvenance='';
+function fpAccuracyStatsFromReport(j){
+ const by=j?.sequentialSelectAudit?.manualControls?.finalizedPerLeague||j?.manualControls?.finalizedPerLeague||{};
+ const coverage=j?.sequentialSelectAudit?.allLeagueCoverage||{};
+ const out={};
+ for(const id of Object.keys(LEAGUES)){
+  const v=by[id],prior=j?.leagues?.[id],c=coverage[id];
+  if(v&&Number.isFinite(Number(v.holdoutPredictions))){
+   out[id]={predictionWins:Number(v.holdoutPredictionWins)||0,predictionCount:Number(v.holdoutPredictions)||0,
+    selectWins:Number(v.holdoutWins)||0,selectBets:Number(v.holdoutBets)||0,
+    historyFixtures:Number(c?.finishedHistory??prior?.fixtures??0)||0,
+    status:Number(v.holdoutPredictions)>0?'tested':'insufficient_chronological_holdout',
+    phase:'final_holdout',selectionBasis:'finalized_model_2_select',source:'imported_report'};
+  }else if(c){out[id]={predictionWins:0,predictionCount:Number(c.holdoutPredictions)||0,selectWins:0,selectBets:Number(c.holdoutSelectBets)||0,historyFixtures:Number(c.finishedHistory)||0,status:c.status||'insufficient_chronological_holdout',source:'imported_report'};}
+ }
+ return out;
+}
+function fpMergeAccuracyRecords(newStats){
+ let count=0;
+ for(const id of Object.keys(LEAGUES)){
+  const v=newStats?.[id];if(!v)continue;
+  // Never overwrite an actual completed test with a zero-sample placeholder.
+  if(fpFixtureLeagueStats[id]?.predictionCount>0&&!(v.predictionCount>0))continue;
+  fpFixtureLeagueStats[id]={...v};count++;
+ }
+ try{localStorage.setItem('fp_fixture_league_accuracy_v1',JSON.stringify(fpFixtureLeagueStats))}catch(_){ }
+ void fpDbPut('fp_fixture_league_accuracy_v1',fpFixtureLeagueStats);
+ return count;
+}
+function fpAccuracyCell(v){
+ if(!v)return 'No verified historical result';
+ if(v.predictionCount>0)return `${v.selectBets>0?`${v.selectWins}/${v.selectBets} (${(100*v.selectWins/v.selectBets).toFixed(1)}%)`:'0 qualifying SELECT bets'}${v.source==='bundled_prior_audit'?' · prior audit':''}`;
+ return v.historyFixtures>0?'Insufficient chronological holdout':'No finished historical fixtures';
+}
+function fpRenderAccuracyControls(){
+ const target=document.getElementById('fpSequentialAudit');if(!target)return;
+ const n=Object.keys(LEAGUES).filter(id=>fpFixtureLeagueStats[id]?.predictionCount>0).length;
+ const rows=Object.entries(LEAGUES).map(([id,name])=>{
+  const v=fpFixtureLeagueStats[id];const p=v?.predictionCount>0?`${v.predictionWins}/${v.predictionCount} (${(100*v.predictionWins/v.predictionCount).toFixed(1)}%)`:'—';
+  return `<tr><td>${esc(name)}</td><td>${esc(p)}</td><td>${esc(fpAccuracyCell(v))}</td><td>${fpGateButton('league',id,fpLeagueSelectAllowed(id))}</td></tr>`;
+ }).join('');
+ const label=fpResultsProvenance||'Saved historical results';
+ target.innerHTML=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">${esc(label)} · ${n}/26 leagues have a historical holdout sample. Historical accuracy is independent of manual betting permission. Imported results never change your BET ON/OFF or MM2 switches.</p><div id="fpManualSummary" class="panel">${fpRestoredReport?'Historical report restored; manual settings retained.':'Historical results shown from the prior supplied audit. Run a new test only when you want updated predictions.'}</div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>League accuracy</th><th>SELECT / BET ON accuracy</th><th>BET ON</th></tr></thead><tbody>${rows}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">BET ON switches are manual and are not changed by importing results.</p>`;
+}
+function fpRestoreReport(j,source){
+ if(!j||typeof j!=='object'||(!j.leagues&&!j.sequentialSelectAudit&&!j.manualControls))throw Error('This JSON is not a recognised FootyPicks Model Test report.');
+ const stats=fpAccuracyStatsFromReport(j),count=fpMergeAccuracyRecords(stats);
+ if(!count)throw Error('No usable per-league holdout metrics in this report.');
+ fpRestoredReport=j;fpResultsProvenance=`${source} · ${j.generated||j.sequentialSelectAudit?.generated||'date unknown'}`;
+ const box=document.getElementById('fpAdaptiveReport');if(box)box.value=JSON.stringify(j,null,2);
+ const status=document.getElementById('fpJsonExportStatus');if(status)status.textContent=`${count} league results restored from ${source}; betting controls unchanged`;
+ const info=document.getElementById('fpRestoreStatus');if(info)info.textContent=`${count} league results restored from ${source}. No historical download required. Manual switches unchanged.`;
+ const test=document.getElementById('testStatus');if(test)test.textContent=`Restored ${count} league results from ${source} (${j.generated||'date unknown'}). This is a saved audit, not a new test.`;
+ fpRenderAccuracyControls();renderFixtures();if(state.liveMatches?.length)renderLive();
+ return count;
+}
+async function fpSaveFullReport(j){
+ if(!j||!j.sequentialSelectAudit)return;
+ try{localStorage.setItem(FP_COMPLETE_REPORT_KEY,JSON.stringify(j))}catch(_){ }
+ await fpDbPut(FP_COMPLETE_REPORT_KEY,j);
+}
+async function fpRestoreSavedReport(){
+ const disk=await fpDbGet(FP_COMPLETE_REPORT_KEY);
+ let local=null;try{local=JSON.parse(localStorage.getItem(FP_COMPLETE_REPORT_KEY)||'null')}catch(_){ }
+ const candidates=[disk,local].filter(Boolean).sort((a,b)=>Date.parse(b.generated||0)-Date.parse(a.generated||0));
+ for(const j of candidates){try{fpRestoreReport(j,'saved test');return}catch(_){ }}
+ // IndexedDB also restores per-league metrics when localStorage is unavailable.
+ const stats=await fpDbGet('fp_fixture_league_accuracy_v1');if(stats&&typeof stats==='object')fpMergeAccuracyRecords(stats);
+ fpRenderAccuracyControls();
 }
 let fpLastManualAudit=null;
 function fpGateButton(kind,key,enabled){return `<button type="button" class="fp-gate-button ${enabled?'on':'off'}" data-fp-manual-kind="${kind}" data-fp-manual-key="${key}" aria-pressed="${enabled}">${enabled?'ON':'OFF'}</button>`}
@@ -2516,7 +2591,9 @@ async function fpSequentialSwitchAudit(matches){
 
   result.mm2LeagueAvailability=Object.fromEntries(Object.entries(groups).map(([id,rows])=>{const covered=rows.filter(m=>fpMM2Goals(m).length>0).length;return [id,{goalTimelineMatches:covered,finishedMatches:rows.length,mm2EventTraitsEnabled:covered>=4,reason:covered>=4?'Event traits available when both teams have sufficient past timelines':'Event-dependent MM2 traits automatically omitted; draw tendency remains available'}]}));
   fpFixtureLeagueStats=Object.fromEntries(Object.keys(LEAGUES).map(id=>{const rows=optimizedH.filter(r=>r.league===id),selected=rows.filter(r=>r.selected);return [id,{predictionWins:rows.filter(r=>r.prediction===r.actual).length,predictionCount:rows.length,selectWins:selected.filter(r=>r.correct).length,selectBets:selected.length,phase:"final_holdout",selectionBasis:"finalized_model_2_select",historyFixtures:(groups[id]||[]).length,status:rows.length?'tested':(groups[id]?.length?'insufficient_chronological_history':'no_finished_history')}]}));
+  for(const v of Object.values(fpFixtureLeagueStats))v.source='new_full_test';
   try{localStorage.setItem('fp_fixture_league_accuracy_v1',JSON.stringify(fpFixtureLeagueStats))}catch(_){}
+  void fpDbPut('fp_fixture_league_accuracy_v1',fpFixtureLeagueStats);
   fpLastManualAudit={validationRows:bestV,holdoutRows:optimizedH};
   renderFixtures();
   const tableLeagues=Object.entries(LEAGUES).map(([id,name])=>leagueResults.find(x=>x.id===id)||{id,name,holdoutOptimized:{bets:0,wins:0,losses:0,net:0,precision:null},validationAll:{bets:0,wins:0,losses:0,net:0,precision:null}});
@@ -2588,7 +2665,7 @@ async function doTest(){
   report.feedDiagnostics=Object.fromEntries(fpInvalidLeagueFeeds);
   report.downloadIntegrity={complete:result.failedMonths.length===0&&!result.errors.length,failedMonths:result.failedMonths,unavailableLeagues:result.errors,monthsCompleted:result.monthsDone,monthsRequested:result.totalMonths};
   const reportBox=document.getElementById('fpAdaptiveReport');
-  if(reportBox){try{const json=JSON.parse(reportBox.value);json.timings=timing;json.downloadIntegrity=report.downloadIntegrity;json.feedDiagnostics=report.feedDiagnostics;json.sequentialSelectAudit=fpSequential;json.precisionExperiment=fpSequential.precisionExperiment||json.precisionExperiment||null;reportBox.value=JSON.stringify(json,null,2);const exportStatus=document.getElementById('fpJsonExportStatus');if(exportStatus)exportStatus.textContent=json.precisionExperiment?'Complete JSON includes precisionExperiment · '+reportBox.value.length.toLocaleString()+' characters':'Warning: precisionExperiment missing';fpManualAuditRefresh()}catch(_){}}
+  if(reportBox){try{const json=JSON.parse(reportBox.value);json.timings=timing;json.downloadIntegrity=report.downloadIntegrity;json.feedDiagnostics=report.feedDiagnostics;json.sequentialSelectAudit=fpSequential;json.precisionExperiment=fpSequential.precisionExperiment||json.precisionExperiment||null;reportBox.value=JSON.stringify(json,null,2);const exportStatus=document.getElementById('fpJsonExportStatus');if(exportStatus)exportStatus.textContent=json.precisionExperiment?'Complete JSON includes precisionExperiment · '+reportBox.value.length.toLocaleString()+' characters':'Warning: precisionExperiment missing';fpManualAuditRefresh();void fpSaveFullReport(json)}catch(e){console.warn('Report save failed',e)}}
   fpPerfUpdate("Validation complete",95,`Download ${timing.downloadSeconds}s · analysis ${timing.analysisSeconds}s`,true);
 
   const secs=((performance.now()-started)/1000).toFixed(1);
@@ -3623,7 +3700,26 @@ function fpRenderInitialLeagueControls(){
  target.innerHTML=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">All retained competitions are listed. Only you change the ON/OFF switches. Saved manual settings are retained. Every retained league is included in historical SELECT testing, even when its manual BET ON switch is OFF. An OFF league cannot display a live SELECT/BET ON recommendation. New leagues default ON unless you previously saved a manual OFF choice. Unavailable feeds will be reported as unavailable, not assigned 0% accuracy.</p><div id="fpManualSummary" class="panel">Run Model Test to calculate current combined metrics.</div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Last saved SELECT accuracy</th><th>BET ON</th></tr></thead><tbody>${rows}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">Your switches are saved locally. The Model Test Optimiser is unchanged.</p>`;
 }
 initLeagueSelects();
-fpRenderInitialLeagueControls();
+// Seed the 26 retained leagues with genuine previously supplied audit results.
+// Local or IndexedDB results take precedence; this does not simulate a fresh test.
+for(const [id,v] of Object.entries(FP_BUNDLED_AUDIT.leagues)){
+ if(!fpFixtureLeagueStats[id]||!(fpFixtureLeagueStats[id].predictionCount>0))fpFixtureLeagueStats[id]={...v};
+}
+// Restore previously approved Model 2 profiles only when no local profile exists.
+// This does not re-approve any failed validation candidate.
+for(const [id,profile] of Object.entries(FP_BUNDLED_AUDIT.profiles||{})){
+ if(FP_ACTIVE_LEAGUES.has(id)&&profile?.approved&&!fpLeagueModelProfiles[id])fpLeagueModelProfiles[id]={...profile};
+}
+try{localStorage.setItem(FP_LEAGUE_MODEL_KEY,JSON.stringify(fpLeagueModelProfiles))}catch(_){ }
+fpResultsProvenance=`Prior supplied audit (${FP_BUNDLED_AUDIT.generated})`;
+fpRenderAccuracyControls();
+void fpRestoreSavedReport();
+document.getElementById('fpImportModelJson')?.addEventListener('change',async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{const j=JSON.parse(await file.text());fpRestoreReport(j,`imported ${file.name}`);await fpSaveFullReport(j)}
+ catch(err){const el=document.getElementById('fpRestoreStatus');if(el)el.textContent='Import failed: '+err.message}
+ e.target.value='';
+});
 for(const [id,name] of Object.entries(LEAGUES))$("fpTestLeague").add(new Option(name,id));
 $("fpTestLeague").value="all";$("league").value="all";$("days").value="today";
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{
