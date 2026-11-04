@@ -490,11 +490,11 @@ main section details>summary{cursor:pointer}
 .fp-mm2-flow h4{margin:0 0 8px;color:#80b7ff}.fp-mm2-flow p{margin:8px 0;line-height:1.55}
 
 /* Women’s football: distinguish fixtures without disrupting the existing theme. */
-.fp-women-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;margin:0 0 12px;border-radius:11px;border:1px solid #a9cde8;background:#eaf5ff;color:#214a68;flex-wrap:wrap}
-.fp-womens-match{background:#eff8ff!important;border:1px solid #b9d8ed!important;border-left:4px solid #6faed7!important;color:#1c3449}
-.fp-women-label{display:inline-block;background:#b7dff7;color:#174b6e;border-radius:5px;padding:2px 6px;font-size:10px;font-weight:800;letter-spacing:.08em;margin-right:5px}
+.fp-women-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;margin:0 0 12px;border-radius:11px;border:1px solid var(--border,#4b5c6c);background:transparent;color:inherit;flex-wrap:wrap}
+.fp-womens-match{border:1px solid #8bbde0!important}
+.fp-women-label{display:inline-block;border:1px solid #8bbde0;color:inherit;background:transparent;border-radius:5px;padding:2px 5px;font-size:9px;font-weight:700;letter-spacing:.04em;margin-right:5px}
 .fp-women-off{opacity:.75}
-@media(prefers-color-scheme:dark){.fp-women-controls{background:#17354b;color:#e4f5ff;border-color:#426b85}.fp-womens-match{background:#183348!important;color:#e8f5ff;border-color:#426b85!important}}
+
 </style>
 <style id="fp-three-model-refresh">
 main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{line-height:1.45;max-width:70ch}
@@ -736,7 +736,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
   <div><label for="sort">Sort by</label><select id="sort"><option value="date">Kick-off date</option><option value="confidence">Confidence</option></select></div>
  </div>
  <div class="row wrap" style="margin-bottom:12px"><button class="btn" id="load">Load / refresh predictions</button><button class="btn secondary" id="top10">Show Top 10 picks</button><button class="btn secondary" id="goalThreats">Show Goal Threats</button></div>
- <div class="fp-women-controls"><span><strong>Women’s leagues</strong> · clearly highlighted in light blue</span><button type="button" class="btn secondary small" id="fpWomenFixtureToggle" aria-pressed="true">Women’s fixtures ON</button></div>
+ <div class="fp-women-controls"><span><strong>Women’s leagues</strong> · light-blue fixture border</span><button type="button" class="btn secondary small" id="fpWomenFixtureToggle" aria-pressed="true">Women’s fixtures ON</button></div>
  <div class="fp-filterbar" id="fixtureFilters" aria-label="Fixture status filter"><button data-fp-filter="all" class="active">All</button><button data-fp-filter="consensus">Bet on Outcome</button></div>
  <div id="topbox"></div><div id="goalThreatBox"></div><div id="fixtureStatus" class="muted smalltext"></div><div id="fixtureList"><div class="empty">Tap “Load / refresh predictions” to begin.</div></div>
 </section>
@@ -875,7 +875,6 @@ const LEAGUES={
  "tur.1":"Turkish Süper Lig",
  "aut.1":"Austrian Bundesliga",
  "bra.1":"Brazilian Série A",
- "mex.1":"Liga MX",
  "uefa.champions":"Champions League",
  "den.1":"Danish Superliga",
  "nor.1":"Norwegian Eliteserien",
@@ -885,7 +884,6 @@ const LEAGUES={
  "ned.2":"Dutch Eerste Divisie",
  "jpn.1":"Japanese J1 League",
  "arg.1":"Argentine Primera División",
- "ksa.1":"Saudi Pro League",
  "col.1":"Colombian Primera A",
  "eng.w.1":"WOMEN · English Women’s Super League",
  "esp.w.1":"WOMEN · Spanish Liga F",
@@ -896,7 +894,7 @@ const FP_ACTIVE_LEAGUES=new Set(Object.keys(LEAGUES));
 // Unsupported historical feeds have been removed from the active league registry.
 // All remaining competitions are tested independently of their manual BET ON/OFF state.
 const FP_WOMENS_LEAGUES=new Set(['eng.w.1','esp.w.1','usa.nwsl','fra.w.1']);
-const FP_NEW_LEAGUES=new Set(['jpn.1','arg.1','ksa.1','col.1',...FP_WOMENS_LEAGUES]);
+const FP_NEW_LEAGUES=new Set(['jpn.1','arg.1','col.1',...FP_WOMENS_LEAGUES]);
 let fpShowWomensFixtures=(()=>{try{return localStorage.getItem('fp_show_womens_fixtures_v1')!=='false'}catch(_){return true}})();
 function fpWomenLabel(id){return FP_WOMENS_LEAGUES.has(id)?'<span class="fp-women-label">WOMEN</span> ':'';}
 
@@ -2238,12 +2236,16 @@ async function fpSequentialSwitchAudit(matches){
  const fixtures=[];
  for(const [league,group] of Object.entries(groups)){
   const rows=group.sort((a,b)=>Date.parse(a.date)-Date.parse(b.date)),n=rows.length;
+  const times=rows.map(x=>Date.parse(x.date));
+  let priorEnd=0;
   for(let i=0;i<n;i++){
-   const m=rows[i],kick=Date.parse(m.date);if(!Number.isFinite(kick))continue;
-   const past=rows.filter(x=>Date.parse(x.date)<kick);if(past.length<8)continue;
+   const m=rows[i],kick=times[i];if(!Number.isFinite(kick))continue;
+   while(priorEnd<n&&times[priorEnd]<kick)priorEnd++;
+   const past=rows.slice(0,priorEnd);if(past.length<8)continue;
    fixtures.push({id:league+':'+eventId(m),league,m,past,actual:getOutcome(m.homeScore,m.awayScore),phase:i<Math.floor(n*.60)?'training':i<Math.floor(n*.80)?'validation':'holdout'});
   }
  }
+ const fixturesByLeague={};for(const x of fixtures)(fixturesByLeague[x.league]??=[]).push(x);
  const saved={...fpSwitches},previousGate={...fpLeagueGate},model={...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]};
  let failures=0;
  async function replay(phase,config){
@@ -2318,12 +2320,13 @@ async function fpSequentialSwitchAudit(matches){
   // Reuse the same fixture histories as baseline. Candidate evaluation is isolated
   // from persisted manual switches and never modifies the live Model 2 configuration.
   for(const [league,group] of Object.entries(groups)){
-   const leagueFixtures=fixtures.filter(x=>x.league===league);
+   const leagueFixtures=fixturesByLeague[league]||[];
+   const trainingFixtures=leagueFixtures.filter(x=>x.phase==='training');
    const candidates=[];
    for(const candidate of fpWeightCandidates){
     const training=[];
     const candidateModel={...model,weights:candidate.weights,windows:candidate.windows};
-    for(const x of leagueFixtures.filter(x=>x.phase==='training')){
+    for(const x of trainingFixtures){
      try{const p=calculatePrediction(x.m,x.past,candidateModel);training.push({actual:x.actual,probs:p.probs});}
      catch(_){fpAdaptiveFailures++}
     }
@@ -2510,20 +2513,28 @@ async function doTest(){
   fpPerfUpdate("Validating historical predictions",40,`${result.matches.length} fixtures`,true);
   // The single pass below produces predictions and all downstream DC statistics.
   // Legacy multi-model grid searches, ranking optimisation and draw research do not run.
+  const fpAnalysisParts={};
+  let fpPartStart=performance.now();
   const report=await fpHybridBacktest(result.matches);
+  fpAnalysisParts.model2BaselineSeconds=+((performance.now()-fpPartStart)/1000).toFixed(2);
   fpPerfUpdate("League-specific SELECT validation",88,"Evaluating final selections, including existing MM2 adjustments",true);
   // MM2 currently modifies Model 2 goal estimates and SELECT, so its historical inputs
   // cannot be dropped without changing the live model. Retain parity with fixtures.
   fpStageUpdate(3,0,'Preparing verified goal-event requests','Running');
+  fpPartStart=performance.now();
   const fpMM2TimelineAudit=await fpMM2EnrichHistorical(result.matches,fpTestDownloadController.signal);
+  fpAnalysisParts.mm2TimelineSeconds=+((performance.now()-fpPartStart)/1000).toFixed(2);
   fpStageUpdate(3,100,`${fpMM2TimelineAudit.withGoals}/${fpMM2TimelineAudit.requested} matches yielded goal timelines`,'Complete');
   fpStageUpdate(4,0,'Running chronological SELECT validation','Running');
+  fpPartStart=performance.now();
   const fpSequential=await fpSequentialSwitchAudit(result.matches);
+  fpAnalysisParts.sequentialAuditSeconds=+((performance.now()-fpPartStart)/1000).toFixed(2);
   fpSequential.mm2TimelineDownload=fpMM2TimelineAudit;
   report.sequentialSelectAudit=fpSequential;
   fpStageUpdate(4,100,'SELECT audit and league profiles complete','Complete');
   analysisMs=performance.now()-started-downloadMs;
   const timing={downloadSeconds:+(downloadMs/1000).toFixed(2),analysisSeconds:+(analysisMs/1000).toFixed(2),totalSeconds:+((performance.now()-started)/1000).toFixed(2)};
+  timing.breakdown=fpAnalysisParts;
   report.timings=timing;
   report.feedDiagnostics=Object.fromEntries(fpInvalidLeagueFeeds);
   report.downloadIntegrity={complete:result.failedMonths.length===0&&!result.errors.length,failedMonths:result.failedMonths,unavailableLeagues:result.errors,monthsCompleted:result.monthsDone,monthsRequested:result.totalMonths};
@@ -2573,7 +2584,7 @@ async function fpHybridBacktest(matches){
   for(let j=0;j<rows.length;j++){
    const m=rows[j],kick=kickoffs[j];while(cursor<rows.length&&kickoffs[cursor]<kick)past.push(rows[cursor++]);
    try{const model={...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]};const b=calculatePrediction(m,past,model);if(j>=cut){const actual=getOutcome(m.homeScore,m.awayScore);const eligible=['H','A'].includes(b.prediction)&&b.selection===b.prediction;fpSwitchRows.push({league:id,fixture:eventId(m),actual,baseline:b.prediction,eligible,baseCorrect:eligible&&b.prediction===actual,holdout:true});}
-    if(['H','A'].includes(b.prediction)&&b.selection===b.prediction){const p=fpIndependentProbs(b);if(p){const actual=getOutcome(m.homeScore,m.awayScore);observations.push({train:j<cut,actual,win:actual===b.prediction,draw:actual==='D',loss:actual!==b.prediction&&actual!=='D',dc:p[b.prediction]+p.D,side:b.prediction==='H'?'1X':'X2',confidence:Number(b.confidence)||null});}}
+    if(['H','A'].includes(b.prediction)&&b.selection===b.prediction){const actual=getOutcome(m.homeScore,m.awayScore);observations.push({train:j<cut,actual,win:actual===b.prediction,draw:actual==='D',loss:actual!==b.prediction&&actual!=='D',confidence:Number(b.confidence)||null});}
    }catch(e){console.warn('Model 2 historical fixture skipped',id,e)}
    processedFixtures++;
    if(j%50===0||j===rows.length-1){
@@ -2582,9 +2593,9 @@ async function fpHybridBacktest(matches){
     testCheckpoint();await new Promise(r=>setTimeout(r,0));
    }
   }
-  const metric=a=>({n:a.length,wins:a.filter(x=>x.win).length,draws:a.filter(x=>x.draw).length,losses:a.filter(x=>x.loss).length,accuracy:a.length?a.filter(x=>x.win).length/a.length:null,dcHit:a.length?a.filter(x=>!x.loss).length/a.length:null});
-  const train=observations.filter(x=>x.train),hold=observations.filter(x=>!x.train),flag=hold.filter(x=>x.dc>=.78);
-  report[id]={league:rows[0]?.league||id,fixtures:rows.length,training:metric(train),holdout:metric(hold),flagged78:metric(flag),flaggedCoverage:hold.length?flag.length/hold.length:null};
+  const metric=a=>({n:a.length,wins:a.filter(x=>x.win).length,draws:a.filter(x=>x.draw).length,losses:a.filter(x=>x.loss).length,accuracy:a.length?a.filter(x=>x.win).length/a.length:null});
+  const train=observations.filter(x=>x.train),hold=observations.filter(x=>!x.train);
+  report[id]={league:rows[0]?.league||id,fixtures:rows.length,training:metric(train),holdout:metric(hold)};
   for(const x of hold)all.push({...x,league:id});done++;
   fpStageUpdate(2,Math.round(done/totalLeagues*80),`${done}/${totalLeagues} league summaries calculated`,"Running");
   await new Promise(r=>setTimeout(r,0));
@@ -2593,13 +2604,14 @@ async function fpHybridBacktest(matches){
  fpStageUpdate(2,100,`${processedFixtures} fixtures analysed`,"Complete");
  fpStageUpdate(2,99,"Calculating overall accuracy and confidence","Running");
  await new Promise(r=>setTimeout(r,0));
- const metric=a=>({n:a.length,wins:a.filter(x=>x.win).length,draws:a.filter(x=>x.draw).length,losses:a.filter(x=>x.loss).length,straightAccuracy:a.length?a.filter(x=>x.win).length/a.length:null,doubleChanceHit:a.length?a.filter(x=>!x.loss).length/a.length:null});
- const confidence=Array.from({length:10},(_,i)=>i+1).map(score=>{const a=all.filter(x=>x.confidence===score);return {score,...metric(a)}});const summary={leagues:Object.keys(report).length,holdout:metric(all),flagged78:metric(all.filter(x=>x.dc>=.78)),threshold:.78};
+ const metric=a=>({n:a.length,wins:a.filter(x=>x.win).length,draws:a.filter(x=>x.draw).length,losses:a.filter(x=>x.loss).length,straightAccuracy:a.length?a.filter(x=>x.win).length/a.length:null});
+ const confidence=Array.from({length:10},(_,i)=>i+1).map(score=>{const a=all.filter(x=>x.confidence===score);return {score,...metric(a)}});
+ const summary={leagues:Object.keys(report).length,holdout:metric(all)};
  const pct=v=>v==null?'—':(v*100).toFixed(1)+'%';
- const el=document.getElementById('fpAdaptiveResults');if(el)el.innerHTML=`<p class="muted smalltext">PREDICTION-DC-V6 · Model 2 only · chronological 75/25 league holdout · 78% Double Chance suggestion threshold is a display rule, not optimised or calibrated. Configuration may overlap holdout; earlier retired-model comparisons need reassessment if leakage is confirmed.</p><div class="fp-draw-summary"><div><small>Leagues</small><strong>${summary.leagues}</strong></div><div><small>Model 2 holdout</small><strong>${summary.holdout.wins}/${summary.holdout.n} · ${pct(summary.holdout.straightAccuracy)}</strong></div><div><small>Automatic DC</small><strong>${pct(summary.holdout.doubleChanceHit)}</strong></div><div><small>78% flags</small><strong>${summary.flagged78.n} · ${pct(summary.flagged78.doubleChanceHit)}</strong></div></div><div class="tablewrap"><table><thead><tr><th>League</th><th>Training wins</th><th>Holdout wins</th><th>Holdout DC</th><th>78% flags</th><th>Flagged W / D / L</th></tr></thead><tbody>${Object.values(report).map(x=>`<tr><td>${esc(x.league)}</td><td>${x.training.wins}/${x.training.n}</td><td>${x.holdout.wins}/${x.holdout.n} · ${pct(x.holdout.accuracy)}</td><td>${pct(x.holdout.dcHit)}</td><td>${x.flagged78.n} · ${pct(x.flaggedCoverage)}</td><td>${x.flagged78.wins} / ${x.flagged78.draws} / ${x.flagged78.losses}</td></tr>`).join('')}</tbody></table></div><h4>Confidence accuracy · holdout</h4><div class="tablewrap"><table><thead><tr><th>Score</th><th>Correct / selections</th><th>Accuracy</th></tr></thead><tbody>${confidence.map(x=>`<tr><td>${x.score}/10</td><td>${x.wins}/${x.n}</td><td>${pct(x.straightAccuracy)}</td></tr>`).join('')}</tbody></table></div><p class="muted smalltext">Integrity: prior matches only; same-kickoff fixtures excluded from one another's form. Historical settings may overlap the holdout, so this is not independent nested validation. Empty confidence bands are reported, not artificially filled.</p>`;
- const output={componentSwitches:{...fpSwitches},actualSelectHoldout:{n:fpSwitchRows.filter(x=>x.eligible).length,wins:fpSwitchRows.filter(x=>x.baseCorrect).length,losses:fpSwitchRows.filter(x=>x.eligible&&!x.baseCorrect).length},version:'PREDICTION-DC-V6',generated:new Date().toISOString(),method:'Model 2 only; chronological league 75/25; fixed DC flag >=78%; historical configuration overlap possible',summary,leagues:report,confidence};
+ const el=document.getElementById('fpAdaptiveResults');if(el)el.innerHTML=`<p class="muted smalltext">Model 2 · chronological 75/25 league holdout · SELECT-first review. Historical configuration may overlap holdout; this is not independent nested validation.</p><div class="fp-draw-summary"><div><small>Leagues</small><strong>${summary.leagues}</strong></div><div><small>SELECT holdout</small><strong>${summary.holdout.wins}/${summary.holdout.n} · ${pct(summary.holdout.straightAccuracy)}</strong></div></div><div class="tablewrap"><table><thead><tr><th>League</th><th>Training SELECT</th><th>Holdout SELECT</th><th>Holdout sample</th></tr></thead><tbody>${Object.values(report).sort((a,b)=>(b.holdout.accuracy??-1)-(a.holdout.accuracy??-1)).map(x=>`<tr><td>${esc(x.league)}</td><td>${x.training.wins}/${x.training.n} · ${pct(x.training.accuracy)}</td><td>${x.holdout.wins}/${x.holdout.n} · ${pct(x.holdout.accuracy)}</td><td>${x.holdout.n}</td></tr>`).join('')}</tbody></table></div><h4>Confidence accuracy · holdout</h4><div class="tablewrap"><table><thead><tr><th>Score</th><th>Correct / selections</th><th>Accuracy</th></tr></thead><tbody>${confidence.map(x=>`<tr><td>${x.score}/10</td><td>${x.wins}/${x.n}</td><td>${pct(x.straightAccuracy)}</td></tr>`).join('')}</tbody></table></div><p class="muted smalltext">Integrity: prior matches only; same-kickoff fixtures excluded from each other's form. The separate chronological manual-switch SELECT audit remains the primary league decision metric.</p>`;
+ const output={componentSwitches:{...fpSwitches},actualSelectHoldout:{n:fpSwitchRows.filter(x=>x.eligible).length,wins:fpSwitchRows.filter(x=>x.baseCorrect).length,losses:fpSwitchRows.filter(x=>x.eligible&&!x.baseCorrect).length},version:'PREDICTION-SELECT-V7',generated:new Date().toISOString(),method:'Model 2 only; chronological league 75/25; SELECT-first; historical configuration overlap possible',summary,leagues:report,confidence};
  const box=document.getElementById('fpAdaptiveReport');if(box)box.value=JSON.stringify(output,null,2);const dashboard=document.getElementById('fpUnifiedTestDashboard');
- if(dashboard)dashboard.innerHTML=`<div class="panel fp-scorecard"><span class="fp-scorecard-label">Model 2 · straight wins</span><strong>${pct(summary.holdout.straightAccuracy)}</strong><span class="muted smalltext">${summary.holdout.wins}/${summary.holdout.n} · chronological holdout</span></div><div class="panel fp-scorecard"><span class="fp-scorecard-label">Automatic Double Chance</span><strong>${pct(summary.holdout.doubleChanceHit)}</strong><span class="muted smalltext">All ${summary.holdout.n} selections</span></div><div class="panel fp-scorecard"><span class="fp-scorecard-label">Double Chance ≥78%</span><strong>${pct(summary.flagged78.doubleChanceHit)}</strong><span class="muted smalltext">${summary.flagged78.n} flags · ${pct(summary.holdout.n?summary.flagged78.n/summary.holdout.n:null)} coverage</span><span class="muted smalltext">${summary.flagged78.wins} wins · ${summary.flagged78.draws} draws · ${summary.flagged78.losses} losses</span></div>`;
+ if(dashboard)dashboard.innerHTML=`<div class="panel fp-scorecard"><span class="fp-scorecard-label">Model 2 · SELECT accuracy</span><strong>${pct(summary.holdout.straightAccuracy)}</strong><span class="muted smalltext">${summary.holdout.wins}/${summary.holdout.n} · chronological holdout</span></div><div class="panel fp-scorecard"><span class="fp-scorecard-label">Leagues evaluated</span><strong>${summary.leagues}</strong><span class="muted smalltext">Per-league SELECT performance below</span></div>`;
  return output;
 }
 
