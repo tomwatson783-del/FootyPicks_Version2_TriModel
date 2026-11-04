@@ -860,13 +860,16 @@ const LEAGUES={
  "ned.1":"Eredivisie","por.1":"Primeira Liga","bel.1":"Belgian Pro League",
  "tur.1":"Turkish Süper Lig","aut.1":"Austrian Bundesliga",
  "bra.1":"Brazilian Série A","mex.1":"Liga MX","uefa.champions":"Champions League",
- "fra.2":"Ligue 2","den.1":"Danish Superliga","nor.1":"Norwegian Eliteserien",
+ "den.1":"Danish Superliga","nor.1":"Norwegian Eliteserien",
  "swe.1":"Swedish Allsvenskan","gre.1":"Greek Super League",
  "sco.2":"Scottish Championship","ned.2":"Dutch Eerste Divisie",
  "sui.1":"Swiss Super League","cze.1":"Czech First League",
  "pol.1":"Polish Ekstraklasa","cro.1":"Croatian HNL","srb.1":"Serbian SuperLiga"
 };
 const FP_ACTIVE_LEAGUES=new Set(Object.keys(LEAGUES));
+// The November 2026 export reported no usable historical data for these feeds.
+// Keep them visible for manual review, but avoid repeating failed historical downloads.
+const FP_UNVERIFIED_TEST_LEAGUES=new Set(['sui.1','cze.1','pol.1','cro.1','srb.1']);
 
 // Populate both competition filters from one shared list so they cannot drift apart.
 function initLeagueSelects(){
@@ -1173,6 +1176,8 @@ let fpSwitches=(()=>{try{return {...FP_SWITCH_DEFAULTS,...JSON.parse(localStorag
 function fpSwitchSave(){try{localStorage.setItem('fp_model_component_switches_v1',JSON.stringify(fpSwitches))}catch(_){}}
 // League SELECT gating is independent of fixture prediction visibility.
 let fpLeagueGate=(()=>{try{return JSON.parse(localStorage.getItem('fp_league_select_gate_v2')||'{}')}catch(_){return {}}})();
+// Preserve every existing manual choice; only initialise genuinely new competitions OFF.
+for(const id of FP_UNVERIFIED_TEST_LEAGUES)if(!Object.prototype.hasOwnProperty.call(fpLeagueGate,id))fpLeagueGate[id]=false;
 function fpLeagueSelectAllowed(id){return !id||fpLeagueGate[id]!==false}
 function fpLeagueGateSave(){try{localStorage.setItem('fp_league_select_gate_v2',JSON.stringify(fpLeagueGate))}catch(_){}}
 let fpFixtureLeagueStats=(()=>{try{return JSON.parse(localStorage.getItem('fp_fixture_league_accuracy_v1')||'{}')}catch(_){return {}}})();
@@ -1808,6 +1813,8 @@ function fpMM2PreVerdict(m){
  return {headline:`First goal: ${first?firstTeam:'unconfirmed'} · Full-time: ${final}`,detail:`${opener} ${response}${late}`};
 }
 function fpMM2FlowHtml(m){
+ // Written game-flow forecasts disabled: timeline coverage is not established for both teams across each league.
+ return "";
  const frozen=state.history.find(x=>x.id===eventId(m)&&new Date(x.savedAt).getTime()<new Date(x.date).getTime());
  const v=frozen?.mm2Flow||(new Date(m.date).getTime()<=Date.now()?{headline:'No verified pre-match narrative',detail:'This fixture has no pre-kickoff MM2 snapshot. A live or retrospective calculation must not be represented as a saved pre-match prediction.'}:fpMM2PreVerdict(m));
  const note=frozen?'Original pre-kickoff assessment · saved '+fmtDate(frozen.savedAt):(new Date(m.date).getTime()<=Date.now()?'No saved pre-kickoff assessment · retrospective prediction unavailable':'Provisional pre-match assessment · not yet saved');
@@ -1845,6 +1852,8 @@ function fpLiveSinceGoal(history,side){
  return recent;
 }
 function fpLiveMM2Html(m,a,pre,stats){
+ // Do not present partial team coverage as a supported in-play prediction.
+ return "";
  const history=fpLiveStatSnapshot(m,a,stats);
  const mm=pre?.mm2,minute=a.minute,remaining=minute==null?null:Math.max(0,96-minute);
  const hs=a.hs,as=a.as,has=a.hasScore,preCall=pre?.prediction&&['H','D','A'].includes(pre.prediction)?outcomeName(pre.prediction):'Unavailable';
@@ -2102,7 +2111,7 @@ function setBusy(title,percent){
 }
 function hideBusy(){$("busy").classList.remove("show","fp-test-busy");const eyebrow=$("fpTestEyebrow");if(eyebrow)eyebrow.hidden=true}
 function fpFixtureLeagueIds(){const id=$("league").value;return id&&id!=="all"?[id]:Object.keys(LEAGUES)}
-function fpTestLeagueIds(){const id=$("fpTestLeague")?.value||"all";return id==="all"?Object.keys(LEAGUES):[id]}
+function fpTestLeagueIds(){const id=$("fpTestLeague")?.value||"all";return (id==="all"?Object.keys(LEAGUES):[id]).filter(x=>!FP_UNVERIFIED_TEST_LEAGUES.has(x))}
 async function loadData(){
  if(state.loading)return;state.loading=true;$("load").disabled=true;$("runTest").disabled=true;$("connection").textContent="Loading";setBusy("Refreshing fixtures…",5);
  try{
@@ -2400,7 +2409,8 @@ async function fpSequentialSwitchAudit(matches){
   try{localStorage.setItem('fp_fixture_league_accuracy_v1',JSON.stringify(fpFixtureLeagueStats))}catch(_){}
   fpLastManualAudit={validationRows:bestV,holdoutRows:optimizedH};
   renderFixtures();
-  const html=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">Accuracy is measured on the final chronological holdout BET ON OUTCOME decisions, not training predictions. Every button controls betting eligibility only; league fixtures and predictions stay visible. No automatic league exclusions are applied. MM2 currently influences Model 2 predicted goals and must remain in the historical audit for valid SELECT results.</p><div id="fpManualSummary" class="panel"></div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Final holdout general accuracy</th><th>Final holdout SELECT accuracy</th><th>Validation SELECT</th><th>Later holdout SELECT</th><th>BET ON</th></tr></thead><tbody>${leagueResults.map(x=>`<tr><td>${esc(x.name)}</td><td>${fpFixtureLeagueStats[x.id]?.predictionCount?`${fpFixtureLeagueStats[x.id].predictionWins}/${fpFixtureLeagueStats[x.id].predictionCount} (${(100*fpFixtureLeagueStats[x.id].predictionWins/fpFixtureLeagueStats[x.id].predictionCount).toFixed(1)}%)`:'Not tested'}</td><td>${fmt(x.holdoutOptimized)}${x.holdoutOptimized.bets<15?' <small>(small sample)</small>':''}</td><td>${fmt(x.validationAll)}</td><td>${fmt(x.holdoutOptimized)}</td><td>${fpGateButton('league',x.id,fpLeagueSelectAllowed(x.id))}</td></tr>`).join('')}</tbody></table></div>
+  const tableLeagues=Object.entries(LEAGUES).map(([id,name])=>leagueResults.find(x=>x.id===id)||{id,name,holdoutOptimized:{bets:0,wins:0,losses:0,net:0,precision:null},validationAll:{bets:0,wins:0,losses:0,net:0,precision:null}});
+  const html=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">Accuracy is measured on the final chronological holdout BET ON OUTCOME decisions, not training predictions. Every button controls betting eligibility only; league fixtures and predictions stay visible. No automatic league exclusions are applied. MM2 currently influences Model 2 predicted goals and must remain in the historical audit for valid SELECT results.</p><div id="fpManualSummary" class="panel"></div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Final holdout general accuracy</th><th>Final holdout SELECT accuracy</th><th>Validation SELECT</th><th>Later holdout SELECT</th><th>BET ON</th></tr></thead><tbody>${tableLeagues.map(x=>`<tr><td>${esc(x.name)}</td><td>${fpFixtureLeagueStats[x.id]?.predictionCount?`${fpFixtureLeagueStats[x.id].predictionWins}/${fpFixtureLeagueStats[x.id].predictionCount} (${(100*fpFixtureLeagueStats[x.id].predictionWins/fpFixtureLeagueStats[x.id].predictionCount).toFixed(1)}%)`:'Not tested'}</td><td>${fmt(x.holdoutOptimized)}${x.holdoutOptimized.bets<15?' <small>(small sample)</small>':''}</td><td>${fmt(x.validationAll)}</td><td>${fmt(x.holdoutOptimized)}</td><td>${fpGateButton('league',x.id,fpLeagueSelectAllowed(x.id))}</td></tr>`).join('')}</tbody></table></div>
 <p id="fpManualNotice" class="muted smalltext">Manual choices are saved in this browser. League toggles update combined results immediately. MM2 toggles require a new Model Test.</p><p class="muted smalltext">Full JSON below includes per-league accuracy, SELECT counts, manually saved switches and chronological validation/holdout metrics.</p>`;
   const target=document.getElementById('fpSequentialAudit');if(target)target.innerHTML=html+fpPrecisionHtml;
   fpManualAuditRefresh();
@@ -2416,6 +2426,7 @@ async function doTest(){
  try{
   fpPerfUpdate("Loading historical fixtures",3,"Fetching selected league histories",true);
   const ids=fpTestLeagueIds();
+  if(!ids.length){$("testStatus").textContent="Historical Model Test unavailable for this competition: ESPN data could not be verified. Its manual ON/OFF setting remains available.";return;}
   fpTestDownloadController=new AbortController();
   const result=await fetchAllLeagues(14,(i,n,name,event)=>{
    const done=event?.monthsDone||0,total=event?.totalMonths||ids.length*14;
@@ -3472,7 +3483,17 @@ document.addEventListener("click",e=>{
 fpBetRefresh();
 
 
+function fpRenderInitialLeagueControls(){
+ const target=document.getElementById('fpSequentialAudit');if(!target)return;
+ const rows=Object.entries(LEAGUES).map(([id,name])=>{
+  const x=fpFixtureLeagueStats[id],pct=x?.selectBets?`${x.selectWins}/${x.selectBets} (${(100*x.selectWins/x.selectBets).toFixed(1)}%)`:'Not tested';
+  const status=FP_UNVERIFIED_TEST_LEAGUES.has(id)?'Historical feed unverified · test skipped':pct;
+  return `<tr><td>${esc(name)}</td><td>${esc(status)}</td><td>${fpGateButton('league',id,fpLeagueSelectAllowed(id))}</td></tr>`;
+ }).join('');
+ target.innerHTML=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">All active competitions are listed, including unverified leagues. Only you change the ON/OFF switches. Saved manual settings are retained. Five unverified feeds are excluded from the historical test until a working source is confirmed.</p><div id="fpManualSummary" class="panel">Run Model Test to calculate current combined metrics.</div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Last saved SELECT accuracy</th><th>BET ON</th></tr></thead><tbody>${rows}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">Your switches are saved locally. The Model Test Optimiser is unchanged.</p>`;
+}
 initLeagueSelects();
+fpRenderInitialLeagueControls();
 for(const [id,name] of Object.entries(LEAGUES))$("fpTestLeague").add(new Option(name,id));
 $("fpTestLeague").value="all";$("league").value="all";$("days").value="today";
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{
