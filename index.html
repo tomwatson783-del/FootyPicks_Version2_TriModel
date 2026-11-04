@@ -488,6 +488,13 @@ main section details>summary{cursor:pointer}
 .fp-fixture-accuracy{display:inline-block;text-align:right;font-size:11px;line-height:1.45;color:var(--text,#e7e7e7);white-space:nowrap;margin-right:7px}.fp-fixture-accuracy b{font-size:12px}.fp-fixture-accuracy small{opacity:.7}.fp-feature-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.fp-feature-right .fp-fixture-accuracy{margin-right:0}@media(max-width:540px){.fp-fixture-accuracy{font-size:10px;white-space:normal}.fp-fixture-accuracy b{font-size:11px}}
 .fp-mm2-flow{margin-top:12px;padding:13px;border:1px solid #3b6787;border-radius:12px;background:#182a3c}
 .fp-mm2-flow h4{margin:0 0 8px;color:#80b7ff}.fp-mm2-flow p{margin:8px 0;line-height:1.55}
+
+/* Women’s football: distinguish fixtures without disrupting the existing theme. */
+.fp-women-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;margin:0 0 12px;border-radius:11px;border:1px solid #a9cde8;background:#eaf5ff;color:#214a68;flex-wrap:wrap}
+.fp-womens-match{background:#eff8ff!important;border:1px solid #b9d8ed!important;border-left:4px solid #6faed7!important;color:#1c3449}
+.fp-women-label{display:inline-block;background:#b7dff7;color:#174b6e;border-radius:5px;padding:2px 6px;font-size:10px;font-weight:800;letter-spacing:.08em;margin-right:5px}
+.fp-women-off{opacity:.75}
+@media(prefers-color-scheme:dark){.fp-women-controls{background:#17354b;color:#e4f5ff;border-color:#426b85}.fp-womens-match{background:#183348!important;color:#e8f5ff;border-color:#426b85!important}}
 </style>
 <style id="fp-three-model-refresh">
 main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{line-height:1.45;max-width:70ch}
@@ -729,6 +736,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
   <div><label for="sort">Sort by</label><select id="sort"><option value="date">Kick-off date</option><option value="confidence">Confidence</option></select></div>
  </div>
  <div class="row wrap" style="margin-bottom:12px"><button class="btn" id="load">Load / refresh predictions</button><button class="btn secondary" id="top10">Show Top 10 picks</button><button class="btn secondary" id="goalThreats">Show Goal Threats</button></div>
+ <div class="fp-women-controls"><span><strong>Women’s leagues</strong> · clearly highlighted in light blue</span><button type="button" class="btn secondary small" id="fpWomenFixtureToggle" aria-pressed="true">Women’s fixtures ON</button></div>
  <div class="fp-filterbar" id="fixtureFilters" aria-label="Fixture status filter"><button data-fp-filter="all" class="active">All</button><button data-fp-filter="consensus">Bet on Outcome</button></div>
  <div id="topbox"></div><div id="goalThreatBox"></div><div id="fixtureStatus" class="muted smalltext"></div><div id="fixtureList"><div class="empty">Tap “Load / refresh predictions” to begin.</div></div>
 </section>
@@ -864,12 +872,22 @@ const LEAGUES={
  "swe.1":"Swedish Allsvenskan","gre.1":"Greek Super League",
  "sco.2":"Scottish Championship","ned.2":"Dutch Eerste Divisie",
  "sui.1":"Swiss Super League","cze.1":"Czech First League",
- "pol.1":"Polish Ekstraklasa","cro.1":"Croatian HNL","srb.1":"Serbian SuperLiga"
+ "pol.1":"Polish Ekstraklasa","cro.1":"Croatian HNL","srb.1":"Serbian SuperLiga",
+ "jpn.1":"Japanese J1 League","arg.1":"Argentine Primera División",
+ "ksa.1":"Saudi Pro League","col.1":"Colombian Primera A","aus.1":"Australian A-League Men",
+ "eng.w.1":"WOMEN · English Women’s Super League","esp.w.1":"WOMEN · Spanish Liga F",
+ "usa.nwsl":"WOMEN · National Women’s Soccer League","ger.frauen.1":"WOMEN · Frauen-Bundesliga",
+ "fra.w.1":"WOMEN · French Première Ligue"
 };
 const FP_ACTIVE_LEAGUES=new Set(Object.keys(LEAGUES));
 // The November 2026 export reported no usable historical data for these feeds.
 // Keep them visible for manual review, but avoid repeating failed historical downloads.
-const FP_UNVERIFIED_TEST_LEAGUES=new Set(['sui.1','cze.1','pol.1','cro.1','srb.1']);
+// These feeds are candidates: test each rather than silently excluding it.
+const FP_UNVERIFIED_TEST_LEAGUES=new Set();
+const FP_WOMENS_LEAGUES=new Set(['eng.w.1','esp.w.1','usa.nwsl','ger.frauen.1','fra.w.1']);
+const FP_NEW_LEAGUES=new Set(['sui.1','cze.1','pol.1','cro.1','srb.1','jpn.1','arg.1','ksa.1','col.1','aus.1',...FP_WOMENS_LEAGUES]);
+let fpShowWomensFixtures=(()=>{try{return localStorage.getItem('fp_show_womens_fixtures_v1')!=='false'}catch(_){return true}})();
+function fpWomenLabel(id){return FP_WOMENS_LEAGUES.has(id)?'<span class="fp-women-label">WOMEN</span> ':'';}
 
 // Populate both competition filters from one shared list so they cannot drift apart.
 function initLeagueSelects(){
@@ -1177,7 +1195,8 @@ function fpSwitchSave(){try{localStorage.setItem('fp_model_component_switches_v1
 // League SELECT gating is independent of fixture prediction visibility.
 let fpLeagueGate=(()=>{try{return JSON.parse(localStorage.getItem('fp_league_select_gate_v2')||'{}')}catch(_){return {}}})();
 // Preserve every existing manual choice; only initialise genuinely new competitions OFF.
-for(const id of FP_UNVERIFIED_TEST_LEAGUES)if(!Object.prototype.hasOwnProperty.call(fpLeagueGate,id))fpLeagueGate[id]=false;
+for(const id of FP_NEW_LEAGUES)if(!Object.prototype.hasOwnProperty.call(fpLeagueGate,id))fpLeagueGate[id]=false;
+for(const id of Object.keys(fpLeagueGate))if(!FP_ACTIVE_LEAGUES.has(id))delete fpLeagueGate[id];
 function fpLeagueSelectAllowed(id){return !id||fpLeagueGate[id]!==false}
 function fpLeagueGateSave(){try{localStorage.setItem('fp_league_select_gate_v2',JSON.stringify(fpLeagueGate))}catch(_){}}
 let fpFixtureLeagueStats=(()=>{try{return JSON.parse(localStorage.getItem('fp_fixture_league_accuracy_v1')||'{}')}catch(_){return {}}})();
@@ -1453,7 +1472,7 @@ async function fpMM2EnrichHistorical(matches,signal){
    else if(parsed.rawEvents>0){stat.goalless++}else stat.missing++;
   }catch(e){if(signal?.aborted)throw e;if(!String(e).includes('HTTP '))stat.parseErrors++;stat.missing++}
   completed++;
-  if(completed%24===0){fpPerfUpdate('Retrieving MM2 goal timelines',40+Math.round(completed/tasks.length*7),`${completed}/${tasks.length} summaries`);await new Promise(r=>setTimeout(r,0));}
+  if(completed%6===0||completed===tasks.length){const usable=Object.values(leagueStats).reduce((n,x)=>n+x.withGoals,0);const pct=tasks.length?Math.round(completed/tasks.length*100):100;fpStageUpdate(3,pct,`${completed}/${tasks.length} checked · ${usable} usable · ${completed-usable} without usable goals · ${LEAGUES[m.leagueId]||m.leagueId}`,'Running');fpPerfUpdate('Retrieving MM2 goal timelines',65+Math.round(pct*.13),`${completed}/${tasks.length} summaries · ${usable} usable`);await new Promise(r=>setTimeout(r,0));}
  }}
  await Promise.all(Array.from({length:Math.min(6,tasks.length)},()=>worker()));
  return {leagues:leagueStats,requested:tasks.length,withGoals:Object.values(leagueStats).reduce((n,x)=>n+x.withGoals,0),note:'Stratified chronological sample up to 120 finished fixtures per league. HTTP, parsing, missing events and observed goalless responses are reported separately. Unfetched fixtures do not count as verified timelines.'};
@@ -1760,7 +1779,7 @@ function riskDetailsHtml(m){
 }
 function matchCard(m){
  const id=eventId(m),added=state.acc.some(x=>x.id===id),shownScore=isFinished(m)?resultString(m):"vs";
- return`<article class="match"><div class="row between"><span class="league">${esc(m.league)}</span><div class="row wrap">${fpFixtureLeagueAccuracy(m)}${Math.min(m.h?.count??0,m.a?.count??0)<5?`<span class="tag">Limited history</span>`:""}</div></div>
+ return`<article class="match ${FP_WOMENS_LEAGUES.has(m.leagueId)?'fp-womens-match':''}"><div class="row between"><span class="league">${fpWomenLabel(m.leagueId)}${esc(m.league)}</span><div class="row wrap">${fpFixtureLeagueAccuracy(m)}${Math.min(m.h?.count??0,m.a?.count??0)<5?`<span class="tag">Limited history</span>`:""}</div></div>
  <div class="meta" style="margin:7px 0">${esc(fmtDate(m.date))}${m.venue?" · "+esc(m.venue):""}</div>
  <div class="row between"><div class="grow teamline">${esc(m.home)}<div class="meta">${m.h.count} prior league matches</div></div><strong style="white-space:nowrap;font-size:19px">${shownScore}</strong><div class="grow teamline" style="text-align:right">${esc(m.away)}<div class="meta">${m.a.count} prior league matches</div></div></div>
  ${comparisonRows(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?"Added":"Add pick"}</button><button class="btn small fp-dc-button" data-dc-toggle="${esc(id)}" type="button">Double chance</button><button class="btn small fp-bet-button" data-bet-toggle="${esc(id)}" type="button">Bet on</button></div><details class="fixture-secondary"><summary>Additional form and risk details</summary>${fpDrawDecision(m)}${explainHtml(m)}${fpMM2FlowHtml(m)}</details></article>`;
@@ -1773,6 +1792,7 @@ function upcoming(){
  else{end=now.getTime()+(Number(v)||14)*86400000;}
  let list=state.matches.filter(m=>!isFinished(m)&&new Date(m.date).getTime()>=start&&new Date(m.date).getTime()<=end);
  if(league!=="all")list=list.filter(m=>m.leagueId===league);
+ if(!fpShowWomensFixtures)list=list.filter(m=>!FP_WOMENS_LEAGUES.has(m.leagueId));
  return list.sort($("sort").value==="confidence"?(a,b)=>fpAverageConfidence(b)-fpAverageConfidence(a):(a,b)=>new Date(a.date)-new Date(b.date));
 }
 function fpModelFlags(m){
@@ -1785,7 +1805,7 @@ let fpFixtureFilter='all',fpResultFilter='all',fpWeeklyFilter='all';
 function renderFixtures(){
  const all=upcoming(),counts={all:all.length,matching:0,consensus:0};
  for(const m of all){const f=fpModelFlags(m);if(f.matching)counts.matching++;if(f.consensus)counts.consensus++;}
- const list=all.filter(m=>fpFixtureFilter==='all'||!!fpModelFlags(m)[fpFixtureFilter]);
+ const list=all.filter(m=>(fpShowWomensFixtures||!FP_WOMENS_LEAGUES.has(m.leagueId))&&(fpFixtureFilter==='all'||!!fpModelFlags(m)[fpFixtureFilter]));
  document.querySelectorAll('#fixtureFilters button').forEach(b=>{b.classList.toggle('active',b.dataset.fpFilter===fpFixtureFilter);b.textContent=({all:'All',matching:'Bet on Outcome',consensus:'Bet on Outcome'}[b.dataset.fpFilter])+' ('+counts[b.dataset.fpFilter]+')';});
  $('fixtureStatus').textContent=state.loaded?`${all.length} fixtures · ${counts.consensus} Bet on Outcome`:'';
  $('fixtureList').innerHTML=list.length?list.map(matchCard).join(''):`<div class="empty">${state.loaded?'No fixtures match this filter.':'Load fixtures to see predictions.'}</div>`;
@@ -1793,7 +1813,7 @@ function renderFixtures(){
 }
 function fpCompactFixture(m,heading='',extra=''){
  const id=eventId(m),added=state.acc.some(x=>x.id===id);
- return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="fp-feature-right">${fpFixtureLeagueAccuracy(m)}<span class="muted smalltext">${esc(fmtDate(m.date))}</span></span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-dc-button" data-dc-toggle="${esc(id)}">Double chance</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Additional form and risk details</summary>${fpDrawDecision(m)}${explainHtml(m)}${fpMM2FlowHtml(m)}</details></article>`;
+ return `<article class="match fp-feature-card ${FP_WOMENS_LEAGUES.has(m.leagueId)?'fp-womens-match':''}"><div class="row between wrap"><span class="league">${fpWomenLabel(m.leagueId)}${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="fp-feature-right">${fpFixtureLeagueAccuracy(m)}<span class="muted smalltext">${esc(fmtDate(m.date))}</span></span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-dc-button" data-dc-toggle="${esc(id)}">Double chance</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Additional form and risk details</summary>${fpDrawDecision(m)}${explainHtml(m)}${fpMM2FlowHtml(m)}</details></article>`;
 }
 function fpMM2Rate(n,d){return d>=4&&n!=null?`${Math.round(n*100)}% (${Math.round(n*d)}/${d})`:null}
 function fpMM2PreVerdict(m){
@@ -2110,8 +2130,8 @@ function setBusy(title,percent){
   :"Preparing your football data…";
 }
 function hideBusy(){$("busy").classList.remove("show","fp-test-busy");const eyebrow=$("fpTestEyebrow");if(eyebrow)eyebrow.hidden=true}
-function fpFixtureLeagueIds(){const id=$("league").value;return id&&id!=="all"?[id]:Object.keys(LEAGUES)}
-function fpTestLeagueIds(){const id=$("fpTestLeague")?.value||"all";return (id==="all"?Object.keys(LEAGUES):[id]).filter(x=>!FP_UNVERIFIED_TEST_LEAGUES.has(x))}
+function fpFixtureLeagueIds(){const id=$("league").value;return id&&id!=="all"?[id]:Object.keys(LEAGUES).filter(x=>fpShowWomensFixtures||!FP_WOMENS_LEAGUES.has(x))}
+function fpTestLeagueIds(){const id=$("fpTestLeague")?.value||"all";return id==="all"?Object.keys(LEAGUES):[id]}
 async function loadData(){
  if(state.loading)return;state.loading=true;$("load").disabled=true;$("runTest").disabled=true;$("connection").textContent="Loading";setBusy("Refreshing fixtures…",5);
  try{
@@ -2138,8 +2158,8 @@ async function refreshHistoryScoresFromLoaded(){
  void fpSaveHistory();renderHistory();
 }
 
-const fpTestStages=["Download fixtures","Prepare league histories","Model 2 + MM2 baseline","Tune windows, weights & xG gaps by league"];
-const fpTestStageState=Array.from({length:4},()=>({pct:0,detail:"Waiting",status:"Waiting"}));
+const fpTestStages=["Download fixtures","Prepare league histories","Model 2 baseline","Collect MM2 goal timelines","Validate SELECT and league profiles"];
+const fpTestStageState=Array.from({length:fpTestStages.length},()=>({pct:0,detail:"Waiting",status:"Waiting"}));
 function fpStageUpdate(index,pct,detail,status){
  const item=fpTestStageState[index];if(!item)return;
  item.pct=Math.max(0,Math.min(100,Math.round(pct)));item.detail=detail||item.detail;item.status=status|| (item.pct===100?"Complete":"Running");
@@ -2147,8 +2167,8 @@ function fpStageUpdate(index,pct,detail,status){
  if(!host.children.length){host.innerHTML=fpTestStages.map((label,i)=>`<div class="fp-progress-item"><div class="fp-progress-head"><span>${i+1}. ${label}</span><span id="fpStageStatus${i}">Waiting</span></div><div class="fp-progress-track"><div id="fpStageBar${i}" class="fp-progress-fill"></div></div><div id="fpStageDetail${i}" class="fp-progress-detail">Waiting</div></div>`).join('')}
  const active=fpTestStageState.findIndex(x=>x.pct<100);
  const step=document.getElementById("fpTestStageProgress");
- if(step)step.textContent=active<0?"All stages completed":`STEP ${active+1} OF 4 · ${fpTestStages[active]}`;
- for(let i=0;i<4;i++){const x=fpTestStageState[i];document.getElementById('fpStageBar'+i).style.width=x.pct+'%';document.getElementById('fpStageStatus'+i).textContent=x.status+' · '+x.pct+'%';document.getElementById('fpStageDetail'+i).textContent=x.detail}
+ if(step)step.textContent=active<0?"All stages completed":`STEP ${active+1} OF ${fpTestStages.length} · ${fpTestStages[active]}`;
+ for(let i=0;i<fpTestStages.length;i++){const x=fpTestStageState[i];document.getElementById('fpStageBar'+i).style.width=x.pct+'%';document.getElementById('fpStageStatus'+i).textContent=x.status+' · '+x.pct+'%';document.getElementById('fpStageDetail'+i).textContent=x.detail}
 }
 function fpStagesReset(){fpTestStageState.forEach(x=>{x.pct=0;x.detail='Waiting';x.status='Waiting'});document.getElementById('fpTestModelRows')?.replaceChildren();document.getElementById('fpTestProgressRows').style.display='block';
  $("busy").classList.add("fp-test-busy");
@@ -2388,7 +2408,7 @@ async function fpSequentialSwitchAudit(matches){
   try{localStorage.setItem(FP_LEAGUE_MODEL_KEY,JSON.stringify(fpApprovedProfiles));}catch(_){ }
   // Predictions for upcoming fixtures use the validated league profile on next refresh.
   // The test's final holdout metrics remain a separate retrospective audit.
-  fpStageUpdate(3,97,`${Object.keys(fpApprovedProfiles).length}/${Object.keys(groups).length} leagues validated for live use`,'Running');
+  fpStageUpdate(4,97,`${Object.keys(fpApprovedProfiles).length}/${Object.keys(groups).length} leagues validated for live use`,'Running');
   const fpHoldout=fpAdapted.filter(x=>x.phase==='holdout');
   const fpPerLeague=Object.fromEntries(Object.keys(groups).map(id=>[id,{
    name:LEAGUES[id]||id,weights:fpLeagueFit[id],drawRisk:fpDrawFit[id],threshold:fpLocalThresholds[id],
@@ -2452,10 +2472,14 @@ async function doTest(){
   fpPerfUpdate("League-specific SELECT validation",88,"Evaluating final selections, including existing MM2 adjustments",true);
   // MM2 currently modifies Model 2 goal estimates and SELECT, so its historical inputs
   // cannot be dropped without changing the live model. Retain parity with fixtures.
+  fpStageUpdate(3,0,'Preparing verified goal-event requests','Running');
   const fpMM2TimelineAudit=await fpMM2EnrichHistorical(result.matches,fpTestDownloadController.signal);
+  fpStageUpdate(3,100,`${fpMM2TimelineAudit.withGoals}/${fpMM2TimelineAudit.requested} matches yielded goal timelines`,'Complete');
+  fpStageUpdate(4,0,'Running chronological SELECT validation','Running');
   const fpSequential=await fpSequentialSwitchAudit(result.matches);
   fpSequential.mm2TimelineDownload=fpMM2TimelineAudit;
   report.sequentialSelectAudit=fpSequential;
+  fpStageUpdate(4,100,'SELECT audit and league profiles complete','Complete');
   analysisMs=performance.now()-started-downloadMs;
   const timing={downloadSeconds:+(downloadMs/1000).toFixed(2),analysisSeconds:+(analysisMs/1000).toFixed(2),totalSeconds:+((performance.now()-started)/1000).toFixed(2)};
   report.timings=timing;
@@ -2519,7 +2543,7 @@ async function fpHybridBacktest(matches){
   const train=observations.filter(x=>x.train),hold=observations.filter(x=>!x.train),flag=hold.filter(x=>x.dc>=.78);
   report[id]={league:rows[0]?.league||id,fixtures:rows.length,training:metric(train),holdout:metric(hold),flagged78:metric(flag),flaggedCoverage:hold.length?flag.length/hold.length:null};
   for(const x of hold)all.push({...x,league:id});done++;
-  fpStageUpdate(3,Math.round(done/totalLeagues*80),`${done}/${totalLeagues} league summaries calculated`,"Running");
+  fpStageUpdate(2,Math.round(done/totalLeagues*80),`${done}/${totalLeagues} league summaries calculated`,"Running");
   await new Promise(r=>setTimeout(r,0));
  }
  fpStageUpdate(1,100,`${totalLeagues} leagues prepared`,"Complete");
@@ -3487,10 +3511,10 @@ function fpRenderInitialLeagueControls(){
  const target=document.getElementById('fpSequentialAudit');if(!target)return;
  const rows=Object.entries(LEAGUES).map(([id,name])=>{
   const x=fpFixtureLeagueStats[id],pct=x?.selectBets?`${x.selectWins}/${x.selectBets} (${(100*x.selectWins/x.selectBets).toFixed(1)}%)`:'Not tested';
-  const status=FP_UNVERIFIED_TEST_LEAGUES.has(id)?'Historical feed unverified · test skipped':pct;
+  const status=pct;
   return `<tr><td>${esc(name)}</td><td>${esc(status)}</td><td>${fpGateButton('league',id,fpLeagueSelectAllowed(id))}</td></tr>`;
  }).join('');
- target.innerHTML=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">All active competitions are listed, including unverified leagues. Only you change the ON/OFF switches. Saved manual settings are retained. Five unverified feeds are excluded from the historical test until a working source is confirmed.</p><div id="fpManualSummary" class="panel">Run Model Test to calculate current combined metrics.</div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Last saved SELECT accuracy</th><th>BET ON</th></tr></thead><tbody>${rows}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">Your switches are saved locally. The Model Test Optimiser is unchanged.</p>`;
+ target.innerHTML=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">All active competitions are listed, including unverified leagues. Only you change the ON/OFF switches. Saved manual settings are retained. All 15 new competitions are included in Model Test, whether BET ON or OFF. Unavailable feeds will be reported as unavailable, not assigned 0% accuracy.</p><div id="fpManualSummary" class="panel">Run Model Test to calculate current combined metrics.</div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Last saved SELECT accuracy</th><th>BET ON</th></tr></thead><tbody>${rows}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">Your switches are saved locally. The Model Test Optimiser is unchanged.</p>`;
 }
 initLeagueSelects();
 fpRenderInitialLeagueControls();
@@ -3500,6 +3524,10 @@ document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()
  showTab(b.dataset.tab);
  if(b.dataset.tab==="previous")fetchLiveSchedule();
 }));
+const fpWomenToggle=document.getElementById('fpWomenFixtureToggle');
+function fpWomenToggleSync(){if(!fpWomenToggle)return;fpWomenToggle.textContent='Women’s fixtures '+(fpShowWomensFixtures?'ON':'OFF');fpWomenToggle.setAttribute('aria-pressed',String(fpShowWomensFixtures));fpWomenToggle.classList.toggle('fp-women-off',!fpShowWomensFixtures)}
+fpWomenToggleSync();
+fpWomenToggle?.addEventListener('click',()=>{fpShowWomensFixtures=!fpShowWomensFixtures;try{localStorage.setItem('fp_show_womens_fixtures_v1',String(fpShowWomensFixtures))}catch(_){}fpWomenToggleSync();renderFixtures();if(state.loaded)document.getElementById('fixtureStatus').textContent+=' · Refresh to update downloaded leagues';});
 $("load").addEventListener("click",loadData);$("league").addEventListener("change",()=>{if(state.loaded){$("fixtureStatus").textContent="Competition changed. Refresh predictions to load this league.";}renderFixtures()});$("days").addEventListener("change",renderFixtures);$("sort").addEventListener("change",renderFixtures);
 $("top10").addEventListener("click",()=>{state.topMode=!state.topMode;$("top10").textContent=state.topMode?"Hide Top 10 picks":"Show Top 10 picks";if(state.topMode)renderTop10();else $("topbox").innerHTML=""});
 $("goalThreats").addEventListener("click",()=>{state.goalThreatMode=!state.goalThreatMode;$("goalThreats").textContent=state.goalThreatMode?"Hide Goal Threats":"Show Goal Threats";if(state.goalThreatMode)renderGoalThreats();else $("goalThreatBox").innerHTML=""});
