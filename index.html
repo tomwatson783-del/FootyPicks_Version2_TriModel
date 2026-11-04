@@ -491,7 +491,9 @@ main section details>summary{cursor:pointer}
 
 /* Women’s football: distinguish fixtures without disrupting the existing theme. */
 .fp-women-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;margin:0 0 12px;border-radius:11px;border:1px solid var(--border,#4b5c6c);background:transparent;color:inherit;flex-wrap:wrap}
-.fp-womens-match{border:1px solid #8bbde0!important}
+.fp-womens-match{border:2px solid #75b9e9!important;box-shadow:inset 0 0 0 1px rgba(117,185,233,.12)}
+.fp-womens-alert{border:2px solid #75b9e9!important;border-radius:9px}
+.fp-womens-alert-row{border-left:3px solid #75b9e9!important;padding-left:9px!important}
 .fp-women-label{display:inline-block;border:1px solid #8bbde0;color:inherit;background:transparent;border-radius:5px;padding:2px 5px;font-size:9px;font-weight:700;letter-spacing:.04em;margin-right:5px}
 .fp-women-off{opacity:.75}
 
@@ -759,6 +761,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
   <p class="muted smalltext">All live scores in one place, with estimated win and draw chances for teams that are drawing or behind.</p>
   <div class="row between wrap"><span id="liveUpdated" class="smalltext muted">Waiting for data…</span><button id="liveRefresh" class="btn small secondary">Refresh live data</button></div>
  </div>
+ <div class="fp-women-controls"><span><strong>Women’s leagues</strong> · Live matches, goal alerts and red cards</span><button type="button" class="btn secondary small" id="fpWomenLiveToggle" aria-pressed="true">Women’s live ON</button></div>
  <div id="recentGoals" aria-live="polite"></div>
  <div id="myLiveBets" class="panel fp-bet-monitor" hidden></div>
  <div id="recentRedCards" aria-live="polite"></div>
@@ -895,6 +898,7 @@ const FP_ACTIVE_LEAGUES=new Set(Object.keys(LEAGUES));
 // All remaining competitions are tested independently of their manual BET ON/OFF state.
 const FP_WOMENS_LEAGUES=new Set(['eng.w.1','esp.w.1','usa.nwsl','fra.w.1']);
 const FP_NEW_LEAGUES=new Set(['jpn.1','arg.1','col.1',...FP_WOMENS_LEAGUES]);
+let fpShowWomensLive=(()=>{try{return localStorage.getItem('fp_show_womens_live_v1')!=='false'}catch(_){return true}})();
 let fpShowWomensFixtures=(()=>{try{return localStorage.getItem('fp_show_womens_fixtures_v1')!=='false'}catch(_){return true}})();
 function fpWomenLabel(id){return FP_WOMENS_LEAGUES.has(id)?'<span class="fp-women-label">WOMEN</span> ':'';}
 
@@ -1217,8 +1221,9 @@ let fpSwitches=(()=>{try{return {...FP_SWITCH_DEFAULTS,...JSON.parse(localStorag
 function fpSwitchSave(){try{localStorage.setItem('fp_model_component_switches_v1',JSON.stringify(fpSwitches))}catch(_){}}
 // League SELECT gating is independent of fixture prediction visibility.
 let fpLeagueGate=(()=>{try{return JSON.parse(localStorage.getItem('fp_league_select_gate_v2')||'{}')}catch(_){return {}}})();
-// Preserve every existing manual choice; only initialise genuinely new competitions OFF.
-for(const id of FP_NEW_LEAGUES)if(!Object.prototype.hasOwnProperty.call(fpLeagueGate,id))fpLeagueGate[id]=false;
+// Preserve existing manual choices; newly added competitions default ON so they participate in live SELECT/BET ON.
+// A previously saved OFF choice is never overwritten.
+for(const id of FP_NEW_LEAGUES)if(!Object.prototype.hasOwnProperty.call(fpLeagueGate,id))fpLeagueGate[id]=true;
 for(const id of Object.keys(fpLeagueGate))if(!FP_ACTIVE_LEAGUES.has(id))delete fpLeagueGate[id];
 function fpLeagueSelectAllowed(id){return !id||fpLeagueGate[id]!==false}
 function fpLeagueGateSave(){try{localStorage.setItem('fp_league_select_gate_v2',JSON.stringify(fpLeagueGate))}catch(_){}}
@@ -2475,7 +2480,7 @@ async function fpSequentialSwitchAudit(matches){
   fpLastManualAudit={validationRows:bestV,holdoutRows:optimizedH};
   renderFixtures();
   const tableLeagues=Object.entries(LEAGUES).map(([id,name])=>leagueResults.find(x=>x.id===id)||{id,name,holdoutOptimized:{bets:0,wins:0,losses:0,net:0,precision:null},validationAll:{bets:0,wins:0,losses:0,net:0,precision:null}});
-  const html=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">Accuracy is measured on the final chronological holdout BET ON OUTCOME decisions, not training predictions. Every button controls betting eligibility only; league fixtures and predictions stay visible. No automatic league exclusions are applied. MM2 currently influences Model 2 predicted goals and must remain in the historical audit for valid SELECT results.</p><div id="fpManualSummary" class="panel"></div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Final holdout general accuracy</th><th>Final holdout SELECT accuracy</th><th>Validation SELECT</th><th>Later holdout SELECT</th><th>BET ON</th></tr></thead><tbody>${tableLeagues.map(x=>`<tr><td>${esc(x.name)}</td><td>${fpFixtureLeagueStats[x.id]?.predictionCount?`${fpFixtureLeagueStats[x.id].predictionWins}/${fpFixtureLeagueStats[x.id].predictionCount} (${(100*fpFixtureLeagueStats[x.id].predictionWins/fpFixtureLeagueStats[x.id].predictionCount).toFixed(1)}%)`:(fpFeedDiagnostic(x.id)?'Feed unavailable: '+esc(fpFeedDiagnostic(x.id)):'Not tested')}</td><td>${fmt(x.holdoutOptimized)}${x.holdoutOptimized.bets<15?' <small>(small sample)</small>':''}</td><td>${fmt(x.validationAll)}</td><td>${fmt(x.holdoutOptimized)}</td><td>${fpGateButton('league',x.id,fpLeagueSelectAllowed(x.id))}</td></tr>`).join('')}</tbody></table></div>
+  const html=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">Historical SELECT accuracy is measured on the final chronological holdout before manual league gating. The BET ON switch controls live eligibility and combined gated totals only. Every button controls betting eligibility only; league fixtures and predictions stay visible. No automatic league exclusions are applied. MM2 currently influences Model 2 predicted goals and must remain in the historical audit for valid SELECT results.</p><div id="fpManualSummary" class="panel"></div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Final holdout general accuracy</th><th>Final holdout SELECT accuracy</th><th>Validation SELECT</th><th>Later holdout SELECT</th><th>BET ON</th></tr></thead><tbody>${tableLeagues.map(x=>`<tr><td>${esc(x.name)}</td><td>${fpFixtureLeagueStats[x.id]?.predictionCount?`${fpFixtureLeagueStats[x.id].predictionWins}/${fpFixtureLeagueStats[x.id].predictionCount} (${(100*fpFixtureLeagueStats[x.id].predictionWins/fpFixtureLeagueStats[x.id].predictionCount).toFixed(1)}%)`:(fpFeedDiagnostic(x.id)?'Feed unavailable: '+esc(fpFeedDiagnostic(x.id)):'Not tested')}</td><td>${fmt(x.holdoutOptimized)}${x.holdoutOptimized.bets<15?' <small>(small sample)</small>':''}</td><td>${fmt(x.validationAll)}</td><td>${fmt(x.holdoutOptimized)}</td><td>${fpGateButton('league',x.id,fpLeagueSelectAllowed(x.id))}</td></tr>`).join('')}</tbody></table></div>
 <p id="fpManualNotice" class="muted smalltext">Manual choices are saved in this browser. League toggles update combined results immediately. MM2 toggles require a new Model Test.</p><p class="muted smalltext">Full JSON below includes per-league accuracy, SELECT counts, manually saved switches and chronological validation/holdout metrics.</p>`;
   const target=document.getElementById('fpSequentialAudit');if(target)target.innerHTML=html+fpPrecisionHtml;
   fpManualAuditRefresh();
@@ -3042,9 +3047,9 @@ function liveCard(m,index,mode="all"){
  const redCardFlag=redEntries.length?`<span class="red-card-flag" role="status" aria-label="Red card reported"><i class="red-dot"></i> RED CARD · ${redEntries.join(" · ")}</span>`:"";
  const hidden=isHiddenLive(m);const preSnap=state.history.find(x=>x.id===id);const originalConfidence=preSnap&&Number.isFinite(Number(preSnap.confidence))?Number(preSnap.confidence):null;
  const modeLabel=mode==="opportunity"?`OPPORTUNITY #${index+1}`:`LIVE MATCH #${index+1}`;
- return `<article class="live-card ${leader&&leader.opportunityScore>=60?"priority":""}" data-backed-live="${esc(id)}">
+ return `<article class="live-card ${FP_WOMENS_LEAGUES.has(m.leagueId)?'fp-womens-match':''} ${leader&&leader.opportunityScore>=60?"priority":""}" data-backed-live="${esc(id)}">
   <div class="row between wrap"><span class="live-rank">${modeLabel}</span><div class="row wrap" style="gap:6px;justify-content:flex-end"><span data-bet-live-badge="${esc(id)}"></span>${redCardFlag}${stormTag}${demoTag}<button class="btn small secondary" data-live-toggle="${esc(id)}">${hidden?"Unhide Game":"Hide Game"}</button></div></div>
-  <div class="meta" style="margin-top:7px">${esc(m.league||"League")} · ${esc(m.statusName||"Live match")}</div>
+  <div class="meta" style="margin-top:7px">${fpWomenLabel(m.leagueId)}${esc(m.league||"League")} · ${esc(m.statusName||"Live match")}</div>
   <div class="row between" style="margin:12px 0;gap:6px"><div class="grow"><div class="live-team">${esc(m.home)}</div><div class="meta">Pre-game win: ${prePct.H}%</div></div><div style="text-align:center;min-width:82px"><div class="live-score">${scoreLine}</div><div class="live-minute">${esc(status)}</div><div class="muted smalltext" style="margin-top:4px">Team-form prediction: ${esc(preSnap?.predictedScore||"Not saved")}<br>Pre-match confidence: ${`<strong>${esc(liveConfidenceText(originalConfidence))}</strong>`}<br>Original selection: <strong>${!preSnap?"N/A":preSnap.selection?preSnap.selection==="N"?"No Selection":outcomeName(preSnap.selection):"Not recorded"}</strong></div></div><div class="grow" style="text-align:right"><div class="live-team">${esc(m.away)}</div><div class="meta">Pre-game win: ${prePct.A}%</div></div></div>
   ${a.projected?`<div class="fp-live-outcome"><span>LIVE PREDICTED OUTCOME</span><strong>${esc(outcomeName(a.projected.prediction))} · ${esc(a.projected.score)}</strong><small>Indicative in-play estimate</small></div>`:''}
   <details class="fp-live-chances"><summary>In-game chances and estimates</summary>
@@ -3073,13 +3078,15 @@ function fpApplySummaryScore(m,summary){
  return changed;
 }
 function renderRecentGoals(matches){
+ matches=(matches||[]).filter(m=>fpShowWomensLive||!FP_WOMENS_LEAGUES.has(m.leagueId));
  const root=$("recentGoals");if(!root)return;
  const rows=(matches||[]).map(m=>{const goal=state.liveStats[eventId(m)]?.lastGoal;if(!goal||goal.minute===null||!validScore(m))return null;const current=getElapsedLiveMinute(m);const age=Number.isFinite(goal.timestamp)?Math.max(0,(Date.now()-goal.timestamp)/60000):(current===null?null:Math.max(0,current-goal.minute));return{m,goal,age}}).filter(Boolean).sort((a,b)=>{const aa=a.age===null?999:a.age,bb=b.age===null?999:b.age;return aa-bb}).slice(0,5);
  if(!rows.length){root.innerHTML=`<div class="recent-goals-panel"><div class="row between wrap"><strong>⚽ Latest goals</strong><span class="muted smalltext">Up to 5 live matches</span></div><p class="muted smalltext" style="margin:7px 0 0">Recent goal events aren’t available from the feed for the current live matches.</p></div>`;return;}
  root.innerHTML=`<div class="recent-goals-panel"><div class="row between wrap" style="margin-bottom:5px"><strong>⚽ Latest goals</strong><span class="muted smalltext">Most recent first · max 5</span></div>${rows.map(({m,goal,age})=>{const cls=age!==null&&age<=1?'goal-now':age!==null&&age<=2?'goal-two':age!==null&&age<=5?'goal-five':'';const label=age===null?`${goal.minute}′`:age<=1?'JUST NOW':age<=2?'LAST 2 MIN':age<=5?'LAST 5 MIN':`${Math.round(age)} MIN AGO`;const side=goal.side==='home'?'home':goal.side==='away'?'away':null;const scorer=goal.scorer?` · ${esc(goal.scorer)}`:'';
- const backed=fpFixtureBets(eventId(m));const badge=backed.length?`<span class="fp-backed-tag fp-alert-backed" title="Backed: ${esc(backed.map(fpBetLabel).join(", "))}">✓ Bet</span>`:'' ;return`<div class="recent-goal-row ${cls}"><span class="goal-age">${label}</span><div><strong>${esc(m.home)} ${m.homeScore}–${m.awayScore} ${esc(m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${goal.minute}′${scorer}</div></div><span class="row wrap" style="gap:5px">${badge}<span class="tag">${side==='home'?'HOME GOAL':side==='away'?'AWAY GOAL':'GOAL'}</span></span></div>`}).join('')}</div>`;
+ const backed=fpFixtureBets(eventId(m));const badge=backed.length?`<span class="fp-backed-tag fp-alert-backed" title="Backed: ${esc(backed.map(fpBetLabel).join(", "))}">✓ Bet</span>`:'' ;return`<div class="recent-goal-row ${cls} ${FP_WOMENS_LEAGUES.has(m.leagueId)?'fp-womens-alert-row':''}"><span class="goal-age">${label}</span><div><strong>${esc(m.home)} ${m.homeScore}–${m.awayScore} ${esc(m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${goal.minute}′${scorer}</div></div><span class="row wrap" style="gap:5px">${badge}<span class="tag">${side==='home'?'HOME GOAL':side==='away'?'AWAY GOAL':'GOAL'}</span></span></div>`}).join('')}</div>`;
 }
 function renderRecentRedCards(matches){
+ matches=(matches||[]).filter(m=>fpShowWomensLive||!FP_WOMENS_LEAGUES.has(m.leagueId));
  const root=$('recentRedCards');if(!root)return;const rows=[];
  for(const m of matches||[]){const stats=state.liveStats[eventId(m)]||{};
   for(const side of ['home','away']){const reported=statNum(stats?.[side]?.redCards);
@@ -3089,7 +3096,7 @@ function renderRecentRedCards(matches){
   }
  }
  if(!rows.length){root.innerHTML='';return}
- root.innerHTML=`<div class="recent-reds-panel fp-red-alert"><div class="row between wrap fp-red-heading"><strong>🟥 Red cards</strong></div>${rows.map(({m,side,count})=>`<div class="recent-red-row fp-red-item"><div class="fp-red-copy"><strong>${esc(side==='home'?m.home:m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${esc(m.home)} ${validScore(m)?m.homeScore+'–'+m.awayScore:'vs'} ${esc(m.away)}</div></div><span class="row wrap" style="gap:6px">${fpFixtureBets(eventId(m)).length?`<span class="fp-backed-tag fp-alert-backed" title="Backed: ${esc(fpFixtureBets(eventId(m)).map(fpBetLabel).join(", "))}">✓ Bet</span>`:''}<span class="fp-red-count">${count} red card${count===1?'':'s'}</span></span></div>`).join('')}</div>`;
+ root.innerHTML=`<div class="recent-reds-panel fp-red-alert"><div class="row between wrap fp-red-heading"><strong>🟥 Red cards</strong></div>${rows.map(({m,side,count})=>`<div class="recent-red-row fp-red-item ${FP_WOMENS_LEAGUES.has(m.leagueId)?'fp-womens-alert-row':''}"><div class="fp-red-copy"><strong>${esc(side==='home'?m.home:m.away)}</strong><div class="muted smalltext">${esc(m.league||'Live')} · ${esc(m.home)} ${validScore(m)?m.homeScore+'–'+m.awayScore:'vs'} ${esc(m.away)}</div></div><span class="row wrap" style="gap:6px">${fpFixtureBets(eventId(m)).length?`<span class="fp-backed-tag fp-alert-backed" title="Backed: ${esc(fpFixtureBets(eventId(m)).map(fpBetLabel).join(", "))}">✓ Bet</span>`:''}<span class="fp-red-count">${count} red card${count===1?'':'s'}</span></span></div>`).join('')}</div>`;
 }
 
 function ukParts(date){
@@ -3222,7 +3229,7 @@ function renderLiveScheduleCategory(){
  }
  const mode=state.liveScheduleFilter,now=new Date(),todayKey=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
  const dayKey=m=>new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(m.date));
- let matches=state.liveSchedule.filter(m=>{
+ let matches=state.liveSchedule.filter(m=>(fpShowWomensLive||!FP_WOMENS_LEAGUES.has(m.leagueId))).filter(m=>{
   const t=new Date(m.date).getTime();
   if(mode==="today")return dayKey(m)===todayKey;
   if(mode==="upcoming")return !isFinished(m)&&m.state!=="in"&&t>=now.getTime()&&t<=now.getTime()+7*86400000;
@@ -3235,7 +3242,7 @@ function renderLiveScheduleCategory(){
  $("liveList").innerHTML=matches.map(m=>{
   const snap=state.history.find(x=>x.id===eventId(m)),score=isFinished(m)?`${m.homeScore}–${m.awayScore}`:validScore(m)?`${m.homeScore}–${m.awayScore}`:"vs";
   const status=isFinished(m)?"Finished":m.state==="in"?"Live":m.statusName||"Upcoming";
-  return `<article data-backed-schedule="${esc(eventId(m))}" class="match fp-schedule-match ${isFinished(m)?'fp-finished':m.state==='in'?'fp-inplay':'fp-upcoming'}"><div class="row between wrap fp-schedule-head"><span class="league">${esc(m.league)}</span><span class="tag">${esc(status)}</span><span data-bet-schedule-badge="${esc(eventId(m))}"></span></div><div class="row between fp-schedule-teams"><strong class="grow">${esc(m.home)}</strong><div class="fp-schedule-middle"><strong>${esc(score)}</strong><small>${esc(fmtDate(m.date))}</small></div><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div><details class="fp-schedule-detail"><summary>Pre-match predictions</summary>${liveModelComparison(m)}</details></article>`;
+  return `<article data-backed-schedule="${esc(eventId(m))}" class="match fp-schedule-match ${FP_WOMENS_LEAGUES.has(m.leagueId)?'fp-womens-match':''} ${isFinished(m)?'fp-finished':m.state==='in'?'fp-inplay':'fp-upcoming'}"><div class="row between wrap fp-schedule-head"><span class="league">${fpWomenLabel(m.leagueId)}${esc(m.league)}</span><span class="tag">${esc(status)}</span><span data-bet-schedule-badge="${esc(eventId(m))}"></span></div><div class="row between fp-schedule-teams"><strong class="grow">${esc(m.home)}</strong><div class="fp-schedule-middle"><strong>${esc(score)}</strong><small>${esc(fmtDate(m.date))}</small></div><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div><details class="fp-schedule-detail"><summary>Pre-match predictions</summary>${liveModelComparison(m)}</details></article>`;
  }).join("");
 }
 const fpMM2OpenPanels=new Set();
@@ -3245,7 +3252,7 @@ function renderLive(){
  const statusFilter=$("liveStatusFilter");if(statusFilter)state.liveScheduleFilter=statusFilter.value||"live";
  const situationControls=$("liveFilters");if(situationControls)situationControls.hidden=state.liveScheduleFilter!=="live";
  if(state.liveScheduleFilter!=="live"){renderLiveScheduleCategory();renderLiveValidation();fpBetRefresh();return;}
- const all=state.liveMatches.slice();
+ const all=state.liveMatches.filter(m=>fpShowWomensLive||!FP_WOMENS_LEAGUES.has(m.leagueId));
  // Remove completed fixtures from the stored hidden list, without affecting their history.
  const activeIds=new Set(all.map(eventId));const retained=state.hiddenLiveGames.filter(id=>activeIds.has(id));
  if(retained.length!==state.hiddenLiveGames.length){state.hiddenLiveGames=retained;store("fp_hidden_live_games",retained)}
@@ -3274,7 +3281,7 @@ function renderLive(){
  renderRecentRedCards(all.filter(m=>(league==="all"||m.leagueId===league)&&!isHiddenLive(m)));
  const stormMatches=matches.map(m=>({m,signal:goalStormSignal(state.liveStats[eventId(m)])})).filter(x=>x.signal);
  const stormSummary=$("goalStormSummary");
- if(stormSummary)stormSummary.innerHTML=stormMatches.length?`<div class="goal-storm-panel"><div class="row between wrap"><h3 style="margin:0">⚡ Goal Storm Watch</h3><span class="tag">${stormMatches.length} high-activity ${stormMatches.length===1?"match":"matches"}</span></div><p class="muted smalltext" style="margin:5px 0 9px">Based on combined shots, shots on target and/or xG reported by the live feed. A storm signal means attacking activity is high; it does not predict a goal with certainty.</p>${stormMatches.slice(0,3).map(x=>`<div class="row between wrap" style="padding:7px 0;border-top:1px solid #9a612a"><strong>${esc(x.m.home)} ${validScore(x.m)?`${x.m.homeScore}–${x.m.awayScore}`:"vs"} ${esc(x.m.away)}</strong><span class="muted smalltext">${esc(x.signal.evidence.join(" · "))}</span></div>`).join("")}</div>`:"";
+ if(stormSummary)stormSummary.innerHTML=stormMatches.length?`<div class="goal-storm-panel"><div class="row between wrap"><h3 style="margin:0">⚡ Goal Storm Watch</h3><span class="tag">${stormMatches.length} high-activity ${stormMatches.length===1?"match":"matches"}</span></div><p class="muted smalltext" style="margin:5px 0 9px">Based on combined shots, shots on target and/or xG reported by the live feed. A storm signal means attacking activity is high; it does not predict a goal with certainty.</p>${stormMatches.slice(0,3).map(x=>`<div class="row between wrap ${FP_WOMENS_LEAGUES.has(x.m.leagueId)?'fp-womens-alert-row':''}" style="padding:7px 0;border-top:1px solid #9a612a"><strong>${esc(x.m.home)} ${validScore(x.m)?`${x.m.homeScore}–${x.m.awayScore}`:"vs"} ${esc(x.m.away)}</strong><span class="muted smalltext">${esc(x.signal.evidence.join(" · "))}</span></div>`).join("")}</div>`:"";
  if(!all.length){$("liveList").innerHTML=`<div class="empty">No live matches were returned by the feed right now. Refresh later to check again. The live feed may not cover every competition or update instantly.</div>`;return;}
  matches.sort((x,y)=>new Date(x.date)-new Date(y.date));
  if(!matches.length){$("liveList").innerHTML=`<div class="empty">No live matches match this filter right now.</div>`;return;}
@@ -3569,7 +3576,7 @@ function fpRenderInitialLeagueControls(){
   const status=pct;
   return `<tr><td>${esc(name)}</td><td>${esc(status)}</td><td>${fpGateButton('league',id,fpLeagueSelectAllowed(id))}</td></tr>`;
  }).join('');
- target.innerHTML=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">All retained competitions are listed. Only you change the ON/OFF switches. Saved manual settings are retained. All retained new competitions are included in Model Test, whether BET ON or OFF. Unavailable feeds will be reported as unavailable, not assigned 0% accuracy.</p><div id="fpManualSummary" class="panel">Run Model Test to calculate current combined metrics.</div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Last saved SELECT accuracy</th><th>BET ON</th></tr></thead><tbody>${rows}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">Your switches are saved locally. The Model Test Optimiser is unchanged.</p>`;
+ target.innerHTML=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">All retained competitions are listed. Only you change the ON/OFF switches. Saved manual settings are retained. Every retained league is included in historical SELECT testing, even when its manual BET ON switch is OFF. An OFF league cannot display a live SELECT/BET ON recommendation. New leagues default ON unless you previously saved a manual OFF choice. Unavailable feeds will be reported as unavailable, not assigned 0% accuracy.</p><div id="fpManualSummary" class="panel">Run Model Test to calculate current combined metrics.</div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>Last saved SELECT accuracy</th><th>BET ON</th></tr></thead><tbody>${rows}</tbody></table></div><p id="fpManualNotice" class="muted smalltext">Your switches are saved locally. The Model Test Optimiser is unchanged.</p>`;
 }
 initLeagueSelects();
 fpRenderInitialLeagueControls();
@@ -3579,6 +3586,10 @@ document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()
  showTab(b.dataset.tab);
  if(b.dataset.tab==="previous")fetchLiveSchedule();
 }));
+const fpWomenLiveToggle=document.getElementById('fpWomenLiveToggle');
+function fpWomenLiveToggleSync(){if(!fpWomenLiveToggle)return;fpWomenLiveToggle.textContent='Women’s live '+(fpShowWomensLive?'ON':'OFF');fpWomenLiveToggle.setAttribute('aria-pressed',String(fpShowWomensLive));fpWomenLiveToggle.classList.toggle('fp-women-off',!fpShowWomensLive)}
+fpWomenLiveToggleSync();
+fpWomenLiveToggle?.addEventListener('click',()=>{fpShowWomensLive=!fpShowWomensLive;try{localStorage.setItem('fp_show_womens_live_v1',String(fpShowWomensLive))}catch(_){}fpWomenLiveToggleSync();renderLive()});
 const fpWomenToggle=document.getElementById('fpWomenFixtureToggle');
 function fpWomenToggleSync(){if(!fpWomenToggle)return;fpWomenToggle.textContent='Women’s fixtures '+(fpShowWomensFixtures?'ON':'OFF');fpWomenToggle.setAttribute('aria-pressed',String(fpShowWomensFixtures));fpWomenToggle.classList.toggle('fp-women-off',!fpShowWomensFixtures)}
 fpWomenToggleSync();
