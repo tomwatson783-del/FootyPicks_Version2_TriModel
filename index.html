@@ -1726,7 +1726,7 @@ function comparisonRows(m){
  const original=m.originalPrediction||frozen?.original;
  const full=false;
  const cell=(v,label)=>{if(!v)return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Prediction unavailable</div></div>`;const chosen=v.selection===v.prediction&&fpLeagueSelectAllowed(m.leagueId);return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${Number(v.xgDifference??(v.homeLambda-v.awayLambda)).toFixed(2)}</div><div class="model-bottom"><span class="${chosen?'model-select':'model-no-select'}">${chosen?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">${fpMinimalConfidenceBadge(fpDisplayConfidence(m,v.confidence))}</span></div></div>`};
- return `<div class="fixture-comparison">${fpStatusTag(m)} ${fpDrawBadge(m)}${fpDrawDetail(m)}<div class="model-grid ${full?'':'two-models'}">${full?cell(original,'01 · League-adjusted'):''}${cell(m,'Model 2 · Team form')}</div>${probsHtml(m)}</div>`;
+ return `<div class="fixture-comparison">${fpStatusTag(m)} ${fpDrawDetail(m)}<div class="model-grid ${full?'':'two-models'}">${full?cell(original,'01 · League-adjusted'):''}${cell(m,'Model 2 · Team form')}</div>${probsHtml(m)}</div>`;
 }
 
 function fpRate(h,n){return n?`${(100*h/n).toFixed(1)}%`:'—'}
@@ -3260,7 +3260,7 @@ function liveModelComparison(m){
  const b=data;
  const cell=(v,label)=>v&&['H','D','A'].includes(v.prediction)?`<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">${Number.isFinite(Number(v.homeLambda))&&Number.isFinite(Number(v.awayLambda))&&v.homeLambda!=null&&v.awayLambda!=null?`Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${(Number(v.homeLambda)-Number(v.awayLambda)).toFixed(2)}`:("Expected goals unavailable")}</div><div class="model-bottom"><span class="${v.selection===v.prediction&&fpLeagueSelectAllowed(m.leagueId)?'model-select':'model-no-select'}">${v.selection===v.prediction&&fpLeagueSelectAllowed(m.leagueId)?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">${Number.isFinite(+v.confidence)?v.confidence+'/10':'—'}</span></div></div>`:`<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Prediction unavailable</div></div>`;
  const full=false;
- return `<div class="fixture-comparison">${fpDrawBadge({...data,leagueId:m.leagueId})}${fpStatusTag({...b,leagueId:m.leagueId})}<div class="model-grid">${cell(b,'Prediction')}</div></div>`;
+ return `<div class="fixture-comparison">${fpStatusTag({...b,leagueId:m.leagueId})}<div class="model-grid">${cell(b,'Prediction')}</div></div>`;
 }
 function renderLiveScheduleCategory(){
  if(fpScheduleLoading&&!state.liveSchedule.length){
