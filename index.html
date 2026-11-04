@@ -486,6 +486,8 @@ main section details>summary{cursor:pointer}
 @media(max-width:600px){.fp-red-item{padding:8px!important}.fp-red-count{font-size:10px}#busy .busybox{padding:20px 14px}}
 
 .fp-fixture-accuracy{display:inline-block;text-align:right;font-size:11px;line-height:1.45;color:var(--text,#e7e7e7);white-space:nowrap;margin-right:7px}.fp-fixture-accuracy b{font-size:12px}.fp-fixture-accuracy small{opacity:.7}.fp-feature-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.fp-feature-right .fp-fixture-accuracy{margin-right:0}@media(max-width:540px){.fp-fixture-accuracy{font-size:10px;white-space:normal}.fp-fixture-accuracy b{font-size:11px}}
+.fp-mm2-flow{margin-top:12px;padding:13px;border:1px solid #3b6787;border-radius:12px;background:#182a3c}
+.fp-mm2-flow h4{margin:0 0 8px;color:#80b7ff}.fp-mm2-flow p{margin:8px 0;line-height:1.55}
 </style>
 <style id="fp-three-model-refresh">
 main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{line-height:1.45;max-width:70ch}
@@ -853,16 +855,19 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 "use strict";
 
 const LEAGUES={
- "eng.1":"Premier League","eng.2":"Championship","eng.3":"League One","eng.4":"League Two",
- "esp.1":"La Liga","ger.1":"Bundesliga","ita.1":"Serie A","fra.1":"Ligue 1",
- "ned.1":"Eredivisie","por.1":"Primeira Liga","ger.2":"2. Bundesliga","bel.1":"Belgian Pro League",
- "tur.1":"Turkish Süper Lig","aut.1":"Austrian Bundesliga","sco.1":"Scottish Premiership","ita.2":"Italian Serie B",
- "usa.1":"Major League Soccer","bra.1":"Brazilian Série A","mex.1":"Liga MX",
- "uefa.champions":"Champions League","uefa.europa":"Europa League",
- "esp.2":"La Liga 2","fra.2":"Ligue 2","den.1":"Danish Superliga",
- "nor.1":"Norwegian Eliteserien","swe.1":"Swedish Allsvenskan",
- "gre.1":"Greek Super League","sco.2":"Scottish Championship","ned.2":"Dutch Eerste Divisie"
+ "eng.1":"Premier League","eng.2":"Championship","eng.3":"League One",
+ "esp.1":"La Liga","ita.1":"Serie A","fra.1":"Ligue 1",
+ "ned.1":"Eredivisie","por.1":"Primeira Liga","bel.1":"Belgian Pro League",
+ "tur.1":"Turkish Süper Lig","aut.1":"Austrian Bundesliga",
+ "bra.1":"Brazilian Série A","mex.1":"Liga MX","uefa.champions":"Champions League",
+ "fra.2":"Ligue 2","den.1":"Danish Superliga","nor.1":"Norwegian Eliteserien",
+ "swe.1":"Swedish Allsvenskan","gre.1":"Greek Super League",
+ "sco.2":"Scottish Championship","ned.2":"Dutch Eerste Divisie",
+ "sui.1":"Swiss Super League","cze.1":"Czech First League",
+ "pol.1":"Polish Ekstraklasa","cro.1":"Croatian HNL","srb.1":"Serbian SuperLiga"
 };
+const FP_ACTIVE_LEAGUES=new Set(Object.keys(LEAGUES));
+
 // Populate both competition filters from one shared list so they cannot drift apart.
 function initLeagueSelects(){
  for(const id of ["league","historyLeague"]){
@@ -917,13 +922,78 @@ function selectionWithDraw(diff,prediction,probs,homeGap=state.homeGap,awayGap=s
 
 const state={
  matches:[],loaded:false,loading:false,topMode:false,goalThreatMode:false,
- acc:readStore("fp_acc",[]),history:readStore("fp_prediction_history",[]),
+ acc:readStore("fp_acc",[]),history:readStore("fp_prediction_history",[]).filter(x=>FP_ACTIVE_LEAGUES.has(x.leagueId)),
  homeGap:.5,awayGap:.5,predictionHomeBoundary:.20,predictionAwayBoundary:.20,leagueInfluence:0,historicalXgInfluence:0,finishingInfluence:0,xgRecords:readStore("fp_historical_xg",{}),hiddenLiveGames:readStore("fp_hidden_live_games",[]),recommendation:null,confidenceRecommendation:null,lastTest:null,activeIndex:1,activeWindow:0,manualWindow:0,mode:"manual",manualIndex:1,minSample:100,confidenceConfig:JSON.parse(JSON.stringify(DEFAULT_CONF)),confidenceMultiplier:3,selectionMethod:"gap",winProb:.50,minimumStability:0,minSelectCoverage:.12,allowDraw:true,drawGap:.20,drawProb:.32,
  liveMatches:[],liveSchedule:[],liveScheduleFilter:"live",weeklyPicks:readStore("fp_weekly_top6",[]),liveStats:{},liveHistory:readStore("fp_live_prediction_history",[]),liveFilter:"all",liveLeagueFilter:"all",liveSituationFilter:"all",liveLoading:false,liveLastUpdated:null
 };
 
 function readStore(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
 function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+
+/* Resilient offline persistence: IndexedDB primary, localStorage fallback.
+   Only this browser/profile can read these records; clearing site data removes them. */
+const FP_DB_NAME='footypicks_saved_v2';
+let fpDatabasePromise;
+function fpDb(){
+ if(!('indexedDB' in window))return Promise.resolve(null);
+ if(!fpDatabasePromise)fpDatabasePromise=new Promise(resolve=>{
+  try{const req=indexedDB.open(FP_DB_NAME,1);
+   req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('records'))req.result.createObjectStore('records')};
+   req.onsuccess=()=>resolve(req.result);req.onerror=()=>resolve(null);req.onblocked=()=>resolve(null);
+  }catch{resolve(null)}
+ });return fpDatabasePromise;
+}
+async function fpDbGet(key){const db=await fpDb();if(!db)return null;return new Promise(resolve=>{
+ try{const req=db.transaction('records','readonly').objectStore('records').get(key);req.onsuccess=()=>resolve(req.result??null);req.onerror=()=>resolve(null)}catch{resolve(null)}
+})}
+async function fpDbPut(key,value){const db=await fpDb();if(!db)return false;return new Promise(resolve=>{
+ try{const req=db.transaction('records','readwrite').objectStore('records').put(value,key);req.onsuccess=()=>resolve(true);req.onerror=()=>resolve(false)}catch{resolve(false)}
+})}
+async function fpDbDelete(key){const db=await fpDb();if(!db)return;try{db.transaction('records','readwrite').objectStore('records').delete(key)}catch{}}
+const fpOriginalStore=store;
+store=function(key,value){fpOriginalStore(key,value);if(['fp_prediction_history','fp_confirmed_bets_v1','fp_acc','fp_fixture_cache_v2'].includes(key))void fpDbPut(key,value)};
+async function fpSaveHistory(){
+ const saved=await fpDbPut('fp_prediction_history',state.history);
+ if(!saved){
+  // Compact local fallback: keep newest snapshots first rather than failing a multi-MB write.
+  for(let n=Math.min(state.history.length,900);n>=50;n=Math.floor(n*.7)){
+   try{localStorage.setItem('fp_prediction_history',JSON.stringify(state.history.slice(-n)));return true}catch{}
+  }
+  return false;
+ }
+ try{localStorage.setItem('fp_prediction_history',JSON.stringify(state.history.slice(-250)))}catch{}
+ return true;
+}
+function fpSaveFixtureCache(){
+ const rows=state.matches.filter(m=>new Date(m.date).getTime()>Date.now()-86400000).map(m=>({
+  id:eventId(m),leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,homeId:m.homeId,awayId:m.awayId,date:m.date,
+  homeScore:m.homeScore,awayScore:m.awayScore,prediction:m.prediction,selection:m.selection,confidence:m.confidence,
+  probs:m.probs,predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,mm2:m.mm2,
+  h:m.h,a:m.a,xgDifference:m.xgDifference,mm2Flow:m.mm2Flow,preMatchLocked:m.preMatchLocked
+ }));
+ // Retain a small same-origin fallback when IndexedDB is unavailable.
+ try{localStorage.setItem('fp_fixture_cache_v2',JSON.stringify(rows.slice(-350)))}catch{}
+ void fpDbPut('fp_fixture_cache_v2',rows);
+}
+async function fpRestoreSavedState(){
+ const [hist,bets,acc,dbFixtures]=await Promise.all(['fp_prediction_history','fp_confirmed_bets_v1','fp_acc','fp_fixture_cache_v2'].map(fpDbGet));
+ const fixtures=Array.isArray(dbFixtures)&&dbFixtures.length?dbFixtures:readStore('fp_fixture_cache_v2',[]);
+ if(Array.isArray(hist)&&hist.length>=state.history.length){
+  const merged=new Map([...hist,...state.history].filter(x=>FP_ACTIVE_LEAGUES.has(x.leagueId)).map(x=>[x.id,x]));
+  state.history=[...merged.values()];
+ }
+ if(Array.isArray(bets)&&bets.length>fpBacked.length){
+  const merged=new Map([...bets,...fpBacked].filter(x=>FP_ACTIVE_LEAGUES.has(x.leagueId)).map(x=>[x.id+'|'+(x.market||'straight'),x]));
+  fpBacked=[...merged.values()];
+ }
+ if(Array.isArray(acc)&&acc.length>state.acc.length)state.acc=acc.filter(x=>FP_ACTIVE_LEAGUES.has(x.leagueId));
+ if(Array.isArray(fixtures)&&fixtures.length&&!state.loading&&!state.loaded){
+  state.matches=fixtures.filter(x=>FP_ACTIVE_LEAGUES.has(x.leagueId));
+  state.loaded=state.matches.length>0;
+  if(state.loaded){renderFixtures();renderAccumulator();$('fixtureStatus').textContent='Restored '+state.matches.length+' cached fixtures and their saved predictions. Refresh to update live data.';}
+ }
+ renderHistory();fpBetRefresh();renderAccumulator();
+}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
 function confidenceClass(score){const n=Number(score);if(score===null||score===undefined||!Number.isFinite(n))return "";if(n>=9)return "confidence-star";if(n>=7)return "confidence-high";if(n>=5)return "confidence-medium";return "confidence-low"}
@@ -1598,7 +1668,9 @@ function updatePredictions(matches,index=state.activeIndex){
   let i=0;
   while(i<rows.length){const kickoff=new Date(rows[i].date).getTime();let end=i+1;
    while(end<rows.length&&new Date(rows[end].date).getTime()===kickoff)end++;
-   for(let j=i;j<end;j++){const m=rows[j];Object.assign(m,calculatePrediction(m,previous,fpModelForLeague(id,{...MODELS[index],windows:WINDOW_SETS[state.activeWindow]})));m.originalPrediction=calculateOriginalIndependent(m,previous);m.rankedPrediction=null;m.drawRisk=null;/* retired experimental Model 1 */}
+   for(let j=i;j<end;j++){const m=rows[j];Object.assign(m,calculatePrediction(m,previous,fpModelForLeague(id,{...MODELS[index],windows:WINDOW_SETS[state.activeWindow]})));m.originalPrediction=calculateOriginalIndependent(m,previous);m.rankedPrediction=null;m.drawRisk=null;
+    const frozen=state.history.find(x=>x.id===eventId(m)&&new Date(x.savedAt).getTime()<new Date(x.date).getTime());
+    if(frozen?.probs){Object.assign(m,{prediction:frozen.prediction,selection:frozen.selection,confidence:frozen.confidence,probs:{...frozen.probs},predictedScore:frozen.predictedScore,homeLambda:frozen.homeLambda,awayLambda:frozen.awayLambda,mm2:frozen.mm2||m.mm2,preMatchLocked:true});}/* retired experimental Model 1 */}
    for(let j=i;j<end;j++)if(isFinished(rows[j]))previous.push(rows[j]);
    i=end;
   }
@@ -1686,7 +1758,7 @@ function matchCard(m){
  return`<article class="match"><div class="row between"><span class="league">${esc(m.league)}</span><div class="row wrap">${fpFixtureLeagueAccuracy(m)}${Math.min(m.h?.count??0,m.a?.count??0)<5?`<span class="tag">Limited history</span>`:""}</div></div>
  <div class="meta" style="margin:7px 0">${esc(fmtDate(m.date))}${m.venue?" · "+esc(m.venue):""}</div>
  <div class="row between"><div class="grow teamline">${esc(m.home)}<div class="meta">${m.h.count} prior league matches</div></div><strong style="white-space:nowrap;font-size:19px">${shownScore}</strong><div class="grow teamline" style="text-align:right">${esc(m.away)}<div class="meta">${m.a.count} prior league matches</div></div></div>
- ${comparisonRows(m)}${fpMM2FlowHtml(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?"Added":"Add pick"}</button><button class="btn small fp-dc-button" data-dc-toggle="${esc(id)}" type="button">Double chance</button><button class="btn small fp-bet-button" data-bet-toggle="${esc(id)}" type="button">Bet on</button></div><details class="fixture-secondary"><summary>Additional form and risk details</summary>${fpDrawDecision(m)}${explainHtml(m)}</details></article>`;
+ ${comparisonRows(m)}<div class="row between wrap" style="margin-top:8px"><button class="btn secondary small ${added?"added":""}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?"Added":"Add pick"}</button><button class="btn small fp-dc-button" data-dc-toggle="${esc(id)}" type="button">Double chance</button><button class="btn small fp-bet-button" data-bet-toggle="${esc(id)}" type="button">Bet on</button></div><details class="fixture-secondary"><summary>Additional form and risk details</summary>${fpDrawDecision(m)}${explainHtml(m)}${fpMM2FlowHtml(m)}</details></article>`;
 }
 function upcoming(){
  const now=new Date(),v=$("days").value,league=$("league").value,todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
@@ -1716,7 +1788,7 @@ function renderFixtures(){
 }
 function fpCompactFixture(m,heading='',extra=''){
  const id=eventId(m),added=state.acc.some(x=>x.id===id);
- return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="fp-feature-right">${fpFixtureLeagueAccuracy(m)}<span class="muted smalltext">${esc(fmtDate(m.date))}</span></span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpMM2FlowHtml(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-dc-button" data-dc-toggle="${esc(id)}">Double chance</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Additional form and risk details</summary>${fpDrawDecision(m)}${explainHtml(m)}</details></article>`;
+ return `<article class="match fp-feature-card"><div class="row between wrap"><span class="league">${heading?esc(heading)+' · ':''}${esc(m.league)}</span><span class="fp-feature-right">${fpFixtureLeagueAccuracy(m)}<span class="muted smalltext">${esc(fmtDate(m.date))}</span></span></div><div class="row between fp-feature-teams"><strong class="grow">${esc(m.home)}</strong><strong class="fp-feature-vs">vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${extra?`<div class="fp-feature-extra">${extra}</div>`:''}<div class="row wrap" style="margin-top:10px"><button class="btn secondary small ${added?'added':''}" aria-pressed="${added}" onclick="addToAccumulator('${esc(id)}','${m.prediction}')">${added?'✓ Added':'Add pick'}</button><button type="button" class="btn small fp-dc-button" data-dc-toggle="${esc(id)}">Double chance</button><button type="button" class="btn small fp-bet-button" data-bet-toggle="${esc(id)}">Bet on</button></div><details class="fixture-secondary"><summary>Additional form and risk details</summary>${fpDrawDecision(m)}${explainHtml(m)}${fpMM2FlowHtml(m)}</details></article>`;
 }
 function fpMM2Rate(n,d){return d>=4&&n!=null?`${Math.round(n*100)}% (${Math.round(n*d)}/${d})`:null}
 function fpMM2PreVerdict(m){
@@ -1736,9 +1808,10 @@ function fpMM2PreVerdict(m){
  return {headline:`First goal: ${first?firstTeam:'unconfirmed'} · Full-time: ${final}`,detail:`${opener} ${response}${late}`};
 }
 function fpMM2FlowHtml(m){
- const v=fpMM2PreVerdict(m);
- if(!m?.mm2||!m.mm2.home||!m.mm2.away||m.mm2.home.counts.first<4||m.mm2.away.counts.first<4)return '';
- return `<details class="fp-mm2-flow"><summary><strong>MM2 · Predicted match flow</strong> <span class="muted smalltext">${esc(v.headline)}</span></summary><div class="notice smalltext">${v.detail}</div></details>`;
+ const frozen=state.history.find(x=>x.id===eventId(m)&&new Date(x.savedAt).getTime()<new Date(x.date).getTime());
+ const v=frozen?.mm2Flow||(new Date(m.date).getTime()<=Date.now()?{headline:'No verified pre-match narrative',detail:'This fixture has no pre-kickoff MM2 snapshot. A live or retrospective calculation must not be represented as a saved pre-match prediction.'}:fpMM2PreVerdict(m));
+ const note=frozen?'Original pre-kickoff assessment · saved '+fmtDate(frozen.savedAt):(new Date(m.date).getTime()<=Date.now()?'No saved pre-kickoff assessment · retrospective prediction unavailable':'Provisional pre-match assessment · not yet saved');
+ return `<section class="fp-mm2-flow"><h4>MM2 · Pre-match game-flow prediction</h4><div class="muted smalltext">${esc(note)}</div><p><strong>${esc(v.headline)}</strong></p><p>${esc(v.detail)}</p></section>`;
 }
 // Snapshots are in-memory and only cover periods while the Live Centre is receiving data.
 const fpLiveStatHistory=new Map();
@@ -1888,11 +1961,11 @@ function snapshotPredictions(matches){
   const agreement={count:flags.count,strategy:flags.strategy,sameOutcome:flags.matching,betOnOutcome:flags.consensus};
   if(existing){continue;} // First saved pre-kickoff forecast is immutable, including agreement and model availability.
 
-  const snap={ranked,original,drawRisk:m.drawRisk?{...m.drawRisk}:null,agreement,model3Config:JSON.parse(JSON.stringify(rankedSettings)),model2Settings:{windowIndex:state.activeWindow,modelIndex:state.activeIndex,homeGap:state.homeGap,awayGap:state.awayGap,drawGap:state.drawGap,drawProb:state.drawProb},id,leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,date:m.date,prediction:m.prediction,selection:m.selection??selectionWithDraw(m.xgDifference,m.prediction,m.probs),confidence:m.confidence,probs:{...m.probs},predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,expectedGoalBreakdown:m.expectedGoalBreakdown,supportFlags:(m.risk?.supportFlags||[]).map(f=>typeof f==='string'?f:f.text),riskLevel:m.risk?.level||'low',riskFlags:(m.risk?.flags||[]).map(f=>typeof f==='string'?f:f.text),modelIndex:state.activeIndex,windowIndex:state.activeWindow,teamRankSettings:{...winRankSettings.team},savedAt:new Date().toISOString()};
+  const snap={ranked,original,drawRisk:m.drawRisk?{...m.drawRisk}:null,agreement,model3Config:JSON.parse(JSON.stringify(rankedSettings)),model2Settings:{windowIndex:state.activeWindow,modelIndex:state.activeIndex,homeGap:state.homeGap,awayGap:state.awayGap,drawGap:state.drawGap,drawProb:state.drawProb},id,leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,date:m.date,prediction:m.prediction,selection:m.selection??selectionWithDraw(m.xgDifference,m.prediction,m.probs),confidence:m.confidence,probs:{...m.probs},predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,expectedGoalBreakdown:m.expectedGoalBreakdown,mm2:m.mm2?JSON.parse(JSON.stringify(m.mm2)):null,mm2Flow:m.mm2?fpMM2PreVerdict(m):null,supportFlags:(m.risk?.supportFlags||[]).map(f=>typeof f==='string'?f:f.text),riskLevel:m.risk?.level||'low',riskFlags:(m.risk?.flags||[]).map(f=>typeof f==='string'?f:f.text),modelIndex:state.activeIndex,windowIndex:state.activeWindow,teamRankSettings:{...winRankSettings.team},savedAt:new Date().toISOString()};
   state.history.push(snap);byId.set(id,snap);added++;
  }
  state.history=state.history.filter(x=>Date.now()-new Date(x.date).getTime()<730*86400000).slice(-10000);
- try{localStorage.setItem('fp_prediction_history',JSON.stringify(state.history));window.fpHistorySaveStatus='Saved '+state.history.length+' pre-match snapshots';}catch(e){window.fpHistorySaveStatus='SAVE FAILED: '+e.message;const status=document.getElementById('connection');if(status)status.textContent=window.fpHistorySaveStatus;}
+ void fpSaveHistory().then(ok=>{window.fpHistorySaveStatus=ok?'Saved '+state.history.length+' pre-match snapshots':'SAVE FAILED — browser storage unavailable';if(!ok){const el=$('connection');if(el)el.textContent=window.fpHistorySaveStatus}});
  return added;
 }
 
@@ -2043,7 +2116,7 @@ async function loadData(){
   else {state.activeIndex=state.manualIndex;state.activeWindow=state.manualWindow;}
   setBusy("Calculating predictions…",78);await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));updatePredictions(state.matches,state.activeIndex);state.loaded=true;updateModelBanner();
   if(state.mode==="auto"&&state.lastTest){const b=bestTestModel(state.lastTest);$("activeModelNote")&&($("activeModelNote").textContent=b?`Auto selected ${b.name} by outcome accuracy ${testRate(b.correct,b.total)}.`:`Not enough test matches for Auto; using manual fallback, Option ${MODELS[state.manualIndex].short}.`)}
-  setBusy("Saving prediction snapshots…",92);const added=snapshotPredictions(state.matches);$("connection").textContent="Data loaded";
+  setBusy("Saving prediction snapshots…",92);const added=snapshotPredictions(state.matches);fpSaveFixtureCache();$("connection").textContent="Data loaded";
   $("fixtureStatus").textContent=`Loaded ${state.matches.length} matches across ${requestedIds.length} competitions.`+`${result.errors.length?" Some competitions unavailable: "+result.errors.join(", ")+".":""} ${added} new pre-match snapshots saved.`;
   await new Promise(resolve=>requestAnimationFrame(resolve));renderFixtures();renderAccumulator();renderWeeklyTop6();await refreshHistoryScoresFromLoaded();if(state.lastTest)renderTest(state.lastTest);
   setBusy("Ready",100);await new Promise(r=>setTimeout(r,250));hideBusy();
@@ -2053,7 +2126,7 @@ async function loadData(){
 async function refreshHistoryScoresFromLoaded(){
  const by=new Map(state.matches.filter(isFinished).map(m=>[eventId(m),m]));
  for(const x of state.history){const m=by.get(x.id);if(m&&new Date(m.date).getTime()<=Date.now()){x.actualScore=`${m.homeScore}–${m.awayScore}`;x.actualOutcome=getOutcome(m.homeScore,m.awayScore)}}
- store("fp_prediction_history",state.history);renderHistory();
+ void fpSaveHistory();renderHistory();
 }
 
 const fpTestStages=["Download fixtures","Prepare league histories","Model 2 + MM2 baseline","Tune windows, weights & xG gaps by league"];
@@ -2536,7 +2609,7 @@ function attachLivePredictions(matches){
  const model=MODELS[state.activeIndex]||MODELS[state.manualIndex]||MODELS[1];
  for(const match of matches){
   const saved=snapshotsById.get(eventId(match))||state.history.find(row=>sameFixture(row,match)&&new Date(row.savedAt||row.date).getTime()<new Date(row.date).getTime());
-  if(saved&&saved.probs){const sum=Number(saved.probs.H)+Number(saved.probs.D)+Number(saved.probs.A);if(sum>0){match.preGameProbs={H:saved.probs.H/sum,D:saved.probs.D/sum,A:saved.probs.A/sum};match.probs={...match.preGameProbs};match.prediction=saved.prediction;match.predictedScore=saved.predictedScore;match.confidence=saved.confidence;match.selection=saved.selection??null;match.preGameHomeLambda=saved.homeLambda;match.preGameAwayLambda=saved.awayLambda;continue;}}
+  if(saved&&saved.probs){const sum=Number(saved.probs.H)+Number(saved.probs.D)+Number(saved.probs.A);if(sum>0){match.preGameProbs={H:saved.probs.H/sum,D:saved.probs.D/sum,A:saved.probs.A/sum};match.probs={...match.preGameProbs};match.prediction=saved.prediction;match.predictedScore=saved.predictedScore;match.confidence=saved.confidence;match.selection=saved.selection??null;match.preGameHomeLambda=saved.homeLambda;match.preGameAwayLambda=saved.awayLambda;match.mm2=saved.mm2||null;match.mm2Flow=saved.mm2Flow||null;match.preMatchLocked=true;continue;}}
   const loaded=new Date(match.date).getTime()>Date.now()?(loadedById.get(eventId(match))||state.matches.find(row=>sameFixture(row,match)&&row.probs&&["H","D","A"].every(key=>Number.isFinite(Number(row.probs[key]))))):null;
   if(loaded?.probs&&["H","D","A"].every(key=>Number.isFinite(Number(loaded.probs[key])))){
    const sum=Number(loaded.probs.H)+Number(loaded.probs.D)+Number(loaded.probs.A);
@@ -2580,7 +2653,7 @@ function fpReconcileFinals(matches){
    snap.actualOutcome=outcome;snap.actualScore=score;changed=true;
   }
  }
- if(changed){store("fp_prediction_history",state.history);renderHistory()}
+ if(changed){void fpSaveHistory();renderHistory()}
  if(typeof fpBetSettle==="function"){fpBetSettle([...finalMap.values()]);fpBetRefresh()}
 }
 function liveOutcomeKey(m){return getOutcome(Number(m.homeScore),Number(m.awayScore))}
@@ -2618,7 +2691,7 @@ function renderLiveValidation(){
 
 function fpLiveLeagueIds(){
  // Live Centre has its own independent competition filter.
- // Never inherit the Fixtures-tab league selection: "All leagues" must request all 29.
+ // Never inherit the Fixtures-tab league selection: "All leagues" requests every active league.
  const selected=state.liveLeagueFilter;
  return selected&&selected!=="all"&&Object.prototype.hasOwnProperty.call(LEAGUES,selected)
   ?[selected]:Object.keys(LEAGUES);
@@ -2883,7 +2956,6 @@ function liveCard(m,index,mode="all"){
   <div class="row between wrap"><span class="live-rank">${modeLabel}</span><div class="row wrap" style="gap:6px;justify-content:flex-end"><span data-bet-live-badge="${esc(id)}"></span>${redCardFlag}${stormTag}${demoTag}<button class="btn small secondary" data-live-toggle="${esc(id)}">${hidden?"Unhide Game":"Hide Game"}</button></div></div>
   <div class="meta" style="margin-top:7px">${esc(m.league||"League")} · ${esc(m.statusName||"Live match")}</div>
   <div class="row between" style="margin:12px 0;gap:6px"><div class="grow"><div class="live-team">${esc(m.home)}</div><div class="meta">Pre-game win: ${prePct.H}%</div></div><div style="text-align:center;min-width:82px"><div class="live-score">${scoreLine}</div><div class="live-minute">${esc(status)}</div><div class="muted smalltext" style="margin-top:4px">Team-form prediction: ${esc(preSnap?.predictedScore||"Not saved")}<br>Pre-match confidence: ${`<strong>${esc(liveConfidenceText(originalConfidence))}</strong>`}<br>Original selection: <strong>${!preSnap?"N/A":preSnap.selection?preSnap.selection==="N"?"No Selection":outcomeName(preSnap.selection):"Not recorded"}</strong></div></div><div class="grow" style="text-align:right"><div class="live-team">${esc(m.away)}</div><div class="meta">Pre-game win: ${prePct.A}%</div></div></div>
-  ${fpLiveMM2Html(m,a,preSnap,stats)}
   ${a.projected?`<div class="fp-live-outcome"><span>LIVE PREDICTED OUTCOME</span><strong>${esc(outcomeName(a.projected.prediction))} · ${esc(a.projected.score)}</strong><small>Indicative in-play estimate</small></div>`:''}
   <details class="fp-live-chances"><summary>In-game chances and estimates</summary>
   
@@ -2892,9 +2964,9 @@ function liveCard(m,index,mode="all"){
   ${shownTeams.length?teamCards:`<div class="notice">No drawing or losing team matches the current situation filter.</div>`}
   <div class="row wrap"><span class="tag">Pre-game pick: ${outcomeName(probs.H>=probs.D&&probs.H>=probs.A?"H":probs.A>=probs.D?"A":"D")}</span><span class="tag">${a.available?`Stats: ${a.available}/5 indicators`:"Score/time only"}</span></div>
   </details>
-  <details><summary>Match stats &amp; estimate evidence</summary><div class="explain">${storm?`<div class="goal-storm-panel"><strong>⚡ Goal Storm signal</strong><div class="muted smalltext" style="margin-top:5px">High combined attacking activity: ${esc(storm.evidence.join(" · "))}. This indicates activity, not that a goal is imminent.</div></div>`:""}<div class="live-visual-grid"><div class="live-visual-card"><h4>In-Play Match Pulse · live radar</h4>${liveRadarHtml(m,stats)}</div><div class="live-visual-card"><h4>Match Momentum</h4>${momentumTimelineHtml(m,a)}</div></div><div class="analytics-grid"><div class="analytics-card full"><h4>Live statistics · Home vs away</h4>${liveStatsHtml(m,stats)}<div class="radar-legend"><span><i class="legend-dot home-dot"></i>${esc(m.home)}</span><span><i class="legend-dot away-dot"></i>${esc(m.away)}</span></div></div><div class="analytics-card"><h4>Factors behind the estimate</h4><ul>${reasons.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div></div><div class="notice"><strong>Important:</strong> pre-game predictions are a baseline, not live market odds, so these estimates cannot establish betting value.</div></div></details>
+  <details><summary>Match stats &amp; estimate evidence</summary><div class="explain">${storm?`<div class="goal-storm-panel"><strong>⚡ Goal Storm signal</strong><div class="muted smalltext" style="margin-top:5px">High combined attacking activity: ${esc(storm.evidence.join(" · "))}. This indicates activity, not that a goal is imminent.</div></div>`:""}<div class="live-visual-grid"><div class="live-visual-card"><h4>In-Play Match Pulse · live radar</h4>${liveRadarHtml(m,stats)}</div><div class="live-visual-card"><h4>Match Momentum</h4>${momentumTimelineHtml(m,a)}</div></div><div class="analytics-grid"><div class="analytics-card full"><h4>Live statistics · Home vs away</h4>${liveStatsHtml(m,stats)}<div class="radar-legend"><span><i class="legend-dot home-dot"></i>${esc(m.home)}</span><span><i class="legend-dot away-dot"></i>${esc(m.away)}</span></div></div><div class="analytics-card"><h4>Factors behind the estimate</h4><ul>${reasons.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div></div>${fpLiveMM2Html(m,a,preSnap,stats)}<div class="notice"><strong>Important:</strong> pre-game predictions are a baseline, not live market odds, so these estimates cannot establish betting value.</div></div></details>
   <div class="live-source">ESPN scoreboard${stats?" and match-summary feed":" feed"} · ${state.liveLastUpdated?"updated "+state.liveLastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"update time unavailable"}</div>
- <details class="fp-schedule-detail"><summary>Pre-match prediction</summary>${liveModelComparison(m)}${fpMM2FlowHtml(preSnap)}</details></article>`;
+ <details class="fp-schedule-detail"><summary>Pre-match prediction</summary>${liveModelComparison(m)}${fpMM2FlowHtml(preSnap||m)}</details></article>`;
 }
 function fpApplySummaryScore(m,summary){
  const competitors=summary?.header?.competitions?.[0]?.competitors||[];
@@ -2994,7 +3066,7 @@ function renderWeeklyTop6(){
  <div class="stat"><span class="muted smalltext">Correct picks</span><strong>${correctPicks.length} / ${settledPicks.length}</strong><span class="muted smalltext">Settled selections only</span></div>
  </div><p class="muted smalltext" style="margin:8px 2px 0">Current week: ${shown}/6 credible selections. Weeks with fewer than six saved picks are excluded from the all-six accumulator rate. Pending or incomplete matches are excluded from settled rates.</p>`;
  if(!rows.length){root.innerHTML=`<div class="empty">${state.matches.length?"No Saturday 3:00 pm English-league fixtures currently meet the minimum selection standard. This list will not force weak picks.":"Load / refresh predictions on the Fixtures tab, then return here."}</div>`}
- else root.innerHTML=rows.map(({m,pick,risk},i)=>`<article class="match"><div class="row between wrap"><span class="league">#${i+1} · ${esc(m.league)}</span><span class="muted smalltext">${esc(weeklyWeekLabel(m.date))}</span></div><div class="row between" style="margin-top:9px"><strong class="grow">${esc(m.home)}</strong><strong>vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}${fpMM2FlowHtml(m)}<details class="fixture-secondary"><summary>Additional form and risk details</summary>${explainHtml(m)}</details></article>`).join("");
+ else root.innerHTML=rows.map(({m,pick,risk},i)=>`<article class="match"><div class="row between wrap"><span class="league">#${i+1} · ${esc(m.league)}</span><span class="muted smalltext">${esc(weeklyWeekLabel(m.date))}</span></div><div class="row between" style="margin-top:9px"><strong class="grow">${esc(m.home)}</strong><strong>vs</strong><strong class="grow" style="text-align:right">${esc(m.away)}</strong></div>${comparisonRows(m)}<details class="fixture-secondary"><summary>Additional form and risk details</summary>${explainHtml(m)}${fpMM2FlowHtml(m)}</details></article>`).join("");
  const weeklyModels=[['League-adjusted',x=>x.original],['Team-form',x=>x],['Opposition-ranked Goals',x=>x.ranked]];
  const weeklyModelRows=weeklyModels.map(([name,get])=>{const available=settledPicks.filter(x=>{const v=get(x);return v&&['H','D','A'].includes(v.prediction)}),hits=available.filter(x=>get(x).prediction===x.actualOutcome).length,selected=available.filter(x=>get(x).selection===get(x).prediction),selectedHits=selected.filter(x=>get(x).prediction===x.actualOutcome).length;return `<tr><td>${name}</td><td>${hits}/${available.length} (${fpRate(hits,available.length)})</td><td>${selectedHits}/${selected.length} (${fpRate(selectedHits,selected.length)})</td></tr>`}).join('');
  const weeklyModelPanel=`<h3>Weekly picks · all-model accuracy</h3><p class="muted smalltext">Only saved pre-kickoff predictions count. Older records without a model snapshot are excluded.</p><div class="tablewrap"><table><thead><tr><th>Model</th><th>Outcome correct</th><th>SELECT correct</th></tr></thead><tbody>${weeklyModelRows}</tbody></table></div>`;
@@ -3171,7 +3243,7 @@ function showTab(tab){
 const FP_BACKED_STORE="fp_confirmed_bets_v1";
 let fpBacked=readStore(FP_BACKED_STORE,[]);
 if(!Array.isArray(fpBacked))fpBacked=[];
-fpBacked=fpBacked.map(b=>({...b,market:b.market||"straight"}));
+fpBacked=fpBacked.filter(b=>FP_ACTIVE_LEAGUES.has(b.leagueId)).map(b=>({...b,market:b.market||"straight"}));
 let fpBackedFilter="all";
 const fpLiveSeen=new Map();
 const fpLiveAlertHistory=[];
@@ -3415,7 +3487,7 @@ document.querySelectorAll('#fixtureFilters button').forEach(b=>b.addEventListene
 document.querySelectorAll('#resultFilters button').forEach(b=>b.addEventListener('click',()=>{fpResultFilter=b.dataset.resultFilter;renderHistory()}));
 document.querySelectorAll('#weeklyFilters button').forEach(b=>b.addEventListener('click',()=>{fpWeeklyFilter=b.dataset.weeklyFilter;renderWeeklyTop6()}));
 $("historyDays").addEventListener("change",renderHistory);$("historyLeague").addEventListener("change",renderHistory);$("refreshHistory").addEventListener("click",()=>{if(!state.loading)loadData()});
-$("clearPredictionHistory").addEventListener("click",()=>{if(confirm("Reset all saved pre-match predictions and their accuracy history on this browser? This cannot be undone. Completed match data and Live Centre tracking will remain.")){state.history=[];try{localStorage.removeItem("fp_prediction_history")}catch{}renderHistory();}});
+$("clearPredictionHistory").addEventListener("click",()=>{if(confirm("Reset all saved pre-match predictions and their accuracy history on this browser? This cannot be undone. Completed match data and Live Centre tracking will remain.")){state.history=[];try{localStorage.removeItem("fp_prediction_history")}catch{}void fpDbDelete("fp_prediction_history");renderHistory();}});
 for(let i=0;i<=100;i+=10)$("historicalXgChoice").add(new Option(`${i}%`,String(i)));
 for(let i=0;i<=30;i+=5)$("finishingChoice").add(new Option(`${i}%`,String(i)));
 historicalXgStatus();
@@ -3434,7 +3506,7 @@ $("liveRefresh").addEventListener("click",()=>{fetchLive();if(state.liveSchedule
 document.querySelectorAll("#liveFilters button").forEach(b=>b.addEventListener("click",()=>{state.liveSituationFilter=b.dataset.situation;document.querySelectorAll("#liveFilters button").forEach(x=>x.classList.toggle("active",x===b));renderLive()}));
 $("liveLeagueFilter").addEventListener("change",e=>{state.liveLeagueFilter=e.target.value;renderLive();fetchLive();if(state.liveScheduleFilter!=="live")fetchLiveSchedule()});
 window.addToAccumulator=addToAccumulator;window.removeAcc=removeAcc;
-loadSettings();renderAccumulator();renderHistory();renderLive();
+loadSettings();renderAccumulator();renderHistory();renderLive();void fpRestoreSavedState();
 if(state.history.length){const n=state.history.filter(x=>new Date(x.date).getTime()>Date.now()).length;const status=$('fixtureStatus');if(status)status.textContent=`${n} upcoming pre-match prediction snapshots retained in this browser. Refresh fixtures to retrieve the latest schedule.`;}
 
 /* Automatically refresh while the page is open. */
