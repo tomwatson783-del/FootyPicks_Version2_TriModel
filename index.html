@@ -497,6 +497,21 @@ main section details>summary{cursor:pointer}
 .fp-women-label{display:inline-block;border:1px solid #8bbde0;color:inherit;background:transparent;border-radius:5px;padding:2px 5px;font-size:9px;font-weight:700;letter-spacing:.04em;margin-right:5px}
 .fp-women-off{opacity:.75}
 
+
+/* 2026 SELECT-first visual refresh: restrained, consistent cards. */
+#historyList>.match.fp-result-modern{border-radius:14px;padding:16px 18px;background:var(--panel, #172234);box-shadow:none}
+.fp-result-modern .fp-result-score{font-size:21px;font-weight:850;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fp-result-modern .fp-result-teams{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;margin:13px 0}
+.fp-result-modern .fp-result-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid rgba(140,160,190,.16)}
+.fp-accuracy-stack{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:11px;line-height:1.35;text-align:right;white-space:nowrap}
+.fp-accuracy-stack b{font-weight:800;color:var(--text,#e8edf6)}
+.fp-accuracy-stack small{color:var(--muted,#9baabd)}
+.fp-confidence-minimal{display:inline-flex;align-items:center;gap:5px;border:1px solid #758295;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:800;white-space:nowrap;background:transparent;color:var(--muted,#b7c2d1)}
+.fp-confidence-minimal.confidence-high{border-color:#42996e;color:#76d7a4;background:rgba(50,145,93,.08)}
+.fp-confidence-minimal.confidence-star{border-color:#a179d7;color:#c9a4f5;background:rgba(137,86,196,.08)}
+.fp-confidence-minimal.confidence-medium,.fp-confidence-minimal.confidence-low{border-color:#667386;color:var(--muted,#b7c2d1);background:transparent}
+.fp-live-accuracy{margin-left:auto;min-width:fit-content}
+@media(max-width:560px){.fp-result-modern .fp-result-teams{gap:6px}.fp-result-modern .fp-result-score{font-size:18px}.fp-accuracy-stack{font-size:10px}}
 </style>
 <style id="fp-three-model-refresh">
 main section>h2{letter-spacing:-.025em;margin-bottom:8px}main section>.muted{line-height:1.45;max-width:70ch}
@@ -1031,6 +1046,30 @@ async function fpRestoreSavedState(){
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
 function confidenceClass(score){const n=Number(score);if(score===null||score===undefined||!Number.isFinite(n))return "";if(n>=9)return "confidence-star";if(n>=7)return "confidence-high";if(n>=5)return "confidence-medium";return "confidence-low"}
+function fpMinimalConfidenceBadge(score){
+ const n=Number(score);if(score==null||score===''||!Number.isFinite(n))return '<span class="fp-confidence-minimal">—/10</span>';
+ const v=Math.max(1,Math.min(10,Math.round(n)));
+ return `<span class="fp-confidence-minimal ${confidenceClass(v)}" title="Displayed confidence ${v}/10; league SELECT reliability is sample-size adjusted when test results exist">${v}/10</span>`;
+}
+function fpLeagueAccuracyStack(m){
+ const x=fpFixtureLeagueStats[m?.leagueId];
+ const fmt=(w,n)=>Number(n)>0?`${(100*Number(w||0)/Number(n)).toFixed(1)}%`:'—';
+ const league=x?fmt(x.predictionWins,x.predictionCount):'—',bet=x?fmt(x.selectWins,x.selectBets):'—';
+ return `<div class="fp-accuracy-stack" title="Latest saved chronological Model Test holdout · league ${x?.predictionWins??0}/${x?.predictionCount??0} · SELECT ${x?.selectWins??0}/${x?.selectBets??0}"><span>League <b>${league}</b></span><span>BET ON <b>${bet}</b></span></div>`;
+}
+/* Presentation-only league reliability adjustment. Never change frozen predictions,
+   SELECT decisions or historical replay using future holdout outcomes. */
+function fpDisplayConfidence(m,base){
+ const n=Number(base),x=fpFixtureLeagueStats[m?.leagueId];
+ if(base==null||base===''||!Number.isFinite(n))return null;
+ if(!x||!Number.isFinite(Number(x.selectBets))||Number(x.selectBets)<=0)return n;
+ const bets=Number(x.selectBets),wins=Number(x.selectWins)||0;
+ // Empirical Bayes: 30 virtual bets at a neutral 70% baseline; reliability
+ // contributes up to half of the displayed score, but never rewrites Model 2.
+ const reliability=(wins+30*.70)/(bets+30);
+ const leagueScore=Math.max(1,Math.min(10,1+9*reliability));
+ return Math.max(1,Math.min(10,Math.round(.5*leagueScore+.5*n)));
+}
 function liveConfidenceText(score){if(score===null||score===undefined||score==="")return "N/A";const n=Number(score);if(!Number.isFinite(n))return "N/A";const label=n>=9?"Exceptional":n>=7?"Strong":n>=5?"Moderate":"Low";return `${n}/10 · ${label}`}
 function confidenceBadge(score){const n=Number(score);if(score===null||score===undefined||!Number.isFinite(n))return `<span class="tag">Confidence unavailable</span>`;const label=n>=8?"EXCEPTIONAL":n>=7?"STRONG":n>=5?"MODERATE":"LOW";return `<span class="confidence-pill ${confidenceClass(n)}" aria-label="Confidence ${n} out of 10, ${label.toLowerCase()}"><span class="confidence-icon" aria-hidden="true">${n>=8?"★":""}</span><strong>${n}/10</strong><span class="confidence-label">${label}</span></span>`}
 function fmtDate(d){return new Date(d).toLocaleString(undefined,{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
@@ -1686,7 +1725,7 @@ function comparisonRows(m){
  const frozen=state.history?.find(x=>x.id===eventId(m));
  const original=m.originalPrediction||frozen?.original;
  const full=false;
- const cell=(v,label)=>{if(!v)return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Prediction unavailable</div></div>`;const chosen=v.selection===v.prediction&&fpLeagueSelectAllowed(m.leagueId);return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${Number(v.xgDifference??(v.homeLambda-v.awayLambda)).toFixed(2)}</div><div class="model-bottom"><span class="${chosen?'model-select':'model-no-select'}">${chosen?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">Confidence ${v.confidence}/10</span></div></div>`};
+ const cell=(v,label)=>{if(!v)return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-sub">Prediction unavailable</div></div>`;const chosen=v.selection===v.prediction&&fpLeagueSelectAllowed(m.leagueId);return `<div class="model-cell"><div class="model-title">${label}</div><div class="model-primary"><span class="model-score">${esc(v.predictedScore||'—')}</span><span class="model-outcome">${outcomeName(v.prediction)}</span></div><div class="model-sub">Home xG ${Number(v.homeLambda).toFixed(2)} · Away xG ${Number(v.awayLambda).toFixed(2)} · Gap ${Number(v.xgDifference??(v.homeLambda-v.awayLambda)).toFixed(2)}</div><div class="model-bottom"><span class="${chosen?'model-select':'model-no-select'}">${chosen?'SELECT '+outcomeName(v.selection).toUpperCase():'NO SELECT'}</span><span class="model-confidence">${fpMinimalConfidenceBadge(fpDisplayConfidence(m,v.confidence))}</span></div></div>`};
  return `<div class="fixture-comparison">${fpStatusTag(m)} ${fpDrawBadge(m)}${fpDrawDetail(m)}<div class="model-grid ${full?'':'two-models'}">${full?cell(original,'01 · League-adjusted'):''}${cell(m,'Model 2 · Team form')}</div>${probsHtml(m)}</div>`;
 }
 
@@ -2055,7 +2094,8 @@ function renderHistory(){
  renderConfidencePerformance(settled);renderRiskPerformance(settled);
  if(!visible.length){$('historyList').innerHTML='<div class="empty">No saved predictions in this period.</div>';return}
  $('historyList').innerHTML=visible.map(x=>{const done=!!x.actualOutcome,ok=done&&x.actualOutcome===x.prediction,score=x.actualScore||'Result pending',p=fpIndependentProbs(x);
- return `<article class="match"><div class="row between wrap"><span class="league">${esc(x.league)}</span><div class="row wrap">${confidenceBadge(x.confidence)}<span class="tag ${!done?'':ok?'good':'bad'}">${!done?'Pending':ok?'Correct':'Incorrect'}</span></div></div><div class="meta">${esc(fmtDate(x.date))}</div><div class="row between" style="margin-top:7px"><strong class="grow">${esc(x.home)}</strong><strong>${esc(score)}</strong><strong class="grow" style="text-align:right">${esc(x.away)}</strong></div><div class="row wrap" style="margin-top:9px"><strong>${esc(outcomeName(x.prediction))}</strong>${fpStatusTag(x)}${fpDrawBadge(x)}<span data-bet-history-badge="${esc(x.id)}"></span></div>${p?`<div class="probrow">${[['H','Home'],['D','Draw'],['A','Away']].map(([k,n])=>`<div class="prob"><span>${n}</span><strong>${(p[k]*100).toFixed(0)}%</strong></div>`).join('')}</div>`:''}</article>`}).join('');
+ const confidence=fpDisplayConfidence(x,x.confidence);
+ return `<article class="match fp-result-modern ${FP_WOMENS_LEAGUES.has(x.leagueId)?'fp-womens-match':''}"><div class="row between" style="align-items:flex-start;gap:12px"><div><span class="league">${fpWomenLabel(x.leagueId)}${esc(x.league)}</span><div class="meta" style="margin-top:5px">${esc(fmtDate(x.date))} · ${done?'FT':'Pending'}</div></div>${fpLeagueAccuracyStack(x)}</div><div class="fp-result-teams"><strong>${esc(x.home)}</strong><span class="fp-result-score">${esc(score)}</span><strong style="text-align:right">${esc(x.away)}</strong></div><div class="fp-result-bottom"><div class="row wrap" style="gap:6px"><strong class="smalltext">${esc(outcomeName(x.prediction))}</strong>${fpStatusTag(x)}<span class="tag ${!done?'':ok?'good':'bad'}">${!done?'Pending':ok?'Correct':'Incorrect'}</span><span data-bet-history-badge="${esc(x.id)}"></span></div>${fpMinimalConfidenceBadge(confidence)}</div><details class="fixture-secondary"><summary>Prediction probabilities</summary>${p?`<div class="probrow">${[['H','Home'],['D','Draw'],['A','Away']].map(([k,n])=>`<div class="prob"><span>${n}</span><strong>${(p[k]*100).toFixed(0)}%</strong></div>`).join('')}</div>`:'No probability snapshot available.'}</details></article>`}).join('');
 }
 const LEAGUE_INFLUENCES=[0];
 let testCancelRequested=false;
@@ -3048,9 +3088,9 @@ function liveCard(m,index,mode="all"){
  const hidden=isHiddenLive(m);const preSnap=state.history.find(x=>x.id===id);const originalConfidence=preSnap&&Number.isFinite(Number(preSnap.confidence))?Number(preSnap.confidence):null;
  const modeLabel=mode==="opportunity"?`OPPORTUNITY #${index+1}`:`LIVE MATCH #${index+1}`;
  return `<article class="live-card ${FP_WOMENS_LEAGUES.has(m.leagueId)?'fp-womens-match':''} ${leader&&leader.opportunityScore>=60?"priority":""}" data-backed-live="${esc(id)}">
-  <div class="row between wrap"><span class="live-rank">${modeLabel}</span><div class="row wrap" style="gap:6px;justify-content:flex-end"><span data-bet-live-badge="${esc(id)}"></span>${redCardFlag}${stormTag}${demoTag}<button class="btn small secondary" data-live-toggle="${esc(id)}">${hidden?"Unhide Game":"Hide Game"}</button></div></div>
+  <div class="row between wrap"><span class="live-rank">${modeLabel}</span><div class="row wrap" style="gap:6px;justify-content:flex-end"><span data-bet-live-badge="${esc(id)}"></span>${redCardFlag}${stormTag}${demoTag}<div class="fp-live-accuracy">${fpLeagueAccuracyStack(m)}</div><button class="btn small secondary" data-live-toggle="${esc(id)}">${hidden?"Unhide Game":"Hide Game"}</button></div></div>
   <div class="meta" style="margin-top:7px">${fpWomenLabel(m.leagueId)}${esc(m.league||"League")} · ${esc(m.statusName||"Live match")}</div>
-  <div class="row between" style="margin:12px 0;gap:6px"><div class="grow"><div class="live-team">${esc(m.home)}</div><div class="meta">Pre-game win: ${prePct.H}%</div></div><div style="text-align:center;min-width:82px"><div class="live-score">${scoreLine}</div><div class="live-minute">${esc(status)}</div><div class="muted smalltext" style="margin-top:4px">Team-form prediction: ${esc(preSnap?.predictedScore||"Not saved")}<br>Pre-match confidence: ${`<strong>${esc(liveConfidenceText(originalConfidence))}</strong>`}<br>Original selection: <strong>${!preSnap?"N/A":preSnap.selection?preSnap.selection==="N"?"No Selection":outcomeName(preSnap.selection):"Not recorded"}</strong></div></div><div class="grow" style="text-align:right"><div class="live-team">${esc(m.away)}</div><div class="meta">Pre-game win: ${prePct.A}%</div></div></div>
+  <div class="row between" style="margin:12px 0;gap:6px"><div class="grow"><div class="live-team">${esc(m.home)}</div><div class="meta">Pre-game win: ${prePct.H}%</div></div><div style="text-align:center;min-width:82px"><div class="live-score">${scoreLine}</div><div class="live-minute">${esc(status)}</div><div class="muted smalltext" style="margin-top:4px">Team-form prediction: ${esc(preSnap?.predictedScore||"Not saved")}<br>Pre-match confidence: ${fpMinimalConfidenceBadge(fpDisplayConfidence(m,originalConfidence))}<br>Original selection: <strong>${!preSnap?"N/A":preSnap.selection?preSnap.selection==="N"?"No Selection":outcomeName(preSnap.selection):"Not recorded"}</strong></div></div><div class="grow" style="text-align:right"><div class="live-team">${esc(m.away)}</div><div class="meta">Pre-game win: ${prePct.A}%</div></div></div>
   ${a.projected?`<div class="fp-live-outcome"><span>LIVE PREDICTED OUTCOME</span><strong>${esc(outcomeName(a.projected.prediction))} · ${esc(a.projected.score)}</strong><small>Indicative in-play estimate</small></div>`:''}
   <details class="fp-live-chances"><summary>In-game chances and estimates</summary>
   
