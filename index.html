@@ -895,17 +895,37 @@ const LEAGUES={
  "nor.1":"Norwegian Eliteserien",
  "swe.1":"Swedish Allsvenskan",
  "arg.1":"Argentine Primera División",
- "qat.1":"Qatar Stars League",
- "uae.1":"UAE Pro League",
- "svk.1":"Slovak Super Liga",
  "bol.1":"Bolivian Primera División",
- "ksa.1":"Saudi Pro League"
+ "ksa.1":"Saudi Pro League",
+ "pol.1":"Polish Ekstraklasa",
+ "rou.1":"Romanian SuperLiga",
+ "hun.1":"Hungarian NB I",
+ "ukr.1":"Ukrainian Premier League",
+ "irl.1":"Irish Premier Division",
+ "nir.1":"Northern Irish Premiership",
+ "wal.1":"Welsh Cymru Premier",
+ "isl.1":"Icelandic Úrvalsdeild",
+ "fin.1":"Finnish Veikkausliiga",
+ "kor.1":"South Korean K League 1",
+ "ind.1":"Indian Super League",
+ "idn.1":"Indonesian Liga 1",
+ "tha.1":"Thai League 1",
+ "rsa.1":"South African Premiership",
+ "egy.1":"Egyptian Premier League",
+ "mar.1":"Moroccan Botola Pro",
+ "chi.1":"Chilean Primera División",
+ "uru.1":"Uruguayan Primera División",
+ "par.1":"Paraguayan Primera División",
+ "per.1":"Peruvian Liga 1",
+ "ecu.1":"Ecuadorian LigaPro",
+ "ven.1":"Venezuelan Primera División",
+ "crc.1":"Costa Rican Primera División"
 };
 const FP_ACTIVE_LEAGUES=new Set(Object.keys(LEAGUES));
 // Unsupported historical feeds have been removed from the active league registry.
 // All remaining competitions are tested independently of their manual BET ON/OFF state.
 const FP_WOMENS_LEAGUES=new Set(['eng.w.1','esp.w.1','usa.nwsl','fra.w.1']);
-const FP_NEW_LEAGUES=new Set(['arg.1','eng.5','qat.1','uae.1','svk.1','bol.1','ksa.1']);
+const FP_NEW_LEAGUES=new Set(['arg.1','eng.5','bol.1','ksa.1','pol.1','rou.1','hun.1','ukr.1','irl.1','nir.1','wal.1','isl.1','fin.1','kor.1','ind.1','idn.1','tha.1','rsa.1','egy.1','mar.1','chi.1','uru.1','par.1','per.1','ecu.1','ven.1','crc.1']);
 let fpShowWomensLive=false;
 let fpShowWomensFixtures=false;
 function fpWomenLabel(id){return FP_WOMENS_LEAGUES.has(id)?'<span class="fp-women-label">WOMEN</span> ':'';}
@@ -1103,7 +1123,7 @@ async function fpTestStoredMonth(id,month){
 }
 async function fpTestSaveMonth(id,month,matches){const db=await fpTestDbPromise;if(!db)return;try{const tx=db.transaction('months','readwrite');tx.objectStore('months').put({matches,savedAt:Date.now()},id+':'+month)}catch(_){}}
 
-const fpInvalidLeagueFeeds=new Map([['qat.1','ESPN HTTP 400 — identifier unsupported (previously verified)'],['uae.1','ESPN HTTP 400 — identifier unsupported (previously verified)'],['svk.1','ESPN HTTP 400 — identifier unsupported (previously verified)']]);
+const fpInvalidLeagueFeeds=new Map();
 const fpMM2SummaryCache=new Map();
 function fpFeedDiagnostic(id){return fpInvalidLeagueFeeds.get(id)||null;}
 
@@ -1288,7 +1308,7 @@ let fpLeagueGate=(()=>{try{return JSON.parse(localStorage.getItem('fp_league_sel
 for(const id of FP_NEW_LEAGUES)if(!Object.prototype.hasOwnProperty.call(fpLeagueGate,id))fpLeagueGate[id]=true;
 // One-time correction for the previous release, which automatically switched these six leagues OFF.
 // Once migrated, all subsequent BET ON/OFF changes remain entirely manual.
-const FP_GOAL_DISPARITY_IDS=['qat.1','uae.1','svk.1','bol.1','ksa.1'];
+const FP_GOAL_DISPARITY_IDS=['bol.1','ksa.1'];
 try{
  if(localStorage.getItem('fp_goal_disparity_gate_migrated_v1')!=='yes'){
   for(const id of FP_GOAL_DISPARITY_IDS)fpLeagueGate[id]=true;
