@@ -1742,7 +1742,7 @@ function calculatePrediction(m,previous,model,confidenceConfig=state.confidenceC
  const leagueHL=0,leagueAL=0,leagueHome=0,leagueAway=0,homeAttack=h.attack,awayAttack=a.attack,homeDefence=h.defence,awayDefence=a.defence;
  const baseHL=teamHL,baseAL=teamAL;
  const historicalEstimate=null;
- const mm2={delta:0,disabled:true};
+ const mm2={delta:0,disabled:true,home:{first:null,protect:null,comeback:null,draw:null,late:null,counts:{first:0,protect:0,comeback:0,draw:0,late:0}},away:{first:null,protect:null,comeback:null,draw:null,late:null,counts:{first:0,protect:0,comeback:0,draw:0,late:0}},evidence:[],signals:[],coverage:{homeTimeline:0,awayTimeline:0}};
  const [hl,al]=[clamp(baseHL+mm2.delta,.15,4.2),clamp(baseAL-mm2.delta,.15,4.2)];
  const dist=scoreDistribution(hl,al);
  // Match outcome comes directly from predicted-goals difference and its tested draw band.
@@ -2016,7 +2016,7 @@ function fpCompactFixture(m,heading='',extra=''){
 }
 function fpMM2Rate(n,d){return d>=4&&n!=null?`${Math.round(n*100)}% (${Math.round(n*d)}/${d})`:null}
 function fpMM2PreVerdict(m){
- const x=m?.mm2;if(!x)return {headline:'Insufficient historical match-flow evidence',detail:'No verified team behaviour profiles are available.'};
+ const x=m?.mm2;if(!x||x.disabled||!x.home?.counts||!x.away?.counts)return {headline:'MM2 disabled',detail:'Goal-timing analysis is disabled for this version.'};
  const h=x.home,a=x.away,hn=esc(m.home||'Home'),an=esc(m.away||'Away');
  const first=h.counts.first>=4&&a.counts.first>=4?(h.first>=a.first?'H':'A'):null;
  const firstTeam=first==='H'?hn:an;
@@ -2189,7 +2189,7 @@ function snapshotPredictions(matches){
   const agreement={count:flags.count,strategy:flags.strategy,sameOutcome:flags.matching,betOnOutcome:flags.consensus};
   if(existing){continue;} // First saved pre-kickoff forecast is immutable, including agreement and model availability.
 
-  const snap={ranked,original,drawRisk:m.drawRisk?{...m.drawRisk}:null,agreement,model3Config:JSON.parse(JSON.stringify(rankedSettings)),model2Settings:{windowIndex:state.activeWindow,modelIndex:state.activeIndex,homeGap:state.homeGap,awayGap:state.awayGap,drawGap:state.drawGap,drawProb:state.drawProb},id,leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,date:m.date,prediction:m.prediction,selection:m.selection??selectionWithDraw(m.xgDifference,m.prediction,m.probs),confidence:m.confidence,probs:{...m.probs},predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,expectedGoalBreakdown:m.expectedGoalBreakdown,mm2:m.mm2?JSON.parse(JSON.stringify(m.mm2)):null,mm2Flow:m.mm2?fpMM2PreVerdict(m):null,supportFlags:(m.risk?.supportFlags||[]).map(f=>typeof f==='string'?f:f.text),riskLevel:m.risk?.level||'low',riskFlags:(m.risk?.flags||[]).map(f=>typeof f==='string'?f:f.text),modelIndex:state.activeIndex,windowIndex:state.activeWindow,teamRankSettings:{...winRankSettings.team},savedAt:new Date().toISOString()};
+  const snap={ranked,original,drawRisk:m.drawRisk?{...m.drawRisk}:null,agreement,model3Config:JSON.parse(JSON.stringify(rankedSettings)),model2Settings:{windowIndex:state.activeWindow,modelIndex:state.activeIndex,homeGap:state.homeGap,awayGap:state.awayGap,drawGap:state.drawGap,drawProb:state.drawProb},id,leagueId:m.leagueId,league:m.league,home:m.home,away:m.away,date:m.date,prediction:m.prediction,selection:m.selection??selectionWithDraw(m.xgDifference,m.prediction,m.probs),confidence:m.confidence,probs:{...m.probs},predictedScore:m.predictedScore,homeLambda:m.homeLambda,awayLambda:m.awayLambda,expectedGoalBreakdown:m.expectedGoalBreakdown,mm2:m.mm2?JSON.parse(JSON.stringify(m.mm2)):null,mm2Flow:m.mm2&&!m.mm2.disabled?fpMM2PreVerdict(m):null,supportFlags:(m.risk?.supportFlags||[]).map(f=>typeof f==='string'?f:f.text),riskLevel:m.risk?.level||'low',riskFlags:(m.risk?.flags||[]).map(f=>typeof f==='string'?f:f.text),modelIndex:state.activeIndex,windowIndex:state.activeWindow,teamRankSettings:{...winRankSettings.team},savedAt:new Date().toISOString()};
   state.history.push(snap);byId.set(id,snap);added++;
  }
  state.history=state.history.filter(x=>Date.now()-new Date(x.date).getTime()<730*86400000).slice(-10000);
@@ -2997,14 +2997,17 @@ async function fetchLive(){
    while(statIndex<state.liveMatches.length){
     const m=state.liveMatches[statIndex++];
     try{
-     const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${m.leagueId}/summary?event=${encodeURIComponent(m.id)}`,{cache:"no-store"});
-     if(r.ok){const summary=await r.json();fpApplySummaryScore(m,summary);stats[eventId(m)]=extractStats(summary,m)}
+     const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),7000);
+     try{
+      const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${m.leagueId}/summary?event=${encodeURIComponent(m.id)}`,{cache:"no-store",signal:controller.signal});
+      if(r.ok){const summary=await r.json();fpApplySummaryScore(m,summary);stats[eventId(m)]=extractStats(summary,m)}
+     }finally{clearTimeout(timeout)}
     }catch(e){console.warn("Live match stats unavailable",m.id,e.message)}
    }
   }));
   state.liveStats=stats;for(const m of state.liveMatches)fpRiskCapture(m,stats[eventId(m)]);fpReconcileFinals(scoreboardEvents);updateLiveHistory(scoreboardEvents.filter(isFinished),state.liveMatches);state.liveLastUpdated=new Date();$("liveStatus").textContent=state.liveMatches.length?`${state.liveMatches.length} LIVE MATCH${state.liveMatches.length===1?"":"ES"}`:"NO LIVE MATCHES";
-  $("liveUpdated").textContent="Updated "+state.liveLastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"});
- }catch(e){$("liveStatus").textContent="Feed unavailable";$("liveUpdated").textContent="Could not refresh the live feed."}
+  $("liveUpdated").textContent="Updated "+state.liveLastUpdated.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"})+(failures.length?` · ${failures.length} league feed${failures.length===1?"":"s"} unavailable`:"");
+ }catch(e){console.error("Live Centre refresh failed",e);$("liveStatus").textContent="Feed unavailable";$("liveUpdated").textContent="Could not refresh the live feed: "+String(e?.message||e)}
  finally{state.liveLoading=false;$("liveRefresh").disabled=false;renderLive();fpMM2RestorePanels(document.getElementById("live"))}
 }
 function statNum(v){if(v===null||v===undefined)return null;const n=parseFloat(String(v).replace("%",""));return Number.isFinite(n)?n:null}
@@ -3373,12 +3376,13 @@ async function fetchLiveSchedule(){
  await Promise.all(Array.from({length:Math.min(5,ids.length*months.length)},()=>worker()));
  const map=new Map();results.forEach(m=>{const id=eventId(m),old=map.get(id);if(!old||(isFinished(m)&&!isFinished(old))||(validScore(m)&&(!validScore(old)||m.homeScore+m.awayScore>=old.homeScore+old.awayScore)))map.set(id,m)});
  // Supplement the scoreboard with any already retrieved fixture or live match. A missing prediction never hides a match.
- for(const m of state.matches)if(!map.has(eventId(m)))map.set(eventId(m),m);
+ for(const m of state.matches)if(FP_ACTIVE_LEAGUES.has(m.leagueId)&&!map.has(eventId(m)))map.set(eventId(m),m);
  for(const m of state.liveMatches){
+  if(!FP_ACTIVE_LEAGUES.has(m.leagueId))continue;
   const old=map.get(eventId(m));
   if(!old||(!validScore(old)&&validScore(m))||m.state==="in")map.set(eventId(m),m);
  }
- state.liveSchedule=[...map.values()].sort((a,b)=>new Date(a.date)-new Date(b.date));
+ state.liveSchedule=[...map.values()].filter(m=>FP_ACTIVE_LEAGUES.has(m.leagueId)).sort((a,b)=>new Date(a.date)-new Date(b.date));
  fpReconcileFinals(state.liveSchedule);
  const snapshots=new Map(state.history.map(x=>[x.id,x]));
  for(const m of state.liveSchedule){const snap=snapshots.get(eventId(m));if(snap){m.originalPredictedScore=snap.predictedScore;m.originalPrediction=snap.prediction;m.originalConfidence=snap.confidence;}}
