@@ -830,7 +830,7 @@ button.added{background:#31bd8b!important;border:2px solid #9affd8!important;col
 <section id="test" hidden>
  <h2>Prediction Test</h2>
  
- <span class="fp-test-scope">Test scope: <strong>All 23 leagues</strong> (including BET OFF)</span><select id="fpTestLeague" hidden aria-hidden="true"><option value="all">All leagues</option></select> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><div id="fpSequentialAudit" class="panel">Run the historical test to review league and MM2 accuracy and manually set ON/OFF.</div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><div class="panel" style="margin:10px 0"><strong>Restore previous Model Test JSON</strong><p class="muted smalltext">Import a completed report without rerunning history. This restores accuracy results only — never BET ON/OFF or MM2 controls.</p><input type="file" id="fpImportModelJson" accept=".json,.txt,application/json,text/plain"/><p id="fpRestoreStatus" class="muted smalltext">Prior audited results are included as a reference in this HTML.</p></div><button class="btn secondary" type="button" id="fpCopyFullReport" onclick="(async()=>{const t=document.getElementById('fpAdaptiveReport');const b=document.getElementById('fpCopyFullReport');try{await navigator.clipboard.writeText(t.value);b.textContent='Copied full JSON ✓'}catch(e){t.focus();t.select();b.textContent='Select JSON and copy manually'}})()">Copy complete JSON</button> <span class="muted smalltext" id="fpJsonExportStatus">Full report appears after test completes</span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
+ <span class="fp-test-scope">Test scope: <strong>All 21 leagues</strong> (including BET OFF)</span><select id="fpTestLeague" hidden aria-hidden="true"><option value="all">All leagues</option></select> <button class="btn" id="runTest">Run historical model test</button> <button class="btn secondary" id="cancelTest" style="display:none">Cancel test</button><div class="panel" id="fpTestUnifiedResults"><h3>Prediction accuracy</h3><div id="fpUnifiedTestDashboard" class="fp-dashboard" aria-live="polite"><div class="panel muted">Run Model Test to view results.</div></div><div id="fpSequentialAudit" class="panel">Run the historical test to review league and MM2 accuracy and manually set ON/OFF.</div><details class="fp-advanced"><summary>Detailed validation</summary><div id="fpAdaptiveResults">Run the test to view results.</div><div class="panel" style="margin:10px 0"><strong>Restore previous Model Test JSON</strong><p class="muted smalltext">Import a completed report without rerunning history. This restores accuracy results only — never BET ON/OFF or MM2 controls.</p><input type="file" id="fpImportModelJson" accept=".json,.txt,application/json,text/plain"/><p id="fpRestoreStatus" class="muted smalltext">Prior audited results are included as a reference in this HTML.</p></div><button class="btn secondary" type="button" id="fpCopyFullReport" onclick="(async()=>{const t=document.getElementById('fpAdaptiveReport');const b=document.getElementById('fpCopyFullReport');try{await navigator.clipboard.writeText(t.value);b.textContent='Copied full JSON ✓'}catch(e){t.focus();t.select();b.textContent='Select JSON and copy manually'}})()">Copy complete JSON</button> <span class="muted smalltext" id="fpJsonExportStatus">Full report appears after test completes</span><textarea id="fpAdaptiveReport" readonly aria-label="Prediction validation JSON report" style="width:100%;min-height:100px;margin-top:10px;font-size:11px"></textarea></details><div id="fpPerfDashboard" hidden><div id="fpPerfStage"></div><div id="fpPerfBar"></div><div id="fpPerfCounts"></div><div id="fpPerfClock"></div><div id="fpPerfLog"></div></div></div><div id="outcomeCompare" hidden></div><div id="confidenceCompare" hidden></div><div id="testStatus" class="muted smalltext" style="margin:10px 0"></div><div hidden aria-hidden="true" id="xgCoveragePanel"><div id="xgCoverageSummary"></div><div id="xgCoverageTable"></div></div><details class="panel fp-advanced" hidden><summary><strong>Full optimisation results</strong></summary><div id="testResults"></div></details>
   <details class="panel fp-advanced" hidden><summary><strong>SELECT and confidence results</strong></summary><div id="integratedTest" class="panel" style="margin-top:14px">Run Model Test for outcome accuracy, SELECT precision/coverage and confidence reliability.</div>
   <div id="drawSelectionTest" class="panel" style="margin-top:14px">Run Model Test to assess whether draw selections improve precision.</div></details>
   <div id="fpLegacyDiagnostics" hidden>  <details class="panel fp-advanced"><summary><strong>Detailed diagnostics</strong></summary><h3>Confidence Analysis</h3><div class="panel"><div class="controls"><div><label>Confidence</label><select id="analysisConfidence"><option value="all">All</option></select></div><div><label>Risk</label><select id="analysisRisk"><option value="all">All</option><option>low</option><option>medium</option><option>high</option></select></div><div><label>Outcome</label><select id="analysisOutcome"><option value="all">All</option><option>H</option><option>D</option><option>A</option></select></div><div><label>Window set</label><select id="analysisWindow"><option value="all">All</option><option value="0">15/10/5</option><option value="1">10/6/3</option><option value="2">8/5/3</option></select></div><div><label>Weighting</label><select id="analysisWeight"><option value="all">All</option><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div><div><label>League</label><select id="analysisLeague"><option value="all">All</option></select></div><div><label>Look back (days)</label><select id="analysisDays"><option value="0">All</option><option value="30">30</option><option value="90">90</option><option value="365">365</option></select></div></div><button class="btn secondary" id="analysisRefresh">Refresh analysis</button><div id="analysisResults"></div></div>
@@ -1095,7 +1095,15 @@ function normaliseEvent(e,leagueId){
 const fpMonthRequests=new Map();
 // Reuse successful monthly scoreboard downloads across tabs and repeated tests.
 const fpCompletedMonthCache=new Map();
-const fpInvalidLeagueFeeds=new Map();
+// Model Test only: persist completed historical scoreboards across HTML reloads.
+const fpTestDbPromise=(()=>{try{return new Promise(resolve=>{const request=indexedDB.open('footy-picks-model-test-months-v1',1);request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains('months'))request.result.createObjectStore('months')};request.onsuccess=()=>resolve(request.result);request.onerror=()=>resolve(null);request.onblocked=()=>resolve(null)})}catch(_){return Promise.resolve(null)}})();
+async function fpTestStoredMonth(id,month){
+ const db=await fpTestDbPromise;if(!db)return null;
+ return new Promise(resolve=>{try{const tx=db.transaction('months','readonly'),r=tx.objectStore('months').get(id+':'+month);r.onsuccess=()=>{const v=r.result;resolve(v&&Array.isArray(v.matches)&&Date.now()-v.savedAt<(month===monthsBack(1)[0]?3600000:90*86400000)?v.matches:null)};r.onerror=()=>resolve(null)}catch(_){resolve(null)}});
+}
+async function fpTestSaveMonth(id,month,matches){const db=await fpTestDbPromise;if(!db)return;try{const tx=db.transaction('months','readwrite');tx.objectStore('months').put({matches,savedAt:Date.now()},id+':'+month)}catch(_){}}
+
+const fpInvalidLeagueFeeds=new Map([['qat.1','ESPN HTTP 400 — identifier unsupported (previously verified)'],['uae.1','ESPN HTTP 400 — identifier unsupported (previously verified)'],['svk.1','ESPN HTTP 400 — identifier unsupported (previously verified)']]);
 const fpMM2SummaryCache=new Map();
 function fpFeedDiagnostic(id){return fpInvalidLeagueFeeds.get(id)||null;}
 
@@ -1104,8 +1112,11 @@ async function fetchMonth(id,month,signal=null){
  const cacheKey=id+":"+month;
  if(fpCompletedMonthCache.has(cacheKey))return fpCompletedMonthCache.get(cacheKey);
  if(signal){
+  const stored=await fpTestStoredMonth(id,month);
+  if(stored){fpCompletedMonthCache.set(cacheKey,stored);return stored;}
   const matches=await fpFetchMonthUncached(id,month,signal);
   fpCompletedMonthCache.set(cacheKey,matches);
+  void fpTestSaveMonth(id,month,matches);
   return matches;
  }
  const key=id+":"+month,prior=fpMonthRequests.get(key),now=Date.now();
@@ -1132,20 +1143,22 @@ async function fpFetchMonthUncached(id,month,externalSignal=null){
 }
 function monthsBack(n){const out=[],now=new Date();for(let i=n-1;i>=0;i--){const d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-i,1));out.push(`${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,"0")}`)}return out}
 async function fetchLeague(id,n=6,progress=()=>{},options={}){
- const months=monthsBack(n),all=[],failed=[];let next=0,done=0;
+ const adaptive=!!options.adaptiveHistory;
+ const months=adaptive?monthsBack(n).reverse():monthsBack(n),all=[],failed=[];let next=0,done=0;
+ let finishedCount=0;const targetFinished=360,minMonths=12;
  const signal=options.signal;
  async function getMonthWithRetry(month){
   let lastError;
-  for(let attempt=0;attempt<3;attempt++){
+  for(let attempt=0;attempt<2;attempt++){
    if(fpInvalidLeagueFeeds.has(id))throw Error('Feed unavailable: '+fpInvalidLeagueFeeds.get(id));
    if(signal?.aborted)throw Error("Test cancelled by user.");
    try{return await fetchMonth(id,month,signal)}
    catch(e){
     if(signal?.aborted)throw Error("Test cancelled by user.");
     lastError=e;
-    progress({league:id,month,attempt:attempt+1,state:attempt<2?'retry':'failed',error:String(e?.message||e)});
+    progress({league:id,month,attempt:attempt+1,state:attempt<1?'retry':'failed',error:String(e?.message||e)});
     if(fpInvalidLeagueFeeds.has(id))break;
-    if(attempt<2)await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)));
+    if(attempt<1)await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)));
    }
   }
   throw lastError||new Error("ESPN request failed");
@@ -1153,18 +1166,20 @@ async function fetchLeague(id,n=6,progress=()=>{},options={}){
  async function worker(){
   while(next<months.length){
    if(signal?.aborted)throw Error("Test cancelled by user.");
+   if(adaptive&&done>=minMonths&&finishedCount>=targetFinished)break;
    const month=months[next++];
    if(fpInvalidLeagueFeeds.has(id)){
     failed.push({league:id,month,error:fpInvalidLeagueFeeds.get(id)});
     done++;progress({league:id,month,state:'done',failed:true,skipped:true});continue;
    }
    progress({league:id,month,state:fpCompletedMonthCache.has(id+':'+month)?'cached':'start'});
-   try{all.push(...await getMonthWithRetry(month))}
+   try{const batch=await getMonthWithRetry(month);all.push(...batch);finishedCount+=batch.filter(isFinished).length}
    catch(e){if(signal?.aborted)throw Error("Test cancelled by user.");failed.push({league:id,month,error:String(e?.message||e)});console.warn("ESPN month request failed",id,month,e?.message||e)}
-   finally{done++;progress({league:id,month,state:'done',failed:failed.some(f=>f.month===month)})}
+   finally{done++;progress({league:id,month,state:'done',failed:failed.length>0&&failed[failed.length-1].month===month})}
   }
  }
- await Promise.all(Array.from({length:Math.min(3,months.length)},()=>worker()));
+ await Promise.all(Array.from({length:adaptive?1:Math.min(2,months.length)},()=>worker()));
+ if(adaptive&&done<months.length){for(let i=done;i<months.length;i++)progress({league:id,month:months[i],state:'done',skipped:true,adaptive:true});}
  const unique=new Map();all.forEach(m=>unique.set(eventId(m),m));
  return {matches:[...unique.values()].sort((a,b)=>new Date(a.date)-new Date(b.date)),failed};
 }
@@ -1177,10 +1192,14 @@ async function fetchAllLeagues(n=6,progress=()=>{},requestedIds=null,options={})
   while(nextIndex<ids.length){
    if(options.signal?.aborted)throw Error("Test cancelled by user.");
    const index=nextIndex++,id=ids[index],name=LEAGUES[id];
+   if(options.signal&&fpInvalidLeagueFeeds.has(id)){
+    errors.push(name+' (feed unavailable)');monthsDone+=n;completed++;
+    emit({league:id,state:'leagueDone',skipped:true});continue;
+   }
    try{
     const result=await fetchLeague(id,n,event=>{
      if(event.state==='done')monthsDone++;
-     if(event.state==='done'&&event.failed)failedMonths.push({league:id,month:event.month,reason:fpFeedDiagnostic(id)||(event.skipped?'Unsupported feed':'Download failed')});
+     if(event.state==='done'&&event.failed&&!event.adaptive)failedMonths.push({league:id,month:event.month,reason:fpFeedDiagnostic(id)||(event.skipped?'Unsupported feed':'Download failed')});
      emit(event);
     },options);
     if(result.matches.length)all.push(...result.matches);
@@ -1191,7 +1210,7 @@ async function fetchAllLeagues(n=6,progress=()=>{},requestedIds=null,options={})
    }finally{completed++;emit({league:id,state:'leagueDone'})}
   }
  }
- await Promise.all(Array.from({length:Math.min(5,ids.length)},()=>worker()));
+ await Promise.all(Array.from({length:Math.min(2,ids.length)},()=>worker()));
  const unique=new Map();for(const match of all)unique.set(eventId(match),match);
  return{matches:[...unique.values()].sort((a,b)=>new Date(a.date)-new Date(b.date)),errors,failedMonths,monthsDone,totalMonths};
 }
@@ -1202,6 +1221,8 @@ function historicalXgStatus(){const n=Object.keys(state.xgRecords).length;$("xgI
 
 // Cache only immutable historical snapshots created by Model Test.
 const fpTestHistoryCache=new WeakMap();
+let fpModelTestPredictionCache=null; // Same-run baseline predictions, reused by chronological audit.
+let fpModelTestBaselineSwitches=null;
 function historyForTeam(previous,key){
  const cache=fpTestHistoryCache.get(previous);
  if(cache&&cache.has(key))return cache.get(key);
@@ -2293,7 +2314,7 @@ function setBusy(title,percent){
 }
 function hideBusy(){$("busy").classList.remove("show","fp-test-busy");const eyebrow=$("fpTestEyebrow");if(eyebrow)eyebrow.hidden=true}
 function fpFixtureLeagueIds(){const id=$("league").value;return id&&id!=="all"?[id]:Object.keys(LEAGUES).filter(x=>fpShowWomensFixtures||!FP_WOMENS_LEAGUES.has(x))}
-function fpTestLeagueIds(){return Object.keys(LEAGUES).filter(id=>!FP_WOMENS_LEAGUES.has(id)&&!fpInvalidLeagueFeeds.has(id))}
+function fpTestLeagueIds(){return Object.keys(LEAGUES).filter(id=>!FP_WOMENS_LEAGUES.has(id))}
 async function loadData(){
  if(state.loading)return;state.loading=true;$("load").disabled=true;$("runTest").disabled=true;$("connection").textContent="Loading";setBusy("Refreshing fixtures…",5);
  try{
@@ -2383,10 +2404,10 @@ async function fpSequentialSwitchAudit(matches){
  async function replay(phase,config){
   fpSwitches={...config};const result=[];let i=0;
   for(const x of fixtures){if(phase&&x.phase!==phase)continue;
-   try{const p=calculatePrediction(x.m,x.past,model),selected=['H','A'].includes(p.prediction)&&p.selection===p.prediction;
+   try{const cached=fpModelTestPredictionCache?.get(x.m);const p=(fpModelTestBaselineSwitches===JSON.stringify(fpSwitches)&&cached?.historyLength===x.past.length)?cached.prediction:calculatePrediction(x.m,x.past,model),selected=['H','A'].includes(p.prediction)&&p.selection===p.prediction;
     result.push({id:x.id,league:x.league,phase:x.phase,actual:x.actual,prediction:p.prediction,selected,correct:selected&&p.prediction===x.actual,confidence:p.confidence,mm2TimelineCoverage:(p.mm2?.coverage?.homeTimeline||0)+(p.mm2?.coverage?.awayTimeline||0),mm2Evidence:(p.mm2?.evidence||[]).map(e=>({key:e.key,delta:e.delta,count:e.count})),goalEvents:[]});
    }catch(e){failures++;}
-   if(++i%12===0){testCheckpoint();fpStageUpdate(4,Math.min(35,Math.round(i/Math.max(1,fixtures.length)*35)),`Replaying historical SELECT predictions · ${i} processed`,"Running");await new Promise(r=>setTimeout(r,0));}
+   if(++i%120===0){testCheckpoint();fpStageUpdate(4,Math.min(35,Math.round(i/Math.max(1,fixtures.length)*35)),`Replaying historical SELECT predictions · ${i} processed`,"Running");await new Promise(r=>setTimeout(r,0));}
   }return result;
  }
  const byPhase=(rows,p)=>rows.filter(x=>x.phase===p);
@@ -2398,7 +2419,7 @@ async function fpSequentialSwitchAudit(matches){
   let current={...saved},bestV=originalV;
   const trials=[];
   // All league gates are decided ONLY from earlier training results, never holdout.
-  const fittedTraining=await replay('training',current);
+  const fittedTraining=original.filter(x=>x.phase==='training');
   const leagueTrials=Object.entries(groups).map(([id,group])=>{
    const training=fittedTraining.filter(x=>x.league===id),v=bestV.filter(x=>x.league===id),h=originalH.filter(x=>x.league===id);
    const n=training.length,w=training.filter(x=>x.prediction===x.actual).length,accuracy=n?w/n:null;
@@ -2630,19 +2651,20 @@ async function doTest(){
  fpStagesReset();fpPerfStart();testCancelRequested=false;
  $("cancelTest").style.display="inline-block";state.loading=true;$("runTest").disabled=true;
  const started=performance.now();let downloadMs=0,analysisMs=0;
+ fpModelTestPredictionCache=new WeakMap();fpModelTestBaselineSwitches=JSON.stringify(fpSwitches);
  try{
-  fpPerfUpdate("Loading historical fixtures",3,"Fetching selected league histories",true);
+  fpPerfUpdate("Loading historical fixtures",3,"Fetching recent history until 360 finished fixtures per league (minimum 12 months)",true);
   const ids=fpTestLeagueIds();
   if(!ids.length){$("testStatus").textContent="Historical Model Test unavailable for this competition: ESPN data could not be verified. Its manual ON/OFF setting remains available.";return;}
   fpTestDownloadController=new AbortController();
   const result=await fetchAllLeagues(24,(i,n,name,event)=>{
    const done=event?.monthsDone||0,total=event?.totalMonths||ids.length*24;
    const pct=total?Math.round(done/total*100):0;
-   const activity=event?.state==='retry'?`Retry ${event.attempt}/3 · ${name} ${event.month}`:event?.state==='start'?`Requesting ${name} ${event.month}`:event?.state==='failed'?`Failed ${name} ${event.month}: ${event.error}`:`${done}/${total} months · ${i}/${n} leagues`;
+   const activity=event?.state==='retry'?`Retry ${event.attempt}/2 · ${name} ${event.month}`:event?.state==='start'?`Requesting ${name} ${event.month}`:event?.state==='failed'?`Failed ${name} ${event.month}: ${event.error}`:`${done}/${total} months · ${i}/${n} leagues`;
    fpStageUpdate(0,pct,`${done}/${total} months · ${event?.failedCount||0} failed · ${activity}`,event?.state==='retry'?'Retrying':'Running');
    fpPerfUpdate("Fetching historical fixtures",5+Math.round(pct*.30),activity,event?.state==='failed');
    $("testStatus").textContent=`Loading ${done}/${total} months (${i}/${n} leagues). ${event?.failedCount||0} failed. ${activity}`;
-  },ids,{signal:fpTestDownloadController.signal});
+  },ids,{signal:fpTestDownloadController.signal,adaptiveHistory:true});
   downloadMs=performance.now()-started;
   testCheckpoint();
   if(!result.matches.length)throw Error('No historical matches were returned. Check feed diagnostics and network access.');
@@ -2690,7 +2712,7 @@ async function doTest(){
   fpPerfUpdate("Complete",100,`${report.summary.leagues} leagues · ${secs}s`,true);
   setBusy("Test complete",100);await new Promise(r=>setTimeout(r,180));hideBusy();
  }catch(e){hideBusy();$("testStatus").innerHTML=`<span class="error">Test failed: ${esc(e.message)}</span>`;fpPerfUpdate("Test interrupted",90,String(e.message),true)}
- finally{fpTestDownloadController=null;fpPerfEnd();const progress=document.getElementById('fpTestProgressRows');if(progress)progress.style.display='none';$("busy").classList.remove("fp-test-busy");state.loading=false;$("runTest").disabled=false;$("cancelTest").style.display="none"}
+ finally{fpModelTestPredictionCache=null;fpModelTestBaselineSwitches=null;fpTestDownloadController=null;fpPerfEnd();const progress=document.getElementById('fpTestProgressRows');if(progress)progress.style.display='none';$("busy").classList.remove("fp-test-busy");state.loading=false;$("runTest").disabled=false;$("cancelTest").style.display="none"}
 }
 
 
@@ -2727,7 +2749,7 @@ async function fpHybridBacktest(matches){
   if(done===0)fpStageUpdate(2,0,`0/${totalFixtures} historical fixtures analysed`,"Running");
   for(let j=0;j<rows.length;j++){
    const m=rows[j],kick=kickoffs[j];while(cursor<rows.length&&kickoffs[cursor]<kick)past.push(rows[cursor++]);
-   try{const model={...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]};const b=calculatePrediction(m,past,model);if(j>=cut){const actual=getOutcome(m.homeScore,m.awayScore);const eligible=['H','A'].includes(b.prediction)&&b.selection===b.prediction;fpSwitchRows.push({league:id,fixture:eventId(m),actual,baseline:b.prediction,eligible,baseCorrect:eligible&&b.prediction===actual,holdout:true});}
+   try{const model={...MODELS[state.activeIndex],windows:WINDOW_SETS[state.activeWindow]};const b=calculatePrediction(m,past,model);if(fpModelTestPredictionCache)fpModelTestPredictionCache.set(m,{prediction:b,historyLength:past.length});if(j>=cut){const actual=getOutcome(m.homeScore,m.awayScore);const eligible=['H','A'].includes(b.prediction)&&b.selection===b.prediction;fpSwitchRows.push({league:id,fixture:eventId(m),actual,baseline:b.prediction,eligible,baseCorrect:eligible&&b.prediction===actual,holdout:true});}
     if(['H','A'].includes(b.prediction)&&b.selection===b.prediction){const actual=getOutcome(m.homeScore,m.awayScore);observations.push({train:j<cut,actual,win:actual===b.prediction,draw:actual==='D',loss:actual!==b.prediction&&actual!=='D',confidence:Number(b.confidence)||null});}
    }catch(e){console.warn('Model 2 historical fixture skipped',id,e)}
    processedFixtures++;
