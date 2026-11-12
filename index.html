@@ -885,7 +885,6 @@ const LEAGUES={
  "eng.5":"English National League",
  "esp.1":"La Liga",
  "ita.1":"Serie A",
- "fra.1":"Ligue 1",
  "ned.1":"Eredivisie",
  "por.1":"Primeira Liga",
  "bel.1":"Belgian Pro League",
@@ -893,19 +892,12 @@ const LEAGUES={
  "aut.1":"Austrian Bundesliga",
  "bra.1":"Brazilian Série A",
  "uefa.champions":"Champions League",
- "den.1":"Danish Superliga",
  "nor.1":"Norwegian Eliteserien",
  "swe.1":"Swedish Allsvenskan",
- "gre.1":"Greek Super League",
- "sco.2":"Scottish Championship",
- "ned.2":"Dutch Eerste Divisie",
- "jpn.1":"Japanese J1 League",
  "arg.1":"Argentine Primera División",
- "col.1":"Colombian Primera A",
  "qat.1":"Qatar Stars League",
  "uae.1":"UAE Pro League",
  "svk.1":"Slovak Super Liga",
- "chn.1":"Chinese Super League",
  "bol.1":"Bolivian Primera División",
  "ksa.1":"Saudi Pro League"
 };
@@ -913,7 +905,7 @@ const FP_ACTIVE_LEAGUES=new Set(Object.keys(LEAGUES));
 // Unsupported historical feeds have been removed from the active league registry.
 // All remaining competitions are tested independently of their manual BET ON/OFF state.
 const FP_WOMENS_LEAGUES=new Set(['eng.w.1','esp.w.1','usa.nwsl','fra.w.1']);
-const FP_NEW_LEAGUES=new Set(['jpn.1','arg.1','col.1','eng.5','qat.1','uae.1','svk.1','chn.1','bol.1','ksa.1']);
+const FP_NEW_LEAGUES=new Set(['arg.1','eng.5','qat.1','uae.1','svk.1','bol.1','ksa.1']);
 let fpShowWomensLive=false;
 let fpShowWomensFixtures=false;
 function fpWomenLabel(id){return FP_WOMENS_LEAGUES.has(id)?'<span class="fp-women-label">WOMEN</span> ':'';}
@@ -1101,16 +1093,24 @@ function normaliseEvent(e,leagueId){
   venue:c.venue?.fullName||"",competitors:cs};
 }
 const fpMonthRequests=new Map();
+// Reuse successful monthly scoreboard downloads across tabs and repeated tests.
+const fpCompletedMonthCache=new Map();
 const fpInvalidLeagueFeeds=new Map();
 const fpMM2SummaryCache=new Map();
 function fpFeedDiagnostic(id){return fpInvalidLeagueFeeds.get(id)||null;}
 
 let fpTestDownloadController=null;
 async function fetchMonth(id,month,signal=null){
- if(signal)return fpFetchMonthUncached(id,month,signal);
+ const cacheKey=id+":"+month;
+ if(fpCompletedMonthCache.has(cacheKey))return fpCompletedMonthCache.get(cacheKey);
+ if(signal){
+  const matches=await fpFetchMonthUncached(id,month,signal);
+  fpCompletedMonthCache.set(cacheKey,matches);
+  return matches;
+ }
  const key=id+":"+month,prior=fpMonthRequests.get(key),now=Date.now();
  if(prior&&prior.expires>now)return prior.promise;
- const promise=fpFetchMonthUncached(id,month);
+ const promise=fpFetchMonthUncached(id,month).then(matches=>{fpCompletedMonthCache.set(key,matches);return matches});
  const d=new Date(),current=`${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,"0")}`;
  fpMonthRequests.set(key,{promise,expires:now+(month===current?25000:300000)});
  promise.catch(()=>{if(fpMonthRequests.get(key)?.promise===promise)fpMonthRequests.delete(key)});
@@ -1144,7 +1144,8 @@ async function fetchLeague(id,n=6,progress=()=>{},options={}){
     if(signal?.aborted)throw Error("Test cancelled by user.");
     lastError=e;
     progress({league:id,month,attempt:attempt+1,state:attempt<2?'retry':'failed',error:String(e?.message||e)});
-    if(attempt<2&&!fpInvalidLeagueFeeds.has(id))await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)));
+    if(fpInvalidLeagueFeeds.has(id))break;
+    if(attempt<2)await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)));
    }
   }
   throw lastError||new Error("ESPN request failed");
@@ -1157,13 +1158,13 @@ async function fetchLeague(id,n=6,progress=()=>{},options={}){
     failed.push({league:id,month,error:fpInvalidLeagueFeeds.get(id)});
     done++;progress({league:id,month,state:'done',failed:true,skipped:true});continue;
    }
-   progress({league:id,month,state:'start'});
+   progress({league:id,month,state:fpCompletedMonthCache.has(id+':'+month)?'cached':'start'});
    try{all.push(...await getMonthWithRetry(month))}
    catch(e){if(signal?.aborted)throw Error("Test cancelled by user.");failed.push({league:id,month,error:String(e?.message||e)});console.warn("ESPN month request failed",id,month,e?.message||e)}
    finally{done++;progress({league:id,month,state:'done',failed:failed.some(f=>f.month===month)})}
   }
  }
- await Promise.all(Array.from({length:Math.min(2,months.length)},()=>worker()));
+ await Promise.all(Array.from({length:Math.min(3,months.length)},()=>worker()));
  const unique=new Map();all.forEach(m=>unique.set(eventId(m),m));
  return {matches:[...unique.values()].sort((a,b)=>new Date(a.date)-new Date(b.date)),failed};
 }
@@ -1190,7 +1191,7 @@ async function fetchAllLeagues(n=6,progress=()=>{},requestedIds=null,options={})
    }finally{completed++;emit({league:id,state:'leagueDone'})}
   }
  }
- await Promise.all(Array.from({length:Math.min(3,ids.length)},()=>worker()));
+ await Promise.all(Array.from({length:Math.min(5,ids.length)},()=>worker()));
  const unique=new Map();for(const match of all)unique.set(eventId(match),match);
  return{matches:[...unique.values()].sort((a,b)=>new Date(a.date)-new Date(b.date)),errors,failedMonths,monthsDone,totalMonths};
 }
@@ -1266,7 +1267,7 @@ let fpLeagueGate=(()=>{try{return JSON.parse(localStorage.getItem('fp_league_sel
 for(const id of FP_NEW_LEAGUES)if(!Object.prototype.hasOwnProperty.call(fpLeagueGate,id))fpLeagueGate[id]=true;
 // One-time correction for the previous release, which automatically switched these six leagues OFF.
 // Once migrated, all subsequent BET ON/OFF changes remain entirely manual.
-const FP_GOAL_DISPARITY_IDS=['qat.1','uae.1','svk.1','chn.1','bol.1','ksa.1'];
+const FP_GOAL_DISPARITY_IDS=['qat.1','uae.1','svk.1','bol.1','ksa.1'];
 try{
  if(localStorage.getItem('fp_goal_disparity_gate_migrated_v1')!=='yes'){
   for(const id of FP_GOAL_DISPARITY_IDS)fpLeagueGate[id]=true;
@@ -2292,7 +2293,7 @@ function setBusy(title,percent){
 }
 function hideBusy(){$("busy").classList.remove("show","fp-test-busy");const eyebrow=$("fpTestEyebrow");if(eyebrow)eyebrow.hidden=true}
 function fpFixtureLeagueIds(){const id=$("league").value;return id&&id!=="all"?[id]:Object.keys(LEAGUES).filter(x=>fpShowWomensFixtures||!FP_WOMENS_LEAGUES.has(x))}
-function fpTestLeagueIds(){return Object.keys(LEAGUES)}
+function fpTestLeagueIds(){return Object.keys(LEAGUES).filter(id=>!FP_WOMENS_LEAGUES.has(id)&&!fpInvalidLeagueFeeds.has(id))}
 async function loadData(){
  if(state.loading)return;state.loading=true;$("load").disabled=true;$("runTest").disabled=true;$("connection").textContent="Loading";setBusy("Refreshing fixtures…",5);
  try{
@@ -3720,6 +3721,7 @@ initLeagueSelects();
 // Seed the retained leagues with genuine previously supplied audit results.
 // Local or IndexedDB results take precedence; this does not simulate a fresh test.
 for(const [id,v] of Object.entries(FP_BUNDLED_AUDIT.leagues)){
+ if(!FP_ACTIVE_LEAGUES.has(id))continue;
  if(!fpFixtureLeagueStats[id]||!(fpFixtureLeagueStats[id].predictionCount>0))fpFixtureLeagueStats[id]={...v};
 }
 // Restore previously approved Model 2 profiles only when no local profile exists.
