@@ -882,50 +882,36 @@ const LEAGUES={
  "eng.1":"Premier League",
  "eng.2":"Championship",
  "eng.3":"League One",
- "eng.5":"English National League",
  "esp.1":"La Liga",
  "ita.1":"Serie A",
- "ned.1":"Eredivisie",
  "por.1":"Primeira Liga",
  "bel.1":"Belgian Pro League",
- "tur.1":"Turkish Süper Lig",
  "aut.1":"Austrian Bundesliga",
  "bra.1":"Brazilian Série A",
  "uefa.champions":"Champions League",
  "nor.1":"Norwegian Eliteserien",
- "swe.1":"Swedish Allsvenskan",
  "arg.1":"Argentine Primera División",
  "bol.1":"Bolivian Primera División",
  "ksa.1":"Saudi Pro League",
  "pol.1":"Polish Ekstraklasa",
- "rou.1":"Romanian SuperLiga",
  "hun.1":"Hungarian NB I",
  "ukr.1":"Ukrainian Premier League",
- "irl.1":"Irish Premier Division",
  "nir.1":"Northern Irish Premiership",
  "wal.1":"Welsh Cymru Premier",
  "isl.1":"Icelandic Úrvalsdeild",
  "fin.1":"Finnish Veikkausliiga",
  "kor.1":"South Korean K League 1",
- "ind.1":"Indian Super League",
  "idn.1":"Indonesian Liga 1",
  "tha.1":"Thai League 1",
- "rsa.1":"South African Premiership",
  "egy.1":"Egyptian Premier League",
  "mar.1":"Moroccan Botola Pro",
- "chi.1":"Chilean Primera División",
- "uru.1":"Uruguayan Primera División",
- "par.1":"Paraguayan Primera División",
- "per.1":"Peruvian Liga 1",
- "ecu.1":"Ecuadorian LigaPro",
  "ven.1":"Venezuelan Primera División",
- "crc.1":"Costa Rican Primera División"
 };
 const FP_ACTIVE_LEAGUES=new Set(Object.keys(LEAGUES));
 // Unsupported historical feeds have been removed from the active league registry.
 // All remaining competitions are tested independently of their manual BET ON/OFF state.
 const FP_WOMENS_LEAGUES=new Set(['eng.w.1','esp.w.1','usa.nwsl','fra.w.1']);
-const FP_NEW_LEAGUES=new Set(['arg.1','eng.5','bol.1','ksa.1','pol.1','rou.1','hun.1','ukr.1','irl.1','nir.1','wal.1','isl.1','fin.1','kor.1','ind.1','idn.1','tha.1','rsa.1','egy.1','mar.1','chi.1','uru.1','par.1','per.1','ecu.1','ven.1','crc.1']);
+const FP_NEW_LEAGUES=new Set(['arg.1','bol.1','ksa.1','pol.1','hun.1','ukr.1','nir.1','wal.1','isl.1','fin.1','kor.1','idn.1','tha.1','egy.1','mar.1','ven.1']);
 let fpShowWomensLive=false;
 let fpShowWomensFixtures=false;
 function fpWomenLabel(id){return FP_WOMENS_LEAGUES.has(id)?'<span class="fp-women-label">WOMEN</span> ':'';}
@@ -1136,7 +1122,7 @@ async function fetchMonth(id,month,signal=null){
   if(stored){fpCompletedMonthCache.set(cacheKey,stored);return stored;}
   const matches=await fpFetchMonthUncached(id,month,signal);
   fpCompletedMonthCache.set(cacheKey,matches);
-  void fpTestSaveMonth(id,month,matches);
+  if(matches.length)void fpTestSaveMonth(id,month,matches);
   return matches;
  }
  const key=id+":"+month,prior=fpMonthRequests.get(key),now=Date.now();
@@ -2658,7 +2644,7 @@ async function fpSequentialSwitchAudit(matches){
   fpLastManualAudit={validationRows:bestV,holdoutRows:optimizedH};
   renderFixtures();
   const tableLeagues=Object.entries(LEAGUES).map(([id,name])=>leagueResults.find(x=>x.id===id)||{id,name,holdoutOptimized:{bets:0,wins:0,losses:0,net:0,precision:null},validationAll:{bets:0,wins:0,losses:0,net:0,precision:null}});
-  const html=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">All ${Object.keys(LEAGUES).length} competitions are included in every full Model Test, even when BET ON is OFF. A dash for SELECT accuracy means zero qualifying SELECT bets; it does not mean the league was skipped. General outcome accuracy uses the last up to 200 chronologically evaluated fixtures per league (correct HOME/DRAW/AWAY predictions divided by evaluated fixtures). Fewer than 200 are shown explicitly when historical data or valid predictions are insufficient. SELECT accuracy remains measured separately on the final chronological holdout before manual league gating. The BET ON switch controls live eligibility and combined gated totals only. Every button controls betting eligibility only; league fixtures and predictions stay visible. No automatic league exclusions are applied. MM2 is disabled in predictions and the historical audit for this comparison.</p><div id="fpManualSummary" class="panel"></div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>General accuracy · last up to 200 fixtures</th><th>Final holdout SELECT accuracy</th><th>Validation SELECT</th><th>Later holdout SELECT</th><th>BET ON</th></tr></thead><tbody>${tableLeagues.map(x=>`<tr><td>${esc(x.name)}</td><td>${fpFixtureLeagueStats[x.id]?.predictionCount?`${fpFixtureLeagueStats[x.id].predictionWins}/${fpFixtureLeagueStats[x.id].predictionCount} (${(100*fpFixtureLeagueStats[x.id].predictionWins/fpFixtureLeagueStats[x.id].predictionCount).toFixed(1)}%)`:(fpFeedDiagnostic(x.id)?'Feed unavailable: '+esc(fpFeedDiagnostic(x.id)):(fpFixtureLeagueStats[x.id]?.historyFixtures?'Insufficient chronological holdout':'No finished history returned'))}</td><td>${fmt(x.holdoutOptimized)}${x.holdoutOptimized.bets<15?' <small>(small sample)</small>':''}</td><td>${fmt(x.validationAll)}</td><td>${fmt(x.holdoutOptimized)}</td><td>${fpGateButton('league',x.id,fpLeagueSelectAllowed(x.id))}</td></tr>`).join('')}</tbody></table></div>
+  const html=`<h3>League accuracy &amp; manual BET ON/OFF</h3><p class="muted smalltext">Only retained competitions are included in Model Test. Previously rejected OFF leagues have been removed from all lists and downloads. A dash for SELECT accuracy means zero qualifying SELECT bets; it does not mean the league was skipped. General outcome accuracy uses the last up to 200 chronologically evaluated fixtures per league (correct HOME/DRAW/AWAY predictions divided by evaluated fixtures). Fewer than 200 are shown explicitly when historical data or valid predictions are insufficient. SELECT accuracy remains measured separately on the final chronological holdout before manual league gating. The BET ON switch controls live eligibility and combined gated totals only. Every button controls betting eligibility only; league fixtures and predictions stay visible. No automatic league exclusions are applied. MM2 is disabled in predictions and the historical audit for this comparison.</p><div id="fpManualSummary" class="panel"></div><div class="tablewrap"><table class="fp-manual-table"><thead><tr><th>League</th><th>General accuracy · last up to 200 fixtures</th><th>Final holdout SELECT accuracy</th><th>Validation SELECT</th><th>Later holdout SELECT</th><th>BET ON</th></tr></thead><tbody>${tableLeagues.map(x=>`<tr><td>${esc(x.name)}</td><td>${fpFixtureLeagueStats[x.id]?.predictionCount?`${fpFixtureLeagueStats[x.id].predictionWins}/${fpFixtureLeagueStats[x.id].predictionCount} (${(100*fpFixtureLeagueStats[x.id].predictionWins/fpFixtureLeagueStats[x.id].predictionCount).toFixed(1)}%)`:(fpFeedDiagnostic(x.id)?'Feed unavailable: '+esc(fpFeedDiagnostic(x.id)):(fpFixtureLeagueStats[x.id]?.historyFixtures?'Insufficient chronological holdout':'No completed fixtures supplied by ESPN — feed needs verification'))}</td><td>${fmt(x.holdoutOptimized)}${x.holdoutOptimized.bets<15?' <small>(small sample)</small>':''}</td><td>${fmt(x.validationAll)}</td><td>${fmt(x.holdoutOptimized)}</td><td>${fpGateButton('league',x.id,fpLeagueSelectAllowed(x.id))}</td></tr>`).join('')}</tbody></table></div>
 <p id="fpManualNotice" class="muted smalltext">Manual choices are saved in this browser. League toggles update combined results immediately. MM2 adjustments are disabled in this version.</p><p class="muted smalltext">Full JSON below includes per-league accuracy, SELECT counts, manually saved switches and chronological validation/holdout metrics.</p>`;
   const target=document.getElementById('fpSequentialAudit');if(target)target.innerHTML=html+fpPrecisionHtml;
   fpManualAuditRefresh();
