@@ -1093,6 +1093,13 @@ function normaliseEvent(e,leagueId){
 const fpMonthRequests=new Map();
 // Reuse successful monthly scoreboard downloads across tabs and repeated tests.
 const fpCompletedMonthCache=new Map();
+// A month containing active fixtures must not be held indefinitely in memory.
+const fpCompletedMonthCacheTime=new Map();
+function fpIsCurrentMonth(month){const d=new Date();return month===`${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,"0")}`}
+function fpMonthCacheValid(key,month){return fpCompletedMonthCache.has(key)&&(!fpIsCurrentMonth(month)||(Date.now()-(fpCompletedMonthCacheTime.get(key)||0)<25000))}
+// Live Centre intentionally bypasses Model Test's historical month cache.
+async function fpLiveFetchMonth(id,month){return fpFetchMonthUncached(id,month)}
+
 // Model Test only: persist completed historical scoreboards across HTML reloads.
 const fpTestDbPromise=(()=>{try{return new Promise(resolve=>{let settled=false;const finish=db=>{if(!settled){settled=true;resolve(db)}};setTimeout(()=>finish(null),1800);const request=indexedDB.open('footy-picks-model-test-months-v1',1);request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains('months'))request.result.createObjectStore('months')};request.onsuccess=()=>finish(request.result);request.onerror=()=>finish(null);request.onblocked=()=>finish(null)})}catch(_){return Promise.resolve(null)}})();
 async function fpTestStoredMonth(id,month){
@@ -1108,18 +1115,18 @@ function fpFeedDiagnostic(id){return fpInvalidLeagueFeeds.get(id)||null;}
 let fpTestDownloadController=null;
 async function fetchMonth(id,month,signal=null){
  const cacheKey=id+":"+month;
- if(fpCompletedMonthCache.has(cacheKey))return fpCompletedMonthCache.get(cacheKey);
+ if(fpMonthCacheValid(cacheKey,month))return fpCompletedMonthCache.get(cacheKey);
  if(signal){
   const stored=await fpTestStoredMonth(id,month);
-  if(stored){fpCompletedMonthCache.set(cacheKey,stored);return stored;}
+  if(stored){fpCompletedMonthCache.set(cacheKey,stored);fpCompletedMonthCacheTime.set(cacheKey,Date.now());return stored;}
   const matches=await fpFetchMonthUncached(id,month,signal);
-  fpCompletedMonthCache.set(cacheKey,matches);
+  fpCompletedMonthCache.set(cacheKey,matches);fpCompletedMonthCacheTime.set(cacheKey,Date.now());
   if(matches.length)void fpTestSaveMonth(id,month,matches);
   return matches;
  }
  const key=id+":"+month,prior=fpMonthRequests.get(key),now=Date.now();
  if(prior&&prior.expires>now)return prior.promise;
- const promise=fpFetchMonthUncached(id,month).then(matches=>{fpCompletedMonthCache.set(key,matches);return matches});
+ const promise=fpFetchMonthUncached(id,month).then(matches=>{fpCompletedMonthCache.set(key,matches);fpCompletedMonthCacheTime.set(key,Date.now());return matches});
  const d=new Date(),current=`${d.getUTCFullYear()}${String(d.getUTCMonth()+1).padStart(2,"0")}`;
  fpMonthRequests.set(key,{promise,expires:now+(month===current?25000:300000)});
  promise.catch(()=>{if(fpMonthRequests.get(key)?.promise===promise)fpMonthRequests.delete(key)});
@@ -2976,14 +2983,16 @@ async function fetchLive(){
  try{
   const ids=fpLiveLeagueIds(),all=[];
   const failures=[];
-  const results=await Promise.all(ids.map(async id=>{
-   const now=new Date(),months=[`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}`];
-   try{return await fetchMonth(id,months[0])}catch(e){
-    failures.push(LEAGUES[id]||id);
-    console.warn("Live Centre league feed unavailable",id,e);
-    return [];
+  const results=new Array(ids.length);let nextLeague=0;
+  async function liveWorker(){while(nextLeague<ids.length){
+   const pos=nextLeague++,id=ids[pos],now=new Date();
+   const month=`${now.getUTCFullYear()}${String(now.getUTCMonth()+1).padStart(2,"0")}`;
+   try{results[pos]=await fpLiveFetchMonth(id,month)}catch(e){
+    failures.push(`${LEAGUES[id]||id}: ${String(e?.message||e)}`);
+    console.warn("Live Centre league feed unavailable",id,e);results[pos]=[];
    }
-  }));
+  }}
+  await Promise.all(Array.from({length:Math.min(/iPhone|iPad|iPod/i.test(navigator.userAgent)?2:4,ids.length)},()=>liveWorker()));
   results.forEach(x=>all.push(...x));
   state.liveFeedCoverage={requested:ids.length,failed:failures,received:ids.length-failures.length};
   const unique=new Map();all.forEach(m=>unique.set(eventId(m),m));
@@ -3364,7 +3373,7 @@ let fpScheduleLoading=false;
 async function fetchLiveSchedule(){
  if(fpScheduleLoading)return;
  fpScheduleLoading=true;
- const filter=$("liveStatusFilter");if(!filter)return;
+ const filter=$("liveStatusFilter");if(!filter){fpScheduleLoading=false;return;}
  try{
  if(state.liveScheduleFilter!=="live"){
   $("liveList").innerHTML='<div class="empty">Loading '+esc(state.liveScheduleFilter)+' matches across all leagues…</div>';
@@ -3374,8 +3383,8 @@ async function fetchLiveSchedule(){
  const months=[monthOffset(-1),monthOffset(0),monthOffset(1)];
  const ids=fpLiveLeagueIds(),results=[],failures=[];
  let index=0;
- async function worker(){while(index<ids.length*months.length){const task=index++,id=ids[Math.floor(task/months.length)],mon=months[task%months.length];try{results.push(...await fetchMonth(id,mon))}catch(e){failures.push(`${LEAGUES[id]} ${mon}`);console.warn('Live Centre schedule missing',id,mon,e)}}}
- await Promise.all(Array.from({length:Math.min(5,ids.length*months.length)},()=>worker()));
+ async function worker(){while(index<ids.length*months.length){const task=index++,id=ids[Math.floor(task/months.length)],mon=months[task%months.length];try{results.push(...await (fpIsCurrentMonth(mon)?fpLiveFetchMonth(id,mon):fetchMonth(id,mon)))}catch(e){failures.push(`${LEAGUES[id]} ${mon}: ${String(e?.message||e)}`);console.warn('Live Centre schedule missing',id,mon,e)}}}
+ await Promise.all(Array.from({length:Math.min(/iPhone|iPad|iPod/i.test(navigator.userAgent)?2:4,ids.length*months.length)},()=>worker()));
  const map=new Map();results.forEach(m=>{const id=eventId(m),old=map.get(id);if(!old||(isFinished(m)&&!isFinished(old))||(validScore(m)&&(!validScore(old)||m.homeScore+m.awayScore>=old.homeScore+old.awayScore)))map.set(id,m)});
  // Supplement the scoreboard with any already retrieved fixture or live match. A missing prediction never hides a match.
  for(const m of state.matches)if(FP_ACTIVE_LEAGUES.has(m.leagueId)&&!map.has(eventId(m)))map.set(eventId(m),m);
@@ -3789,6 +3798,7 @@ $("fpTestLeague").value="all";$("league").value="all";$("days").value="today";
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{
  showTab(b.dataset.tab);
  if(b.dataset.tab==="previous")fetchLiveSchedule();
+ if(b.dataset.tab==="live"){fetchLive();if(state.liveScheduleFilter!=="live")fetchLiveSchedule();}
 }));
 const fpWomenLiveToggle=document.getElementById('fpWomenLiveToggle');
 function fpWomenLiveToggleSync(){if(!fpWomenLiveToggle)return;fpWomenLiveToggle.textContent='Women’s live '+(fpShowWomensLive?'ON':'OFF');fpWomenLiveToggle.setAttribute('aria-pressed',String(fpShowWomensLive));fpWomenLiveToggle.classList.toggle('fp-women-off',!fpShowWomensLive)}
@@ -3820,7 +3830,7 @@ $("liveRefresh").addEventListener("click",()=>{fetchLive();if(state.liveSchedule
  state.liveScheduleFilter=e.target.value;
  renderLive();
  if(e.target.value==="live")fetchLive();
- else if(!state.liveSchedule?.length)fetchLiveSchedule();
+ else fetchLiveSchedule();
 });
 document.querySelectorAll("#liveFilters button").forEach(b=>b.addEventListener("click",()=>{state.liveSituationFilter=b.dataset.situation;document.querySelectorAll("#liveFilters button").forEach(x=>x.classList.toggle("active",x===b));renderLive()}));
 $("liveLeagueFilter").addEventListener("change",e=>{state.liveLeagueFilter=e.target.value;renderLive();fetchLive();if(state.liveScheduleFilter!=="live")fetchLiveSchedule()});
